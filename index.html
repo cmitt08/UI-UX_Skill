@@ -472,6 +472,9 @@
     nav.tabs button { padding: 10px 12px; font-size: 13px; }
     .header-actions { display: none; }
     .grid.cols-4, .grid.cols-3, .grid.cols-2 { grid-template-columns: 1fr; }
+    /* Inline `grid-column: span 2` on full-width cards forces an implicit
+       second column on mobile — neutralize it so siblings stay full-width. */
+    .grid > * { grid-column: auto !important; }
     .row { grid-template-columns: 1fr; }
     .section-head { margin: 18px 0 12px; gap: 10px; }
     .section-head h2 { font-size: 24px; }
