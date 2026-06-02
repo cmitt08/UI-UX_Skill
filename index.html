@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0F1420;
@@ -472,7 +473,7 @@
     .brand-sub { font-size: 10px; letter-spacing: 0.15em; }
     nav.tabs { padding: 4px; }
     nav.tabs button { padding: 10px 12px; font-size: 13px; }
-    .header-actions { display: none; }
+    .header-actions { display: flex; justify-content: flex-end; }
     .grid.cols-4, .grid.cols-3, .grid.cols-2 { grid-template-columns: 1fr !important; }
     /* Bulletproof: convert every .grid to a vertical flex column on phones.
        Two items physically cannot sit side-by-side in a flex column,
@@ -550,6 +551,71 @@
   /* Legend */
   .legend { display: flex; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 12px; }
   .legend .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: middle; }
+
+  /* Account chip in topbar */
+  .account-chip {
+    appearance: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 200ms ease, border-color 200ms ease;
+    max-width: 220px;
+    min-height: 36px;
+    touch-action: manipulation;
+  }
+  .account-chip:hover { background: rgba(255,255,255,0.08); border-color: #3A4866; }
+  .account-chip .dot {
+    width: 8px; height: 8px; border-radius: 999px;
+    background: var(--muted); flex: 0 0 auto;
+  }
+  .account-chip.signed-in .dot { background: var(--accent); box-shadow: 0 0 8px rgba(34,197,94,0.6); }
+  .account-chip .label {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-transform: none; letter-spacing: 0; font-family: 'Barlow', sans-serif;
+    font-weight: 500; font-size: 13px;
+  }
+  @media (max-width: 700px) {
+    .account-chip { align-self: flex-end; }
+  }
+
+  /* Auth modal tabs */
+  .auth-tabs { display: flex; gap: 6px; padding: 4px; background: rgba(15,20,32,0.7); border-radius: 10px; border: 1px solid var(--border); margin-bottom: 14px; }
+  .auth-tabs button {
+    flex: 1; appearance: none; border: 0; background: transparent;
+    color: var(--muted); padding: 10px;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; font-size: 13px;
+    border-radius: 7px; cursor: pointer; transition: color 200ms ease, background 200ms ease;
+    min-height: 40px;
+  }
+  .auth-tabs button.active {
+    color: #0F1420;
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  }
+  .auth-error { color: #FCA5A5; font-size: 13px; margin-top: 8px; min-height: 18px; }
+  .auth-info { color: #86EFAC; font-size: 13px; margin-top: 8px; }
+
+  /* Sync indicator */
+  .sync-indicator {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: 11px; color: var(--muted);
+  }
+  .sync-indicator .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--muted); }
+  .sync-indicator.synced .dot { background: var(--accent); }
+  .sync-indicator.syncing .dot { background: var(--warn); animation: pulse 1.2s ease-in-out infinite; }
+  .sync-indicator.error .dot { background: var(--danger); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 </style>
 </head>
 <body>
@@ -582,9 +648,9 @@
     </nav>
 
     <div class="header-actions">
-      <button class="btn btn-primary" id="quickLogBtn" aria-label="Quick log workout">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-        New Set
+      <button class="account-chip" id="accountChip" aria-label="Account" type="button">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="label" id="accountChipLabel">Guest</span>
       </button>
     </div>
   </header>
@@ -968,7 +1034,37 @@
     <div class="section-head">
       <div>
         <h2>Data &amp; <span class="accent">Settings</span></h2>
-        <div class="desc">Your data lives in your browser. Back it up regularly.</div>
+        <div class="desc" id="dataDesc">Your data lives in your browser. Back it up regularly.</div>
+      </div>
+    </div>
+
+    <div class="card tinted-green" id="accountCard" style="margin-bottom:18px;">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Account
+        <span class="spacer"></span>
+        <span class="sync-indicator" id="syncIndicator"><span class="dot"></span><span id="syncIndicatorLabel">Local only</span></span>
+      </div>
+
+      <div id="accountSignedOut">
+        <p class="muted" style="margin: 0 0 12px;">Sign in to save your workouts to the cloud and access them from any device. Without an account, your data lives only in this browser.</p>
+        <div class="row-flex">
+          <button class="btn btn-accent" id="openSignInBtn">Sign In</button>
+          <button class="btn" id="openSignUpBtn">Create Account</button>
+        </div>
+      </div>
+
+      <div id="accountSignedIn" style="display:none;">
+        <p class="muted" style="margin: 0 0 8px;">Signed in as <strong id="accountEmail"></strong></p>
+        <p class="muted" style="margin: 0 0 12px; font-size: 13px;" id="accountSyncMsg">All changes sync automatically to the cloud.</p>
+        <div class="row-flex">
+          <button class="btn" id="syncNowBtn">Sync Now</button>
+          <button class="btn btn-danger" id="signOutBtn">Sign Out</button>
+        </div>
+      </div>
+
+      <div id="accountCloudDisabled" style="display:none;">
+        <p class="muted" style="margin: 0;">Cloud accounts aren't configured for this site. Data is stored only in this browser. (To enable: set <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in the source.)</p>
       </div>
     </div>
 
@@ -1039,6 +1135,31 @@
   </div>
 </div>
 
+<!-- Auth modal -->
+<div class="modal-backdrop" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="modal">
+    <h3 id="authTitle">Sign In</h3>
+    <div class="desc" id="authDesc">Welcome back. Sign in to sync your workouts.</div>
+    <div class="auth-tabs" role="tablist">
+      <button id="authTabSignIn" class="active" type="button">Sign In</button>
+      <button id="authTabSignUp" type="button">Create Account</button>
+    </div>
+    <div class="field">
+      <label class="lbl" for="authEmail">Email</label>
+      <input type="email" id="authEmail" autocomplete="email" inputmode="email" placeholder="you@example.com" />
+    </div>
+    <div class="field" style="margin-top: 10px;">
+      <label class="lbl" for="authPassword">Password</label>
+      <input type="password" id="authPassword" autocomplete="current-password" placeholder="••••••••" />
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <div class="modal-actions">
+      <button class="btn" id="authCancel">Cancel</button>
+      <button class="btn btn-primary" id="authSubmit">Sign In</button>
+    </div>
+  </div>
+</div>
+
 <!-- Prompt modal (mobile-friendly replacement for window.prompt) -->
 <div class="modal-backdrop" id="promptModal" role="dialog" aria-modal="true" aria-labelledby="promptTitle">
   <div class="modal">
@@ -1065,9 +1186,28 @@
        exercises: [{ id, name, group }],
        entries: [{ id, exerciseId, date (ISO yyyy-mm-dd), sets: [{w,r}], notes }]
      }
-   ============================================================ */
+
+   --------------------------------------------------------------
+   CLOUD SYNC SETUP (optional — leave blank for localStorage only):
+   1. Sign up at https://supabase.com (free, no credit card)
+   2. Create a project, then in SQL Editor run:
+        create table if not exists public.profiles (
+          user_id uuid primary key references auth.users(id) on delete cascade,
+          data jsonb not null default '{}'::jsonb,
+          updated_at timestamptz not null default now()
+        );
+        alter table public.profiles enable row level security;
+        create policy "Users manage own profile" on public.profiles
+          for all using (auth.uid() = user_id)
+          with check (auth.uid() = user_id);
+   3. Project Settings → API → copy "Project URL" and "anon public" key
+   4. Paste them below
+   --------------------------------------------------------------*/
+const SUPABASE_URL = "";       // e.g. "https://abcdefg.supabase.co"
+const SUPABASE_ANON_KEY = "";  // long string starting with "eyJ..."
 
 const STORAGE_KEY = "iron-ledger:v1";
+const LAST_USER_KEY = "iron-ledger:last-user";
 
 const DEFAULT_EXERCISES = [
   { name: "Bench Press", group: "Chest" },
@@ -1092,6 +1232,14 @@ let state = loadState();
 let charts = {};
 
 /* -------------------- State -------------------- */
+function freshState() {
+  return {
+    version: 1,
+    prefs: { unit: 'lb', defaultSets: 3 },
+    exercises: DEFAULT_EXERCISES.map(e => ({ id: uid(), name: e.name, group: e.group })),
+    entries: []
+  };
+}
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -1100,16 +1248,11 @@ function loadState() {
       if (s && s.version === 1) return s;
     }
   } catch(e) { /* fallthrough */ }
-  // Initial seed
-  return {
-    version: 1,
-    prefs: { unit: 'lb', defaultSets: 3 },
-    exercises: DEFAULT_EXERCISES.map((e, i) => ({ id: uid(), name: e.name, group: e.group })),
-    entries: []
-  };
+  return freshState();
 }
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  queueCloudSync();
 }
 function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
 
@@ -2119,6 +2262,261 @@ function seedSampleData() {
   saveState();
 }
 
+/* ==================================================================
+   CLOUD AUTH + SYNC (Supabase)
+   ================================================================== */
+const CLOUD_ENABLED = !!(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase);
+let sb = null;
+let session = null;
+let cloudReady = false;
+let cloudSyncTimer = null;
+let lastSyncError = null;
+
+if (CLOUD_ENABLED) {
+  try {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true }
+    });
+  } catch (e) {
+    console.error('Supabase init failed', e);
+  }
+}
+
+function setSyncIndicator(status, label) {
+  const el = document.getElementById('syncIndicator');
+  const lbl = document.getElementById('syncIndicatorLabel');
+  if (!el || !lbl) return;
+  el.classList.remove('synced', 'syncing', 'error');
+  if (status) el.classList.add(status);
+  lbl.textContent = label;
+}
+
+function updateAccountUI() {
+  const chip = document.getElementById('accountChip');
+  const chipLabel = document.getElementById('accountChipLabel');
+  const signedOut = document.getElementById('accountSignedOut');
+  const signedIn = document.getElementById('accountSignedIn');
+  const disabled = document.getElementById('accountCloudDisabled');
+
+  if (!CLOUD_ENABLED || !sb) {
+    chip.classList.remove('signed-in');
+    chipLabel.textContent = 'Local';
+    signedOut.style.display = 'none';
+    signedIn.style.display = 'none';
+    disabled.style.display = 'block';
+    setSyncIndicator(null, 'Local only');
+    return;
+  }
+
+  if (session && session.user) {
+    chip.classList.add('signed-in');
+    const email = session.user.email || 'Signed in';
+    chipLabel.textContent = email;
+    document.getElementById('accountEmail').textContent = email;
+    signedOut.style.display = 'none';
+    signedIn.style.display = 'block';
+    disabled.style.display = 'none';
+    if (lastSyncError) setSyncIndicator('error', 'Sync failed');
+    else setSyncIndicator('synced', 'Synced');
+  } else {
+    chip.classList.remove('signed-in');
+    chipLabel.textContent = 'Sign In';
+    signedOut.style.display = 'block';
+    signedIn.style.display = 'none';
+    disabled.style.display = 'none';
+    setSyncIndicator(null, 'Not signed in');
+  }
+}
+
+async function initCloud() {
+  if (!CLOUD_ENABLED || !sb) { updateAccountUI(); return; }
+  const { data } = await sb.auth.getSession();
+  session = data.session;
+  cloudReady = true;
+  if (session) await syncFromCloud({ isFirstLogin: false });
+  updateAccountUI();
+  sb.auth.onAuthStateChange(async (event, sess) => {
+    const prevSession = session;
+    session = sess;
+    if (event === 'SIGNED_IN' && (!prevSession || prevSession.user.id !== sess.user.id)) {
+      await syncFromCloud({ isFirstLogin: true });
+    }
+    if (event === 'SIGNED_OUT') {
+      // Keep current state, just stop syncing
+    }
+    updateAccountUI();
+  });
+}
+
+async function syncFromCloud({ isFirstLogin } = {}) {
+  if (!sb || !session) return;
+  setSyncIndicator('syncing', 'Syncing…');
+  try {
+    const { data, error } = await sb
+      .from('profiles')
+      .select('data')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (data && data.data && data.data.version) {
+      // Cloud has data — adopt it
+      state = data.data;
+      saveLocalOnly();
+      lastSyncError = null;
+      setSyncIndicator('synced', 'Synced');
+      refreshAll();
+      localStorage.setItem(LAST_USER_KEY, session.user.id);
+      if (isFirstLogin) toast('Welcome back. Data restored.');
+    } else {
+      // Cloud empty. Check if this is a different user than was last signed in
+      // on this device — if so, start them fresh to avoid leaking the previous
+      // user's local data into the new account.
+      const lastUser = localStorage.getItem(LAST_USER_KEY);
+      if (lastUser && lastUser !== session.user.id) {
+        state = freshState();
+        saveLocalOnly();
+        refreshAll();
+      }
+      await pushToCloud();
+      localStorage.setItem(LAST_USER_KEY, session.user.id);
+      if (isFirstLogin && state.entries.length) toast('Your data is now saved to the cloud.');
+    }
+  } catch (err) {
+    console.error('syncFromCloud', err);
+    lastSyncError = err.message || String(err);
+    setSyncIndicator('error', 'Sync failed');
+  }
+}
+
+async function pushToCloud() {
+  if (!sb || !session) return;
+  setSyncIndicator('syncing', 'Syncing…');
+  try {
+    const { error } = await sb
+      .from('profiles')
+      .upsert({
+        user_id: session.user.id,
+        data: state,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+    if (error) throw error;
+    lastSyncError = null;
+    setSyncIndicator('synced', 'Synced');
+  } catch (err) {
+    console.error('pushToCloud', err);
+    lastSyncError = err.message || String(err);
+    setSyncIndicator('error', 'Sync failed');
+  }
+}
+
+function queueCloudSync() {
+  if (!sb || !session) return;
+  clearTimeout(cloudSyncTimer);
+  setSyncIndicator('syncing', 'Saving…');
+  cloudSyncTimer = setTimeout(pushToCloud, 700);
+}
+
+function saveLocalOnly() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+/* -------------------- Auth modal -------------------- */
+let authMode = 'signin';
+
+function openAuth(mode = 'signin') {
+  if (!CLOUD_ENABLED || !sb) {
+    toast('Cloud accounts are not configured for this site.', true);
+    return;
+  }
+  authMode = mode;
+  const modal = document.getElementById('authModal');
+  document.getElementById('authError').textContent = '';
+  document.getElementById('authEmail').value = '';
+  document.getElementById('authPassword').value = '';
+  setAuthMode(mode);
+  modal.classList.add('show');
+  setTimeout(() => document.getElementById('authEmail').focus(), 50);
+}
+
+function closeAuth() {
+  document.getElementById('authModal').classList.remove('show');
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  document.getElementById('authTabSignIn').classList.toggle('active', mode === 'signin');
+  document.getElementById('authTabSignUp').classList.toggle('active', mode === 'signup');
+  document.getElementById('authTitle').textContent = mode === 'signin' ? 'Sign In' : 'Create Account';
+  document.getElementById('authDesc').textContent = mode === 'signin'
+    ? 'Welcome back. Sign in to sync your workouts.'
+    : 'Create an account to back up your progress and access it from any device.';
+  document.getElementById('authSubmit').textContent = mode === 'signin' ? 'Sign In' : 'Sign Up';
+  document.getElementById('authPassword').autocomplete = mode === 'signin' ? 'current-password' : 'new-password';
+  document.getElementById('authError').textContent = '';
+}
+
+async function submitAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  if (!email || !password) { errEl.textContent = 'Email and password are required.'; return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  const submitBtn = document.getElementById('authSubmit');
+  submitBtn.disabled = true;
+  submitBtn.textContent = '...';
+  try {
+    if (authMode === 'signin') {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      closeAuth();
+      toast('Signed in.');
+    } else {
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if (error) throw error;
+      if (data.session) {
+        closeAuth();
+        toast('Account created.');
+      } else {
+        errEl.style.color = '#86EFAC';
+        errEl.textContent = 'Check your email to confirm your account.';
+      }
+    }
+  } catch (err) {
+    errEl.style.color = '#FCA5A5';
+    errEl.textContent = err.message || 'Something went wrong.';
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = authMode === 'signin' ? 'Sign In' : 'Sign Up';
+  }
+}
+
+async function signOutAction() {
+  if (!sb) return;
+  await sb.auth.signOut();
+  session = null;
+  updateAccountUI();
+  toast('Signed out.');
+}
+
+/* -------------------- Wire up account UI -------------------- */
+document.getElementById('accountChip').addEventListener('click', () => {
+  if (!CLOUD_ENABLED) { setTab('data'); return; }
+  if (session) setTab('data');
+  else openAuth('signin');
+});
+document.getElementById('openSignInBtn').addEventListener('click', () => openAuth('signin'));
+document.getElementById('openSignUpBtn').addEventListener('click', () => openAuth('signup'));
+document.getElementById('signOutBtn').addEventListener('click', signOutAction);
+document.getElementById('syncNowBtn').addEventListener('click', async () => { await pushToCloud(); toast('Synced.'); });
+document.getElementById('authTabSignIn').addEventListener('click', () => setAuthMode('signin'));
+document.getElementById('authTabSignUp').addEventListener('click', () => setAuthMode('signup'));
+document.getElementById('authCancel').addEventListener('click', closeAuth);
+document.getElementById('authSubmit').addEventListener('click', submitAuth);
+document.getElementById('authPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitAuth(); });
+document.getElementById('authEmail').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('authPassword').focus(); });
+document.getElementById('authModal').addEventListener('click', (e) => { if (e.target.id === 'authModal') closeAuth(); });
+
 /* -------------------- Resize charts on rotation/resize -------------------- */
 let _resizeT;
 window.addEventListener('resize', () => {
@@ -2149,6 +2547,10 @@ refreshDashboard();
 
 // Pre-populate log so it's ready when user switches tabs
 refreshLog();
+
+// Initialize cloud auth (no-op if not configured)
+updateAccountUI();
+initCloud();
 </script>
 </body>
 </html>
