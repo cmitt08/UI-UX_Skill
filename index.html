@@ -474,12 +474,17 @@
     nav.tabs button { padding: 10px 12px; font-size: 13px; }
     .header-actions { display: none; }
     .grid.cols-4, .grid.cols-3, .grid.cols-2 { grid-template-columns: 1fr !important; }
-    /* Any item that asks to span columns must collapse to one — otherwise
-       it forces the grid to implicitly create extra columns. */
-    .grid > *,
-    .col-span-2,
-    .col-span-full,
-    [style*="grid-column"] { grid-column: auto !important; }
+    /* Bulletproof: convert every .grid to a vertical flex column on phones.
+       Two items physically cannot sit side-by-side in a flex column,
+       regardless of any grid-column / span / inline-style overrides. */
+    .grid { display: flex !important; flex-direction: column !important; }
+    .grid > * {
+      grid-column: auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+    }
+    .col-span-2, .col-span-full, [style*="grid-column"] { grid-column: auto !important; }
     .row { grid-template-columns: 1fr; }
     .section-head { margin: 18px 0 12px; gap: 10px; }
     .section-head h2 { font-size: 24px; }
