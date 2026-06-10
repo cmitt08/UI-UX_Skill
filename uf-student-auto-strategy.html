@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>The Gator Pipeline — UF Student Auto Strategy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Libre+Bodoni:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+  @page { size: Letter; margin: 0; }
+
+  :root {
+    --blue: #0021A5;
+    --navy: #0A1440;
+    --ink: #131C3B;
+    --muted: #525C7D;
+    --orange: #FA4616;
+    --orange-deep: #D93A0F;
+    --tint: #F2F5FC;
+    --tint-warm: #FFF3EE;
+    --line: #DDE3F0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Public Sans', sans-serif;
+    color: var(--ink);
+    font-size: 9.5pt;
+    line-height: 1.55;
+  }
+
+  .sheet {
+    width: 8.5in;
+    height: 11in;
+    page-break-after: always;
+    position: relative;
+    background: #fff;
+    overflow: hidden;
+  }
+  .sheet:last-child { page-break-after: auto; }
+
+  .pad { padding: 0 0.7in; }
+
+  .kicker {
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--orange);
+  }
+
+  h2.section {
+    font-family: 'Libre Bodoni', serif;
+    font-weight: 600;
+    font-size: 16.5pt;
+    color: var(--blue);
+    margin: 4pt 0 10pt;
+  }
+
+  /* ---------- PAGE 1 ---------- */
+
+  .cover-band {
+    background: var(--navy);
+    padding: 0.62in 0.7in 0.5in;
+    color: #fff;
+  }
+  .cover-band .kicker { margin-bottom: 14pt; }
+  .cover-band h1 {
+    font-family: 'Libre Bodoni', serif;
+    font-weight: 700;
+    font-size: 37pt;
+    line-height: 1.08;
+    margin-bottom: 12pt;
+    color: #fff;
+  }
+  .cover-band h1 .accent { color: #FF6A3D; }
+  .cover-band .sub {
+    font-size: 11.5pt;
+    font-weight: 300;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.82);
+    max-width: 6.2in;
+    margin-bottom: 18pt;
+  }
+  .cover-meta {
+    display: flex;
+    border-top: 1px solid rgba(255,255,255,0.22);
+    padding-top: 10pt;
+    font-size: 8pt;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+  }
+  .cover-meta span { margin-right: 28pt; }
+  .cover-meta b { color: #fff; font-weight: 600; }
+
+  .intro {
+    padding-top: 0.32in;
+    font-size: 10.5pt;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+  .intro p { max-width: 7.1in; }
+  .intro .lede-cap {
+    font-family: 'Libre Bodoni', serif;
+    color: var(--blue);
+    font-weight: 600;
+  }
+
+  .stats {
+    display: flex;
+    margin-top: 0.24in;
+  }
+  .stat {
+    flex: 1;
+    background: var(--tint);
+    border-top: 2.5pt solid var(--orange);
+    padding: 11pt 12pt 10pt;
+    margin-right: 10pt;
+  }
+  .stat:last-child { margin-right: 0; }
+  .stat .num {
+    font-family: 'Libre Bodoni', serif;
+    font-weight: 700;
+    font-size: 19pt;
+    color: var(--blue);
+    line-height: 1.1;
+    margin-bottom: 4pt;
+  }
+  .stat .lbl {
+    font-size: 7.6pt;
+    line-height: 1.45;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .insight {
+    margin-top: 0.26in;
+    background: var(--tint-warm);
+    border-left: 3pt solid var(--orange);
+    padding: 13pt 16pt;
+  }
+  .insight .tag {
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--orange-deep);
+    margin-bottom: 5pt;
+  }
+  .insight p {
+    font-family: 'Libre Bodoni', serif;
+    font-size: 11.5pt;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+
+  .three-up {
+    display: flex;
+    margin-top: 0.26in;
+  }
+  .three-up .cell {
+    flex: 1;
+    padding-right: 16pt;
+    margin-right: 16pt;
+    border-right: 1px solid var(--line);
+  }
+  .three-up .cell:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+  .three-up h4 {
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 4pt;
+  }
+  .three-up p { font-size: 8.6pt; color: var(--muted); line-height: 1.5; }
+
+  /* ---------- PAGE 2 ---------- */
+
+  .page-head { padding-top: 0.42in; }
+
+  .plays { margin-top: 4pt; }
+  .play-row { display: flex; margin-bottom: 11pt; }
+  .play {
+    flex: 1;
+    border: 1px solid var(--line);
+    border-top: 2.5pt solid var(--blue);
+    padding: 11pt 13pt 10pt;
+    margin-right: 11pt;
+  }
+  .play:last-child { margin-right: 0; }
+  .play-top { display: flex; align-items: center; margin-bottom: 5pt; }
+  .play-num {
+    font-family: 'Libre Bodoni', serif;
+    font-weight: 700;
+    font-size: 15pt;
+    color: var(--orange);
+    width: 22pt;
+  }
+  .play-icon { width: 15pt; height: 15pt; margin-right: 7pt; }
+  .play h3 {
+    font-family: 'Libre Bodoni', serif;
+    font-weight: 600;
+    font-size: 12pt;
+    color: var(--ink);
+  }
+  .play .why {
+    font-size: 8.4pt;
+    line-height: 1.5;
+    color: var(--muted);
+    margin-bottom: 6pt;
+  }
+  .play .why b { color: var(--ink); font-weight: 600; }
+  .play ul { list-style: none; }
+  .play li {
+    font-size: 8.4pt;
+    line-height: 1.45;
+    padding-left: 11pt;
+    position: relative;
+    margin-bottom: 3pt;
+    color: var(--ink);
+  }
+  .play li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 4.5pt;
+    width: 4.5pt; height: 4.5pt;
+    background: var(--orange);
+  }
+  .run-tag {
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 3pt;
+  }
+
+  /* ---------- PAGE 3 ---------- */
+
+  .timeline { margin-top: 2pt; }
+  .t-row {
+    display: flex;
+    border-bottom: 1px solid var(--line);
+    padding: 5.5pt 0;
+  }
+  .t-row:last-child { border-bottom: none; }
+  .t-when {
+    width: 1.45in;
+    font-family: 'Libre Bodoni', serif;
+    font-weight: 600;
+    font-size: 10pt;
+    color: var(--blue);
+    padding-right: 12pt;
+  }
+  .t-what { flex: 1; font-size: 8.8pt; color: var(--ink); line-height: 1.5; }
+  .t-what b { font-weight: 600; }
+  .t-what .m { color: var(--muted); }
+
+  .bottom-cols { display: flex; margin-top: 0.16in; }
+
+  .pitch {
+    flex: 1.25;
+    background: var(--navy);
+    color: #fff;
+    padding: 12pt 15pt;
+    margin-right: 13pt;
+  }
+  .pitch .tag {
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #FF6A3D;
+    margin-bottom: 7pt;
+  }
+  .pitch p {
+    font-family: 'Libre Bodoni', serif;
+    font-size: 9.5pt;
+    line-height: 1.58;
+    color: rgba(255,255,255,0.93);
+  }
+  .pitch p + p { margin-top: 7pt; }
+
+  .ask { flex: 1; }
+  .ask h3 {
+    font-family: 'Libre Bodoni', serif;
+    font-weight: 600;
+    font-size: 13pt;
+    color: var(--blue);
+    margin-bottom: 8pt;
+  }
+  .ask-item { display: flex; margin-bottom: 7pt; }
+  .ask-item svg { width: 11pt; height: 11pt; margin: 1.5pt 7pt 0 0; flex: none; }
+  .ask-item p { font-size: 8.6pt; line-height: 1.45; color: var(--ink); }
+  .ask-item b { font-weight: 600; }
+
+  .scorecard {
+    margin-top: 0.16in;
+    background: var(--tint);
+    border-top: 2.5pt solid var(--blue);
+    padding: 10pt 14pt 9pt;
+  }
+  .scorecard .tag {
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 8pt;
+  }
+  .score-row { display: flex; }
+  .score {
+    flex: 1;
+    margin-right: 14pt;
+    padding-right: 14pt;
+    border-right: 1px solid #C9D3E8;
+  }
+  .score:last-child { margin-right: 0; padding-right: 0; border-right: none; }
+  .score .n {
+    font-family: 'Libre Bodoni', serif;
+    font-weight: 700;
+    font-size: 13pt;
+    color: var(--orange);
+    margin-bottom: 2pt;
+  }
+  .score .t { font-size: 8.6pt; font-weight: 600; color: var(--ink); line-height: 1.35; }
+  .score .d { font-size: 7.6pt; color: var(--muted); line-height: 1.45; margin-top: 2pt; }
+  .scorecard .closer {
+    margin-top: 6pt;
+    font-size: 8.4pt;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .fine {
+    position: absolute;
+    bottom: 0.42in;
+    left: 0.7in;
+    right: 0.7in;
+    border-top: 1px solid var(--line);
+    padding-top: 7pt;
+    font-size: 6.9pt;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .fine b { color: var(--ink); font-weight: 600; }
+
+  .footer {
+    position: absolute;
+    bottom: 0.42in;
+    left: 0.7in;
+    right: 0.7in;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--line);
+    padding-top: 7pt;
+    font-size: 7pt;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .footer .pg { color: var(--orange); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ================= PAGE 1 ================= -->
+<div class="sheet">
+  <div class="cover-band">
+    <div class="kicker">Internal Strategy Brief &middot; Personal Lines — Auto</div>
+    <h1>The Gator<br/>Pipeline<span class="accent">.</span></h1>
+    <p class="sub">A Gainesville-specific plan for winning auto customers from the University of Florida's student wave — six plays we can start running before August move-in.</p>
+    <div class="cover-meta">
+      <span>Prepared by <b>[Your Name], Intern</b></span>
+      <span>For <b>[Agency Name]</b></span>
+      <span><b>June 2026</b></span>
+    </div>
+  </div>
+
+  <div class="pad intro">
+    <p><span class="lede-cap">We can't get auto customers from car dealerships</span> because new-car buyers already have insurance. But we're sitting four miles from the largest collection of people who <em>don't</em>: every year, tens of thousands of students arrive at UF and Santa Fe College — and they hit forced insurance moments most adults never see. First cars. First leases. Florida vehicle registration. First policies in their own name. Nobody in Gainesville systematically owns those moments. We can.</p>
+  </div>
+
+  <div class="pad stats">
+    <div class="stat">
+      <div class="num">~61,000</div>
+      <div class="lbl">Students enrolled at UF — plus ~14,000 more at Santa Fe College</div>
+    </div>
+    <div class="stat">
+      <div class="num">~75%</div>
+      <div class="lbl">Live off campus, where nearly every lease requires renters insurance — our door-opener</div>
+    </div>
+    <div class="stat">
+      <div class="num">~6,000</div>
+      <div class="lbl">International students with no U.S. insurance history who need a first policy</div>
+    </div>
+    <div class="stat">
+      <div class="num">2&times; / yr</div>
+      <div class="lbl">Graduation waves (May &amp; December) of grads leaving their parents' policies</div>
+    </div>
+  </div>
+
+  <div class="pad">
+    <div class="insight">
+      <div class="tag">The Core Insight</div>
+      <p>A new-car buyer at a dealership already has coverage. A 19-year-old registering a car in Florida to qualify for in-state tuition, signing her first Gainesville lease, or graduating into her first job does not. Students compress more forced-insurance moments into four years than most adults hit in twenty.</p>
+    </div>
+  </div>
+
+  <div class="pad three-up">
+    <div class="cell">
+      <h4>Cheap to win</h4>
+      <p>No ad budget needed — these channels run on legwork, partnerships, and one-page handouts.</p>
+    </div>
+    <div class="cell">
+      <h4>Compounding value</h4>
+      <p>Renters today, auto at graduation, home in five years. We capture customers at the start of the ladder.</p>
+    </div>
+    <div class="cell">
+      <h4>Parents come attached</h4>
+      <p>Parents co-sign and pay. One student policy regularly opens a whole multi-car household.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>The Gator Pipeline &middot; UF Student Auto Strategy</span>
+    <span class="pg">01 / 03</span>
+  </div>
+</div>
+
+<!-- ================= PAGE 2 ================= -->
+<div class="sheet">
+  <div class="pad page-head">
+    <div class="kicker">How We Reach Them</div>
+    <h2 class="section">Six plays, in priority order</h2>
+  </div>
+
+  <div class="pad plays">
+
+    <div class="play-row">
+      <div class="play">
+        <div class="play-top">
+          <span class="play-num">1</span>
+          <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="#0021A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <h3>The Residency Play</h3>
+        </div>
+        <p class="why">Out-of-state students chasing <b>in-state tuition</b> must build Florida ties: FL license, FL vehicle registration — and Florida registration requires Florida insurance. Parents' out-of-state policy often can't follow the car. <b>No one markets to this.</b></p>
+        <div class="run-tag">Run it</div>
+        <ul>
+          <li>Build a one-page "Becoming a Florida Resident" checklist — insurance is simply step 3, with our QR code.</li>
+          <li>Seed it where students search: off-campus housing offices, the UF subreddit, class GroupMe chats.</li>
+        </ul>
+      </div>
+      <div class="play">
+        <div class="play-top">
+          <span class="play-num">2</span>
+          <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="#0021A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="#0021A5"/></svg>
+          <h3>The Lease-Signing Play</h3>
+        </div>
+        <p class="why">Nearly every off-campus complex <b>requires renters insurance</b> at lease signing. A ~$15/month renters policy is our foot in the door — and the <b>auto bundle pitch is built in.</b></p>
+        <div class="run-tag">Run it</div>
+        <ul>
+          <li>Visit leasing offices along Archer Rd, SW 13th &amp; Sorority Row with "covered in 10 minutes" cards for lease packets.</li>
+          <li>Give leasing staff same-day proof of coverage — we solve <em>their</em> compliance chase.</li>
+          <li>Table at UF's off-campus housing fairs each spring and summer.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="play-row">
+      <div class="play">
+        <div class="play-top">
+          <span class="play-num">3</span>
+          <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="#0021A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>
+          <h3>The Scooter Play</h3>
+        </div>
+        <p class="why">Gainesville runs on scooters. Local dealers sell to students year-round; <b>financed scooters need coverage</b> and parents usually pay. Every scooter policy opens a household full of cars.</p>
+        <div class="run-tag">Run it</div>
+        <ul>
+          <li>Partner with the main student scooter dealers (e.g., New Scooters 4 Less, Solano Cycle) — same-day proof promise.</li>
+          <li>Cross-sell every scooter household: "Want me to run your auto while I'm in here? Bundling helps both."</li>
+        </ul>
+      </div>
+      <div class="play">
+        <div class="play-top">
+          <span class="play-num">4</span>
+          <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="#0021A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <h3>The Parent Play</h3>
+        </div>
+        <p class="why"><b>Parents pay the premiums</b> — and many out-of-state carriers can't properly cover a car garaged and registered in Florida. Gator parent Facebook groups field insurance questions every single week.</p>
+        <div class="run-tag">Run it</div>
+        <ul>
+          <li>Be visible when parents are in town: move-in weekend and Family Weekend (water station, branded help table).</li>
+          <li>Become the helpful local expert in Gator parent groups — answer questions, never spam.</li>
+          <li>One-pager: "Your student's car is 300 miles from home. Is it actually covered?"</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="play-row">
+      <div class="play">
+        <div class="play-top">
+          <span class="play-num">5</span>
+          <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="#0021A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>
+          <h3>The Graduation Play</h3>
+        </div>
+        <p class="why">Every May and December, thousands of grads take first jobs and <b>leave their parents' policies</b> — a guaranteed first-policy wave, twice a year, forever.</p>
+        <div class="run-tag">Run it</div>
+        <ul>
+          <li>"Your First Policy 101" one-pager with QR code at career-prep events and senior weeks.</li>
+          <li>Collect renewal dates from spring seniors; auto renews every 6 months, so every "no" comes back twice a year.</li>
+        </ul>
+      </div>
+      <div class="play">
+        <div class="play-top">
+          <span class="play-num">6</span>
+          <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="#0021A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+          <h3>The Ambassador Play</h3>
+        </div>
+        <p class="why">Businesses can't table on Plaza of the Americas — but <b>registered student orgs can.</b> Students trust students, and a sponsorship costs less than one month of ads.</p>
+        <div class="run-tag">Run it</div>
+        <ul>
+          <li>Sponsor a business fraternity, sales club, or Gator Motorsports in exchange for tabling partnership &amp; referrals.</li>
+          <li>Keep any per-referral thank-yous inside Florida's gift rules (see compliance note, p.3).</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <span>The Gator Pipeline &middot; UF Student Auto Strategy</span>
+    <span class="pg">02 / 03</span>
+  </div>
+</div>
+
+<!-- ================= PAGE 3 ================= -->
+<div class="sheet">
+  <div class="pad page-head">
+    <div class="kicker">When To Strike</div>
+    <h2 class="section">The Gainesville calendar does the marketing for us</h2>
+  </div>
+
+  <div class="pad timeline">
+    <div class="t-row">
+      <div class="t-when">June – July</div>
+      <div class="t-what"><b>UF Preview (orientation)</b> — parents are on campus with checkbooks open. <span class="m">Prep materials now; contact leasing offices &amp; scooter dealers before the rush.</span></div>
+    </div>
+    <div class="t-row">
+      <div class="t-when">August</div>
+      <div class="t-what"><b>Move-in week</b> — the single biggest wave of the year: new leases, new scooters, cars newly garaged in Florida. <span class="m">Renters + auto bundles; parent one-pagers everywhere.</span></div>
+    </div>
+    <div class="t-row">
+      <div class="t-when">Sept – Nov</div>
+      <div class="t-what"><b>Game days &amp; Family Weekend</b> — parents return; campus is at full energy. <span class="m">Parent play + ambassador tabling.</span></div>
+    </div>
+    <div class="t-row">
+      <div class="t-when">December</div>
+      <div class="t-what"><b>Fall graduation</b> — first-policy wave #1. <span class="m">Spring lease signings also begin for next year.</span></div>
+    </div>
+    <div class="t-row">
+      <div class="t-when">January</div>
+      <div class="t-what"><b>Spring arrivals &amp; lease renewals</b> — transfer students and a second, smaller move-in. <span class="m">Re-run the August playbook at lower volume.</span></div>
+    </div>
+    <div class="t-row">
+      <div class="t-when">April – May</div>
+      <div class="t-what"><b>Spring graduation</b> — the biggest first-policy wave of all. <span class="m">Capture renewal dates from every senior we talk to.</span></div>
+    </div>
+  </div>
+
+  <div class="pad bottom-cols">
+    <div class="pitch">
+      <div class="tag">The 60-Second Version &mdash; Say This In The Meeting</div>
+      <p>&ldquo;Every August, twenty-thousand-plus new students arrive in Gainesville, and they hit insurance moments most adults never see — registering a car in Florida for in-state tuition, leases that require renters insurance, first scooters, and graduating into a first policy in their own name. Dealership shoppers already have insurance. These students don't.</p>
+      <p>I want to run three small experiments before fall move-in: leasing offices, scooter dealers, and a Florida-residency checklist. It costs about $150 and my legwork. I'll bring back renewal dates and quote-ready leads — and we'll know exactly what's working by September.&rdquo;</p>
+    </div>
+    <div class="ask">
+      <h3>What it takes to start</h3>
+      <div class="ask-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FA4616" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <p><b>~$150 print budget</b> — residency checklists, parent one-pagers, QR cards.</p>
+      </div>
+      <div class="ask-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FA4616" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <p><b>A quote-request link</b> (even a Google Form) behind every QR code.</p>
+      </div>
+      <div class="ask-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FA4616" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <p><b>Green light to visit</b> 3 leasing offices and 2 scooter dealers as the agency.</p>
+      </div>
+      <div class="ask-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FA4616" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <p><b>30 minutes with a producer</b> to confirm which of our carriers are competitive for under-25 drivers and scooters.</p>
+      </div>
+      <div class="ask-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FA4616" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <p><b>A licensed producer</b> to quote &amp; bind what I tee up — I handle outreach, intake, and follow-up.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pad">
+    <div class="scorecard">
+      <div class="tag">How we'll know it's working — four numbers, tracked weekly</div>
+      <div class="score-row">
+        <div class="score">
+          <div class="n">01</div>
+          <div class="t">Conversations</div>
+          <div class="d">Students &amp; parents reached across every play</div>
+        </div>
+        <div class="score">
+          <div class="n">02</div>
+          <div class="t">Renewal dates collected</div>
+          <div class="d">Every "no" becomes a follow-up — auto renews twice a year</div>
+        </div>
+        <div class="score">
+          <div class="n">03</div>
+          <div class="t">Quotes run</div>
+          <div class="d">The number the manager asked for — my reps quoting</div>
+        </div>
+        <div class="score">
+          <div class="n">04</div>
+          <div class="t">Policies bound</div>
+          <div class="d">New auto customers on the agency's book</div>
+        </div>
+      </div>
+      <p class="closer">By the end of September we double down on whichever play wins — and the agency keeps the pipeline long after my internship ends.</p>
+    </div>
+  </div>
+
+  <div class="fine">
+    <b>Compliance notes (confirm with manager):</b> As an unlicensed intern, I market, gather information, and set appointments — a licensed producer presents quotes and binds. Florida's anti-rebating rules (F.S. &sect;626.9541) cap promotional gifts at $100 per insured/prospect; keep ambassador thank-yous and giveaways inside that limit and never contingent on purchase. Get contact consent in writing on every sign-up form (TCPA). On-campus tabling is reserved for registered student organizations — partner with one rather than soliciting directly. &nbsp;&nbsp;&middot;&nbsp;&nbsp; <b>The Gator Pipeline &middot; 03 / 03</b>
+  </div>
+</div>
+
+</body>
+</html>
