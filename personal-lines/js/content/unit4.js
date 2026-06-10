@@ -671,6 +671,233 @@ window.PL.units.push({
         { term: 'Mold limitation', def: 'Fungus and mold losses are excluded or capped at small sub-limits except when hidden and caused by a covered accidental water discharge.' }
       ]
     },
+
+    /* ---------------- Lesson 4.4 ---------------- */
+    {
+      id: 'u4l4',
+      title: 'Section II — Liability (E) & Medical Payments (F)',
+      minutes: 15,
+      objectives: [
+        'Explain Coverage E personal liability, its $100,000 base limit, and why defense costs are paid in addition to the limit',
+        'Explain Coverage F medical payments to others — $1,000 base, no fault required, never for insureds',
+        'Identify who counts as an insured under Section II and recognize the major liability exclusions',
+        'Describe the Section II additional coverages, especially damage to property of others ($1,000)'
+      ],
+      blocks: [
+        {
+          type: 'text',
+          html: `<h3>Coverage E — Personal Liability</h3>
+<p>Section II turns the homeowners policy into a personal shield. <strong>Coverage E pays on behalf of an insured when a claim or suit is brought for bodily injury or property damage caused by an occurrence to which coverage applies</strong> — the dog bites the mail carrier, a guest tumbles down unlit stairs, your kid line-drives a baseball through the neighbor’s bay window and into their television.</p>
+<p>The mechanics you must know cold:</p>
+<ul>
+<li><strong>Base limit: $100,000 per occurrence</strong>, a single limit covering bodily injury and property damage combined. Higher limits ($300,000, $500,000) cost surprisingly little and are routinely recommended — Florida juries are not shy.</li>
+<li><strong>Legal liability is required.</strong> Coverage E pays only what the insured becomes <em>legally obligated</em> to pay — through judgment or settlement. Sympathy is not a trigger.</li>
+<li><strong>Defense is in ADDITION to the limit.</strong> The insurer provides and pays for the defense lawyer, and those costs do not reduce the $100,000. The duty to defend exists even for groundless or fraudulent suits — but it <strong>ends when the limit is exhausted</strong> by payment of judgments or settlements.</li>
+<li>Coverage follows the insured for personal activities <strong>worldwide</strong> — it is not confined to the residence premises.</li>
+</ul>`
+        },
+        {
+          type: 'callout', variant: 'definition', title: 'Definition — Occurrence',
+          html: `<p>An <strong>occurrence</strong> is an accident, including continuous or repeated exposure to substantially the same harmful conditions, that results in bodily injury or property damage during the policy period — <strong>neither expected nor intended</strong> by the insured. The word does the gatekeeping: planned harm is not an occurrence.</p>`
+        },
+        {
+          type: 'text',
+          html: `<h3>Coverage F — Medical Payments to Others</h3>
+<p>Coverage F is the goodwill coverage: it pays <strong>necessary medical expenses for people injured on the insured location with permission, or injured away from it by the insured, a resident employee, or an animal owned by an insured — without any need to prove the insured was at fault.</strong> Expenses must be incurred within three years of the accident.</p>
+<p>The two facts the exam circles back to every time:</p>
+<ul>
+<li><strong>Base limit: $1,000 per person.</strong></li>
+<li><strong>It NEVER pays the named insured or regular residents of the household</strong> (except residence employees). Your own family’s injuries are a health-insurance matter; Coverage F exists for guests and neighbors.</li>
+</ul>
+<p>Why carry it? Paying a guest’s $800 urgent-care bill quickly and without an admission of fault keeps small mishaps from ripening into Coverage E lawsuits.</p>`
+        },
+        {
+          type: 'compare',
+          title: 'Coverage E vs. Coverage F',
+          left: {
+            title: 'E — Personal Liability',
+            items: [
+              'Pays when the insured is <strong>legally liable</strong>',
+              'Base limit <strong>$100,000 per occurrence</strong> (BI + PD combined)',
+              '<strong>Defense costs in addition</strong> to the limit',
+              'Pays third parties — never the insured’s own injuries',
+              'Triggered by claims and lawsuits'
+            ]
+          },
+          right: {
+            title: 'F — Medical Payments to Others',
+            items: [
+              '<strong>No fault required</strong> — pays regardless of liability',
+              'Base limit <strong>$1,000 per person</strong>',
+              'Medical expenses incurred within <strong>3 years</strong> of the accident',
+              'Pays <strong>guests and others — never insureds</strong> or regular residents (except residence employees)',
+              'A goodwill tool that heads off lawsuits'
+            ]
+          }
+        },
+        {
+          type: 'text',
+          html: `<h3>Who is an insured, and what Section II refuses to touch</h3>
+<p><strong>Insureds under Section II</strong> include the named insured and spouse, <strong>resident relatives</strong>, and anyone under 21 in the care of an insured. Students temporarily away at school remain insureds (relatives under 24; non-relatives under 21 in an insured’s care). Also insured: persons legally responsible for covered animals or watercraft (a friend walking your dog), and residence employees operating covered vehicles within their job.</p>
+<h4>The exclusions that pay the exam’s bills</h4>
+<ul>
+<li><strong>Expected or intended injury</strong> — the punch thrown on purpose.</li>
+<li><strong>Business pursuits</strong> — liability arising out of a business, including most home businesses and regular child care for pay (incidental activities and some part-time youth activities escape). The home business endorsement (Lesson 4.6) buys it back.</li>
+<li><strong>Professional services</strong> — malpractice belongs in professional liability policies.</li>
+<li><strong>Motor vehicles</strong> — autos belong to the PAP (Unit 6). Limited exceptions: vehicles in dead storage on premises, vehicles used solely to service the residence, golf carts in certain settings, motorized wheelchairs.</li>
+<li><strong>Watercraft</strong> — larger boats and powerful motors are excluded (small boats and low-horsepower craft retain coverage); Unit 8 covers boat policies.</li>
+<li><strong>Aircraft</strong> — excluded outright (hobby drones not designed to carry people are generally fine).</li>
+<li><strong>Rental of premises</strong> — except occasional rental of the residence, rental of part of it as a residence, or rental for office/school/studio use.</li>
+<li><strong>War, communicable disease, abuse, controlled substances</strong> — public-policy exclusions.</li>
+<li><strong>Property OWNED by, or in the care, custody or control of, the insured</strong> — Coverage E does not pay you for breaking your own things or the things you borrowed. (The fix for borrowed property is below.)</li>
+<li><strong>Workers compensation</strong> obligations.</li>
+</ul>`
+        },
+        {
+          type: 'quiz',
+          title: 'Checkpoint — E & F mechanics',
+          questions: [
+            {
+              q: 'A guest slips on the insured’s wet pool deck and sues. The court awards $100,000, and the insurer also spent $40,000 defending. With a base Coverage E limit, the insurer pays a total of:',
+              choices: ['$100,000', '$60,000', '$140,000 — the judgment plus defense, because defense costs are in addition to the limit', '$40,000'],
+              answer: 2,
+              explain: 'Defense costs are supplementary — paid in addition to the limit of liability. The full $100,000 judgment is within the limit, and the $40,000 defense bill rides on top.'
+            },
+            {
+              q: 'Coverage F medical payments would pay for the injuries of which person?',
+              choices: [
+                'The named insured, who fell off her own ladder',
+                'The insured’s 16-year-old resident son, hurt skateboarding in the driveway',
+                'The insured’s tenant-farm business customer',
+                'A dinner guest who burns her hand on the insured’s stove'
+              ],
+              answer: 3,
+              explain: 'Coverage F pays guests and other non-residents — never the named insured or regular residents of the household. Business-related injuries fall to the business pursuits exclusion.'
+            },
+            {
+              q: 'The base Section II limits in an unendorsed HO policy are:',
+              choices: [
+                '$100,000 Coverage E per occurrence and $1,000 Coverage F per person',
+                '$300,000 Coverage E and $5,000 Coverage F',
+                '$25,000 Coverage E and $500 Coverage F',
+                '$100,000 Coverage E per person and $10,000 Coverage F per occurrence'
+              ],
+              answer: 0,
+              explain: 'Memorize the pair: E is $100,000 per occurrence (single limit, BI and PD combined); F is $1,000 per person. Both can be increased for modest premium.'
+            },
+            {
+              q: 'Which claim would Section II of a homeowners policy cover?',
+              choices: [
+                'The insured rear-ends another car on the highway',
+                'A client is injured during a massage in the insured’s home massage studio',
+                'The insured’s dog bites a jogger at the park two miles from home',
+                'The insured intentionally shoves a heckler at a softball game'
+              ],
+              answer: 2,
+              explain: 'Personal liability follows the insured (and the insured’s animals) anywhere in the world. The car crash is excluded as a motor vehicle loss, the massage client hits the business/professional exclusions, and the shove is expected or intended injury.'
+            }
+          ]
+        },
+        {
+          type: 'text',
+          html: `<h3>Section II additional coverages</h3>
+<p>Section II carries its own short list of extras, paid in addition to the limits:</p>
+<ul>
+<li><strong>Claim expenses</strong> — defense costs, premiums on appeal bonds, post-judgment interest, and the insured’s loss of earnings up to <strong>$250 per day</strong> for helping with the defense at the insurer’s request.</li>
+<li><strong>First aid expenses</strong> — first aid to others rendered at the time of a covered bodily injury (never to an insured).</li>
+<li><strong>Damage to property of others</strong> — up to <strong>$1,000 per occurrence, at replacement cost, with NO requirement of legal liability</strong>. This is the borrowed-ladder coverage: your child breaks a friend’s bicycle, you crack a borrowed pressure washer — the policy pays even though no one is suing. Not covered: property an insured owns or rents, intentional damage by an insured <strong>age 13 or older</strong>, damage arising from business, and motor-vehicle damage.</li>
+<li><strong>Loss assessment</strong> — up to $1,000 for the insured’s share of an association assessment arising from liability exposures, parallel to the Section I version.</li>
+</ul>`
+        },
+        {
+          type: 'callout', variant: 'example',
+          html: `<p>The insured’s 10-year-old throws a baseball through the neighbor’s window: $480 in glass. The neighbor is a friend and nobody is suing. <strong>Damage to property of others</strong> pays the $480 at replacement cost, no lawsuit, no liability finding, no deductible. Note the age trigger: intentional damage by a child <strong>under 13</strong> is still payable; an angry 16-year-old who does the same thing on purpose gets nothing.</p>`
+        },
+        {
+          type: 'callout', variant: 'warning',
+          html: `<p>Keep the two famous $1,000 figures separate. <strong>Coverage F med pay = $1,000 per person</strong> for injuries to non-insureds. <strong>Damage to property of others = $1,000 per occurrence</strong> for property of non-insureds. One body, one stuff — both small, both goodwill-driven, both tested.</p>`
+        },
+        {
+          type: 'flashcards',
+          title: 'Lesson 4.4 key cards',
+          cards: [
+            { front: 'Coverage E base limit', back: '$100,000 per occurrence — bodily injury and property damage combined, legal liability required.' },
+            { front: 'Defense costs under Coverage E', back: 'Paid IN ADDITION to the limit; the duty to defend ends when the limit is exhausted by judgments or settlements.' },
+            { front: 'Coverage F base limit', back: '$1,000 per person — medical expenses incurred within 3 years of the accident.' },
+            { front: 'Who Coverage F never pays', back: 'The named insured and regular residents of the household (residence employees excepted). Guests only.' },
+            { front: 'Occurrence', back: 'An accident, including repeated exposure to the same conditions, neither expected nor intended by the insured.' },
+            { front: 'Damage to property of others', back: '$1,000 per occurrence, replacement cost, NO legal liability required. Intentional damage excluded only for insureds 13 and older.' },
+            { front: 'Section II insureds', back: 'Named insured, spouse, resident relatives, persons under 21 in an insured’s care, students temporarily away.' },
+            { front: 'Big Section II exclusions', back: 'Intentional injury, business pursuits, professional services, motor vehicles, large watercraft, aircraft, war.' },
+            { front: 'Claim expenses', back: 'Defense, appeal bond premiums, post-judgment interest, and up to $250/day of the insured’s lost earnings.' }
+          ]
+        },
+        {
+          type: 'quiz',
+          title: 'Checkpoint — Section II scenarios',
+          questions: [
+            {
+              q: 'The insured borrows a neighbor’s riding mower and accidentally backs it into a tree, causing $700 in damage. There is no lawsuit. The best source of payment is:',
+              choices: [
+                'Coverage E, after the neighbor wins a judgment',
+                'Damage to property of others — up to $1,000 with no liability required',
+                'Coverage C, because the mower was in the insured’s possession',
+                'No coverage — borrowed property is always excluded everywhere in the policy'
+              ],
+              answer: 1,
+              explain: 'Coverage E excludes property in the insured’s care, custody, or control — but the damage-to-property-of-others additional coverage pays up to $1,000 at replacement cost precisely for these no-fault, goodwill situations.'
+            },
+            {
+              q: 'The duty to defend under Coverage E ends when:',
+              choices: [
+                'The insurer has spent an amount equal to the limit on lawyers',
+                'The insured demands a second opinion',
+                'The limit of liability is exhausted by payment of judgments or settlements',
+                'The claim is six months old'
+              ],
+              answer: 2,
+              explain: 'Defense costs themselves never erode the limit — only paid judgments and settlements do. Once those payments exhaust the limit, the defense obligation stops.'
+            },
+            {
+              q: 'A neighbor’s child, age 9 and in the insured’s care for the afternoon, is injured on the insured’s trampoline. Which is TRUE?',
+              choices: [
+                'Coverage F can pay the child’s medical bills even if the insured was not negligent',
+                'The child is an insured, so no Section II coverage applies to her injury',
+                'Only Coverage D responds',
+                'Coverage E pays automatically without any claim of liability'
+              ],
+              answer: 0,
+              explain: 'A visiting child injured on the premises with permission is a classic Coverage F claimant — no fault required, up to the per-person limit. (A child under 21 in an insured’s care counts as an insured for LIABILITY protection purposes, but Coverage F looks at residency: a non-resident guest’s injuries remain payable. If she were a regular household resident, F would not pay.)'
+            },
+            {
+              q: 'Which exposure is EXCLUDED by Section II of the homeowners policy?',
+              choices: [
+                'The insured’s dog injures a guest in the backyard',
+                'A foul ball from the insured’s recreational softball swing injures a spectator',
+                'A delivery driver trips over a garden hose on the insured’s walkway',
+                'A paying daycare client’s child is injured in the insured’s home daycare'
+              ],
+              answer: 3,
+              explain: 'Regular child care for compensation is a business pursuit — excluded without an endorsement. The dog bite, recreational sports injury, and premises trip-and-fall are core covered occurrences.'
+            }
+          ]
+        }
+      ],
+      terms: [
+        { term: 'Coverage E — Personal Liability', def: 'Pays sums an insured is legally obligated to pay for bodily injury or property damage from a covered occurrence; base limit $100,000 per occurrence.' },
+        { term: 'Coverage F — Medical Payments to Others', def: 'Pays necessary medical expenses of non-insureds injured in covered circumstances, without regard to fault; base limit $1,000 per person, expenses within 3 years.' },
+        { term: 'Occurrence', def: 'An accident, including continuous or repeated exposure to substantially the same harmful conditions, neither expected nor intended by the insured.' },
+        { term: 'Duty to defend', def: 'The insurer’s obligation to provide and pay for legal defense, even against groundless suits, ending when the limit is exhausted by judgments or settlements.' },
+        { term: 'Supplementary (claim) expenses', def: 'Defense costs, appeal bond premiums, post-judgment interest, and up to $250 per day of the insured’s lost earnings — paid in addition to the limit.' },
+        { term: 'Damage to property of others', def: 'Section II additional coverage paying up to $1,000 per occurrence at replacement cost for property of others damaged by an insured, with no liability requirement.' },
+        { term: 'Business pursuits exclusion', def: 'Excludes liability arising from an insured’s business activities, including regular paid child care; buy-back available by endorsement.' },
+        { term: 'Care, custody or control exclusion', def: 'Coverage E does not cover damage to property owned by, rented to, or in the care of an insured.' },
+        { term: 'Expected or intended injury exclusion', def: 'Excludes injury or damage the insured meant to cause or could expect to result from the act.' },
+        { term: 'Insured (Section II)', def: 'Named insured, spouse, resident relatives, persons under 21 in an insured’s care, students temporarily away at school, plus persons responsible for covered animals or watercraft.' },
+        { term: 'Residence employee', def: 'A domestic worker (housekeeper, nanny) whose duties relate to the household; one of the few non-guests Coverage F can pay.' },
+        { term: 'First aid expenses', def: 'Section II additional coverage for first aid to others rendered by the insured at the time of covered bodily injury.' }
+      ]
+    },
 /*__MORE__*/
   ],
   exam: { questions: [] }
