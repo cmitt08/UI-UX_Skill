@@ -1,0 +1,7 @@
+# Used when a Netlify site is created from this repo with the base
+# directory set to "worldcup". Publishes only the Pitchside '26 World
+# Cup hub, so it can live on its own URL while sharing the repo with
+# the other sites (which keep using the netlify.toml at the repo root).
+[build]
+  publish = "."
+  command = ""
