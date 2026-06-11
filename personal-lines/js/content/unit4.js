@@ -1102,7 +1102,333 @@ window.PL.units.push({
         { term: 'Other insurance (pro-rata)', def: 'When two policies cover the same loss, each pays in proportion to its limit.' }
       ]
     },
-/*__MORE__*/
+
+    /* ---------------- Lesson 4.6 ---------------- */
+    {
+      id: 'u4l6',
+      title: 'HO-4, HO-6 & the Endorsements That Matter',
+      minutes: 15,
+      objectives: [
+        'Explain what the HO-4 covers for tenants and why Coverage D is based on Coverage C',
+        'Describe the HO-6 condo form, its small Coverage A, and where the association’s master policy stops',
+        'Identify the major homeowners endorsements and the gap each one closes',
+        'Recommend the right form and endorsements for common Florida living situations'
+      ],
+      blocks: [
+        {
+          type: 'text',
+          html: `<h3>HO-4 — the renter’s package</h3>
+<p>A tenant owns no building, so the HO-4 (Contents Broad Form) strips Section I down to what a renter actually needs: <strong>Coverage C personal property on the broad named perils, Coverage D loss of use at 30% of C</strong>, and the full Section II liability package (Coverage E and F). There is no Coverage A or B in any meaningful amount.</p>
+<p>Two HO-4 features earn exam questions:</p>
+<ul>
+<li><strong>Building additions and alterations</strong> — an additional coverage equal to <strong>10% of Coverage C</strong> for improvements the tenant installs at their own cost (built-in shelving, upgraded fixtures). The landlord’s policy does not cover the tenant’s improvements; this does.</li>
+<li><strong>Same liability, same sub-limits</strong> — everything you learned about Coverage C special limits, Coverage E, Coverage F, and damage to property of others applies to renters exactly as it does to homeowners.</li>
+</ul>
+<p>Renters insurance is cheap because the big-ticket item — the building — belongs to someone else. The biggest agency failure with tenants is simply not offering it.</p>
+<h3>HO-6 — the condo unit-owner’s form</h3>
+<p>A condominium splits one building between many owners plus an association, so the HO-6 has to dovetail with the <strong>association’s master policy</strong>. The unit-owner’s HO-6 provides:</p>
+<ul>
+<li><strong>Coverage A (dwelling)</strong> — a deliberately small base amount (commonly <strong>$5,000</strong>, increasable) for the parts of the building the unit-owner is responsible for: interior walls, floors, cabinets, fixtures, and improvements, as defined by the condo documents.</li>
+<li><strong>Coverage C</strong> — personal property on broad named perils, with <strong>Coverage D at 50% of C</strong>.</li>
+<li><strong>Loss assessment coverage</strong> — pays the insured’s share of an assessment the association levies after a loss to common property exceeds the master policy.</li>
+</ul>`
+        },
+        {
+          type: 'compare',
+          title: 'Where the master policy ends and the HO-6 begins',
+          left: {
+            title: 'Association master policy',
+            items: [
+              'The building shell, roof, and common elements',
+              '<strong>Bare walls</strong> versions stop at the unfinished interior surfaces',
+              '<strong>All-in</strong> versions include fixtures and standard finishes',
+              'Paid for through association dues'
+            ]
+          },
+          right: {
+            title: 'Unit-owner’s HO-6',
+            items: [
+              'Interior finishes, cabinets, fixtures, improvements (Coverage A)',
+              'All personal property (Coverage C)',
+              'Personal liability and medical payments (E and F)',
+              'Loss assessment for the owner’s share of master-policy shortfalls'
+            ]
+          }
+        },
+        {
+          type: 'callout', variant: 'florida', title: 'Florida Law — condo association vs. unit owner',
+          html: `<p>Florida statute draws the property line for condos: the association insures the building as originally constructed, while the <strong>unit owner is responsible for floor coverings, wall coverings, ceiling coverings, cabinets, countertops, appliances, water heaters, and built-in fixtures within the unit</strong>. In a state full of condos, knowing this split is daily bread for a customer representative — it determines how much Coverage A an HO-6 needs.</p>`
+        },
+        {
+          type: 'quiz',
+          title: 'Checkpoint — HO-4 and HO-6',
+          questions: [
+            {
+              q: 'A tenant spends $4,000 installing custom shelving in her rented apartment. A covered fire destroys it. Her HO-4 responds under:',
+              choices: [
+                'Coverage A — dwelling',
+                'Building additions and alterations — 10% of Coverage C',
+                'Coverage B — other structures',
+                'The landlord’s policy only'
+              ],
+              answer: 1,
+              explain: 'The HO-4 has no Coverage A, but its building additions and alterations additional coverage (10% of Coverage C) covers improvements the tenant installed at their own expense.'
+            },
+            {
+              q: 'After a hurricane damages the condo clubhouse, the association assesses every unit owner $3,000 for repairs above the master policy limits. The HO-6 coverage designed for this is:',
+              choices: ['Coverage B', 'Ordinance or law', 'Loss assessment coverage', 'Fair rental value'],
+              answer: 2,
+              explain: 'Loss assessment coverage pays the unit owner’s share of assessments levied because a covered loss to common property exceeded the association’s insurance.'
+            },
+            {
+              q: 'Coverage D (loss of use) in an HO-6 is what percentage of Coverage C?',
+              choices: ['10%', '20%', '30%', '50%'],
+              answer: 3,
+              explain: 'HO-6 Coverage D is 50% of Coverage C. The HO-4 uses 30% of C, and the HO-2/3/5 use 30% of Coverage A.'
+            }
+          ]
+        },
+        {
+          type: 'text',
+          html: `<h3>Endorsements — tailoring the package</h3>
+<p>Endorsements modify the standard form. Each of the following exists to close a specific gap you already know about — connect the endorsement to the gap and the exam questions answer themselves.</p>`
+        },
+        {
+          type: 'table',
+          caption: 'Major homeowners endorsements and the gap each closes',
+          headers: ['Endorsement', 'The gap it closes', 'What it does'],
+          rows: [
+            ['<strong>Scheduled personal property</strong>', 'Coverage C sub-limits ($1,500 jewelry theft, etc.) and named perils', 'Lists specific items at appraised values with open-peril coverage, typically no deductible'],
+            ['<strong>Personal property replacement cost</strong>', 'Contents settle at ACV by default', 'Upgrades Coverage C settlement to replacement cost'],
+            ['<strong>Water backup / sump overflow</strong>', 'Backup through sewers and drains is excluded', 'Buys back a stated limit for water backup losses'],
+            ['<strong>Personal injury</strong>', 'Coverage E covers only bodily injury and property damage', 'Adds libel, slander, false arrest, invasion of privacy, wrongful eviction'],
+            ['<strong>Home business / permitted incidental occupancy</strong>', 'Business property sub-limits and the business liability exclusion', 'Restores property and liability coverage for an in-home business'],
+            ['<strong>Inflation guard</strong>', 'Coverage A falls behind rising construction costs', 'Automatically increases limits a set percentage each year'],
+            ['<strong>Ordinance or law (increased)</strong>', 'Base policy gives only 10% of A for code upgrades', 'Raises the percentage for demolition and code-required rebuilding'],
+            ['<strong>Sinkhole loss coverage (FL)</strong>', 'Only catastrophic ground cover collapse is automatic', 'Optional Florida endorsement covering sinkhole damage (Unit 5)'],
+            ['<strong>Animal liability buy-back (FL market)</strong>', 'Many Florida carriers exclude dog liability', 'Restores liability for animal-related injuries']
+          ]
+        },
+        {
+          type: 'callout', variant: 'example',
+          html: `<p>A client’s engagement ring is appraised at $9,000. Her HO-3 would pay at most <strong>$1,500 if it is stolen</strong> (the jewelry theft sub-limit) and nothing if she simply loses it (theft is a named peril; "mysterious disappearance" is not). Scheduled on a personal property endorsement at $9,000, the ring is covered <strong>open-peril — including accidental loss — at its appraised value with no deductible</strong>. That conversation is the classic cross-service moment for a customer representative.</p>`
+        },
+        {
+          type: 'callout', variant: 'tip',
+          html: `<p>Endorsement questions are usually gap-matching questions in disguise. Memorize the pairs: sub-limits → scheduled property; ACV contents → replacement cost endorsement; sewer backup exclusion → water backup; libel/slander → personal injury; business exclusion → home business endorsement.</p>`
+        },
+        {
+          type: 'flashcards',
+          title: 'Lesson 4.6 key terms',
+          cards: [
+            { front: 'HO-4', back: 'Tenant’s form: Coverage C broad named perils + D (30% of C) + full Section II. No dwelling coverage.' },
+            { front: 'Building additions & alterations (HO-4)', back: 'Additional coverage — 10% of Coverage C — for improvements the tenant installs.' },
+            { front: 'HO-6', back: 'Condo unit-owner’s form: small Coverage A (base ~$5,000), Coverage C broad perils, D = 50% of C.' },
+            { front: 'Loss assessment coverage', back: 'Pays the insured’s share of an association assessment after a covered loss exceeds the master policy.' },
+            { front: 'Scheduled personal property endorsement', back: 'Open-peril, appraised-value coverage for listed valuables; bypasses sub-limits; usually no deductible.' },
+            { front: 'Personal property replacement cost endorsement', back: 'Upgrades Coverage C settlement from ACV to replacement cost.' },
+            { front: 'Water backup endorsement', back: 'Buys back the excluded peril of water backing up through sewers and drains.' },
+            { front: 'Personal injury endorsement', back: 'Adds libel, slander, false arrest, and similar offenses to Section II.' },
+            { front: 'Inflation guard', back: 'Automatically increases policy limits annually to keep pace with construction costs.' }
+          ]
+        },
+        {
+          type: 'quiz',
+          title: 'Checkpoint — endorsements',
+          questions: [
+            {
+              q: 'A client runs a bookkeeping business from her spare bedroom with $6,000 of office equipment and regular client visits. Her unendorsed HO-3 leaves her exposed because:',
+              choices: [
+                'Business property has reduced sub-limits and business liability is excluded',
+                'Home offices void the entire policy',
+                'Coverage D does not apply to bedrooms',
+                'Client visits are covered only under Coverage F'
+              ],
+              answer: 0,
+              explain: 'On-premises business property faces a small sub-limit and Section II excludes business liability entirely. A home business or incidental occupancy endorsement closes both gaps.'
+            },
+            {
+              q: 'Which endorsement changes the SETTLEMENT BASIS of Coverage C rather than adding a new peril or limit?',
+              choices: ['Water backup', 'Personal property replacement cost', 'Personal injury', 'Inflation guard'],
+              answer: 1,
+              explain: 'The personal property replacement cost endorsement converts contents settlement from ACV to replacement cost. Water backup adds a peril; personal injury adds offenses; inflation guard adjusts limits.'
+            },
+            {
+              q: 'A neighbor sues your insured for slander after a heated HOA dispute. The unendorsed HO-3 provides:',
+              choices: [
+                'Coverage E defense and damages',
+                'Coverage F medical payments',
+                'No coverage — slander is not bodily injury or property damage',
+                'Coverage up to $1,000 under damage to property of others'
+              ],
+              answer: 2,
+              explain: 'Coverage E responds to bodily injury and property damage. Slander is a personal injury offense, covered only if the personal injury endorsement was added.'
+            },
+            {
+              q: 'For a Florida condo unit owner whose association master policy is written "bare walls," the BEST advice is to:',
+              choices: [
+                'Skip Coverage A since the association insures the building',
+                'Increase HO-6 Coverage A to cover interior finishes, cabinets, and fixtures',
+                'Buy an HO-8 instead',
+                'Rely on loss assessment coverage for interior damage'
+              ],
+              answer: 1,
+              explain: 'Bare-walls master policies stop at unfinished interior surfaces, leaving floors, cabinets, fixtures, and finishes to the unit owner — exactly what HO-6 Coverage A must be sized to rebuild.'
+            }
+          ]
+        }
+      ],
+      terms: [
+        { term: 'HO-4 (Contents Broad Form)', def: 'The homeowners form for tenants: broad named-peril personal property coverage plus liability, with no dwelling coverage.' },
+        { term: 'HO-6 (Unit-Owners Form)', def: 'The homeowners form for condominium unit owners, pairing a small Coverage A with personal property and liability coverage.' },
+        { term: 'Building additions and alterations', def: 'HO-4 additional coverage (10% of Coverage C) for improvements a tenant installs at their own expense.' },
+        { term: 'Master policy', def: 'The condominium association’s policy covering the building and common elements; written bare-walls or all-in.' },
+        { term: 'Bare walls coverage', def: 'A master policy approach insuring only to the unfinished interior surfaces, leaving finishes to the unit owner.' },
+        { term: 'Loss assessment coverage', def: 'Coverage for the insured’s share of an association assessment resulting from a covered loss to common property.' },
+        { term: 'Scheduled personal property endorsement', def: 'An endorsement listing valuables individually at agreed values with open-peril coverage and usually no deductible.' },
+        { term: 'Personal property replacement cost endorsement', def: 'An endorsement upgrading Coverage C loss settlement from actual cash value to replacement cost.' },
+        { term: 'Water backup endorsement', def: 'An endorsement restoring coverage for water that backs up through sewers, drains, or sump systems.' },
+        { term: 'Personal injury endorsement', def: 'An endorsement adding offenses such as libel, slander, false arrest, and invasion of privacy to Section II.' },
+        { term: 'Inflation guard endorsement', def: 'An endorsement that automatically increases policy limits by a set percentage to track construction costs.' },
+        { term: 'Animal liability exclusion', def: 'A common Florida market exclusion removing liability coverage for injuries caused by the insured’s animals, reversible by buy-back endorsement.' }
+      ]
+    }
   ],
-  exam: { questions: [] }
+
+  /* ---------------- Unit 4 Exam ---------------- */
+  exam: {
+    questions: [
+      {
+        q: 'Which homeowners form insures the dwelling on an OPEN-peril basis but personal property on NAMED perils?',
+        choices: ['HO-2', 'HO-3', 'HO-5', 'HO-8'],
+        answer: 1,
+        explain: 'The HO-3 is the hybrid: open peril on Coverages A and B, broad named perils on Coverage C. The HO-5 is open peril on both; the HO-2 named peril on both.'
+      },
+      {
+        q: 'A home insured under an HO-3 has Coverage A of $400,000. Without any endorsement, Coverage C is:',
+        choices: ['$40,000', '$120,000', '$200,000', '$400,000'],
+        answer: 2,
+        explain: 'Coverage C defaults to 50% of Coverage A — here $200,000. Coverage B is 10% and Coverage D is 30% of A.'
+      },
+      {
+        q: 'Burglars steal $6,000 of jewelry and $400 in cash from an insured home. The unendorsed HO-3 pays at most:',
+        choices: ['$6,400', '$1,700', '$1,900', '$2,000'],
+        answer: 1,
+        explain: 'Theft of jewelry is capped at $1,500 and money at $200 — $1,700 total before the deductible. Scheduling the jewelry would have avoided the cap.'
+      },
+      {
+        q: 'Which loss is COVERED under the HO-3 open-peril dwelling coverage?',
+        choices: [
+          'Foundation cracking from earth movement',
+          'A tree crashing through the roof during a thunderstorm',
+          'Gradual seepage of groundwater into the basement',
+          'Flood surge from a nearby river'
+        ],
+        answer: 1,
+        explain: 'Open peril covers everything not excluded — a falling tree qualifies. Earth movement, flood, and gradual seepage are all excluded perils.'
+      },
+      {
+        q: 'Coverage E provides defense costs:',
+        choices: [
+          'Within the liability limit, reducing what is available for damages',
+          'Only if the insured is ultimately found liable',
+          'In addition to the limit of liability',
+          'Only after the insured pays a defense deductible'
+        ],
+        answer: 2,
+        explain: 'Defense is supplementary — paid in addition to the Coverage E limit, and owed even for groundless suits, until the insurer has paid its limit in damages.'
+      },
+      {
+        q: 'A dinner guest slips on the insured’s wet patio and needs $800 of stitches. No one was negligent. The fastest-responding coverage is:',
+        choices: ['Coverage E', 'Coverage F — medical payments to others', 'Coverage D', 'Damage to property of others'],
+        answer: 1,
+        explain: 'Coverage F pays reasonable medical expenses for guests injured on the premises without regard to fault — designed precisely to handle small injuries without a liability fight.'
+      },
+      {
+        q: 'The insured’s 9-year-old son breaks a neighbor’s $700 camera. With no negligence claim filed, the HO-3 can pay under:',
+        choices: [
+          'Damage to property of others — up to $1,000',
+          'Coverage C',
+          'Coverage B',
+          'Loss assessment'
+        ],
+        answer: 0,
+        explain: 'Damage to property of others is a Section II additional coverage paying up to $1,000 per occurrence on a goodwill basis, no liability required.'
+      },
+      {
+        q: 'A $300,000-replacement-cost home is insured for $210,000 when wind causes $40,000 of roof damage. Ignoring the deductible, the loss settlement formula pays:',
+        choices: ['$40,000', '$35,000', '$28,000', '$21,000'],
+        answer: 1,
+        explain: '80% of $300,000 is $240,000. The insured carried $210,000, so the policy pays (210,000 ÷ 240,000) × $40,000 = $35,000 (or ACV if greater). Insuring to 80% would have produced full replacement cost.'
+      },
+      {
+        q: 'Personal property of an insured student living in a college dorm is covered under the parents’ HO-3:',
+        choices: [
+          'Not at all',
+          'Worldwide, subject to the 10% limit for property usually located at another residence',
+          'Only while the student is home on break',
+          'Only with a scheduled property endorsement'
+        ],
+        answer: 1,
+        explain: 'Coverage C applies worldwide; property usually kept at another residence (like a dorm) is limited to 10% of Coverage C. Resident-relative students away at school remain insureds.'
+      },
+      {
+        q: 'Which is an EXCLUDED loss under Section II of the homeowners policy?',
+        choices: [
+          'A guest bitten by the insured’s dog at a backyard barbecue',
+          'Bodily injury caused intentionally by the insured',
+          'A golf ball the insured hooks into a spectator',
+          'The insured’s dog biting a delivery driver at the front door'
+        ],
+        answer: 1,
+        explain: 'Intentional injury is excluded — insurance covers accidents. Dog bites and errant golf balls are classic covered occurrences (absent a specific animal exclusion).'
+      },
+      {
+        q: 'The HO-8 exists primarily for:',
+        choices: [
+          'Newly built luxury homes',
+          'Older homes whose replacement cost far exceeds market value',
+          'Tenants in older buildings',
+          'Mobile homes'
+        ],
+        answer: 1,
+        explain: 'The HO-8 settles losses on an ACV/functional replacement basis so an older home with ornate construction can be insured near market value without moral hazard.'
+      },
+      {
+        q: 'A condo unit owner needs coverage for her share of a $250,000 association shortfall after a hurricane damages the building lobby. The HO-6 coverage that responds is:',
+        choices: ['Coverage A', 'Coverage C', 'Loss assessment', 'Ordinance or law'],
+        answer: 2,
+        explain: 'Loss assessment coverage pays the unit owner’s share of assessments levied for covered losses to common property exceeding the master policy.'
+      },
+      {
+        q: 'Which endorsement would cover an insured sued for libel over a social media post?',
+        choices: ['Personal injury', 'Home business', 'Water backup', 'Scheduled personal property'],
+        answer: 0,
+        explain: 'Libel, slander, defamation, false arrest, and invasion of privacy are personal injury offenses, added to Section II only by the personal injury endorsement.'
+      },
+      {
+        q: 'An HO-4 differs from an HO-3 in that the HO-4:',
+        choices: [
+          'Has no Section II liability coverage',
+          'Covers the dwelling on a named-peril basis',
+          'Provides no dwelling coverage and bases Coverage D on Coverage C',
+          'Cannot be endorsed'
+        ],
+        answer: 2,
+        explain: 'The tenant form drops Coverages A and B (the landlord owns the building) and sets loss of use at 30% of Coverage C. Section II is identical to other HO forms.'
+      },
+      {
+        q: 'Sudden discharge of water from a burst supply pipe ruins an insured’s wood floors. Under the HO-3 this loss is:',
+        choices: [
+          'Excluded as water damage',
+          'Covered — sudden and accidental discharge is not an excluded water loss',
+          'Covered only with a flood policy',
+          'Limited to $1,500'
+        ],
+        answer: 1,
+        explain: 'The water damage exclusion targets flood, surface water, sewer backup, and seepage. A sudden discharge from plumbing is a covered loss (the resulting damage, not the worn pipe itself).'
+      }
+    ]
+  }
 });
+
