@@ -1,0 +1,7 @@
+# Used when a Netlify site is created from this repo with the base
+# directory set to "apex". Publishes only the APEX tracker, so it can
+# live on its own URL while sharing the repo with the study course
+# (which keeps using the netlify.toml at the repo root).
+[build]
+  publish = "."
+  command = ""
