@@ -504,6 +504,135 @@ img, svg, canvas { max-width: 100%; }
   box-shadow: var(--shadow);
 }
 
+/* ---------- weekly plan ---------- */
+
+.section--plan { padding-bottom: 90px; }
+
+.plan-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding: 8px max(24px, calc((100vw - 1140px) / 2)) 22px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.plan-card {
+  flex: 0 0 272px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(165deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.plan-card:hover { border-color: var(--border-strong); }
+
+.plan-card--volt { --tone: var(--volt); --tone-soft: rgba(215, 255, 62, 0.12); }
+.plan-card--cyan { --tone: var(--cyan); --tone-soft: rgba(77, 227, 255, 0.12); }
+.plan-card--pink { --tone: var(--pink); --tone-soft: rgba(255, 92, 122, 0.12); }
+.plan-card--rest { --tone: var(--muted); --tone-soft: rgba(255, 255, 255, 0.06); opacity: 0.85; }
+
+.plan-card.is-today {
+  border-color: var(--volt);
+  box-shadow: 0 0 0 1px var(--volt), 0 18px 44px rgba(215, 255, 62, 0.12);
+}
+
+.plan-card__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.plan-card__dow {
+  font-family: var(--font-display);
+  font-size: 19px;
+  letter-spacing: 0.1em;
+  color: var(--tone);
+}
+
+.plan-card__time {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.plan-card__badge {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  background: var(--volt);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.plan-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.plan-card__focus {
+  margin: 6px 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.plan-card__lifts {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+}
+
+.plan-card__lifts li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.plan-card__lifts li span:first-child { color: var(--text); min-width: 0; }
+.plan-card__lifts li span:last-child { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.plan-card__rest {
+  flex: 1;
+  margin: 0 0 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.plan-card .btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 14px;
+  background: var(--tone-soft);
+  color: var(--tone);
+  border: 1px solid transparent;
+}
+
+.plan-card .btn:hover { border-color: var(--tone); }
+
 /* ---------- log ---------- */
 
 .log__grid {
@@ -792,6 +921,11 @@ select { color-scheme: dark; cursor: pointer; }
 .heatmap__legend span { margin: 0 4px; }
 
 .hm-0, .heatmap i.hm-0 { background: rgba(255, 255, 255, 0.05); }
+.hm-sched, .heatmap i.hm-sched, .heatmap__legend i.hm-sched {
+  background: rgba(215, 255, 62, 0.06);
+  outline: 1.5px dashed rgba(215, 255, 62, 0.55);
+  outline-offset: -1.5px;
+}
 .hm-1, .heatmap i.hm-1 { background: rgba(215, 255, 62, 0.22); }
 .hm-2, .heatmap i.hm-2 { background: rgba(215, 255, 62, 0.45); }
 .hm-3, .heatmap i.hm-3 { background: rgba(215, 255, 62, 0.7); }
@@ -974,11 +1108,13 @@ select { color-scheme: dark; cursor: pointer; }
 }
 
 @media (max-width: 640px) {
-  .nav { gap: 10px; padding: 8px 12px; }
-  .nav__links a { padding: 8px 9px; font-size: 13px; }
+  .nav { gap: 6px; padding: 6px 10px; }
+  .nav__links a { padding: 10px 8px; font-size: 13px; }
   .nav__brand span { display: none; }
   .nav__brand svg { width: 24px; height: 24px; }
-  .nav__unit { padding: 6px 10px; }
+  .nav__unit { padding: 8px 10px; }
+  .plan-card { flex-basis: 256px; }
+  .chart-card__body--donut { height: 330px; }
   .hero { padding-top: 120px; }
   .hero__stats { gap: 28px; flex-wrap: wrap; }
   .hero__stats dd { font-size: 36px; }
@@ -992,6 +1128,13 @@ select { color-scheme: dark; cursor: pointer; }
   .log__actions { flex-direction: column; align-items: stretch; }
   .log__actions .btn--volt { width: 100%; }
   .log__data { justify-content: center; }
+}
+
+@media (max-width: 420px) {
+  .nav { gap: 2px; padding: 6px 8px; }
+  .nav__links { gap: 0; }
+  .nav__links a { padding: 10px 6px; font-size: 12px; }
+  .nav__unit { font-size: 11px; padding: 8px 8px; }
 }
 
 /* ============================================================

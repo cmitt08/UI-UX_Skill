@@ -39,7 +39,76 @@
     'Bicep Curl': 'Arms', 'Hammer Curl': 'Arms', 'Preacher Curl': 'Arms',
     'Tricep Pushdown': 'Arms', 'Skull Crusher': 'Arms', 'Overhead Tricep Extension': 'Arms',
     'Plank': 'Core', 'Hanging Leg Raise': 'Core', 'Cable Crunch': 'Core', 'Ab Wheel': 'Core',
+    'Arnold Press': 'Shoulders', 'Low-to-High Cable Fly': 'Chest', 'Barbell Curl': 'Arms',
+    'Incline Dumbbell Curl': 'Arms', 'EZ-Bar Curl': 'Arms', 'Concentration Curl': 'Arms',
+    'Reverse Curl': 'Arms', 'Stiff-Leg Deadlift': 'Legs', 'Seated Calf Raise': 'Legs',
   };
+
+  /* Weekly routine, synced from the owner's Google Calendar (PPL x2 split,
+     Mon-Sat 7:00 AM). Each lift: [exercise, sets, rep range label, default reps]. */
+  const PLAN = [
+    { dow: 1, title: 'Push Day', focus: 'Chest, Shoulders & Triceps', tone: 'pink', lifts: [
+      ['Bench Press', 4, '8–10', 8],
+      ['Incline Dumbbell Press', 3, '10–12', 10],
+      ['Cable Fly', 3, '12–15', 12],
+      ['Dumbbell Shoulder Press', 3, '10–12', 10],
+      ['Lateral Raise', 4, '15–20', 15],
+      ['Tricep Pushdown', 3, '12–15', 12],
+      ['Overhead Tricep Extension', 3, '12', 12],
+    ]},
+    { dow: 2, title: 'Pull Day', focus: 'Upper Back & Biceps', tone: 'cyan', lifts: [
+      ['Pull-Up', 4, '6–10', 6],
+      ['Barbell Row', 4, '8–10', 8],
+      ['Seated Cable Row', 3, '10–12', 10],
+      ['Face Pull', 3, '15–20', 15],
+      ['Barbell Curl', 3, '10–12', 10],
+      ['Incline Dumbbell Curl', 3, '12', 12],
+      ['Hammer Curl', 2, '12–15', 12],
+    ]},
+    { dow: 3, title: 'Leg Day', focus: 'Quads, Hamstrings & Glutes', tone: 'volt', lifts: [
+      ['Squat', 4, '6–10', 6],
+      ['Romanian Deadlift', 3, '10–12', 10],
+      ['Leg Press', 3, '12–15', 12],
+      ['Lunge', 3, '12', 12],
+      ['Leg Curl', 3, '12–15', 12],
+      ['Leg Extension', 3, '15', 15],
+      ['Calf Raise', 4, '15–20', 15],
+    ]},
+    { dow: 4, title: 'Push Day 2', focus: 'Shoulders & Chest Variation', tone: 'pink', lifts: [
+      ['Overhead Press', 4, '6–8', 6],
+      ['Arnold Press', 3, '10–12', 10],
+      ['Lateral Raise', 4, '15–20', 15],
+      ['Rear Delt Fly', 3, '15', 15],
+      ['Dumbbell Press', 3, '10–12', 10],
+      ['Low-to-High Cable Fly', 3, '12–15', 12],
+      ['Skull Crusher', 3, '10–12', 10],
+    ]},
+    { dow: 5, title: 'Pull Day 2', focus: 'Deadlifts, Lats & Arms', tone: 'cyan', lifts: [
+      ['Deadlift', 3, '4–6', 4],
+      ['Pull-Up', 4, '6–10', 6],
+      ['Dumbbell Row', 3, '10–12', 10],
+      ['Shrug', 3, '12–15', 12],
+      ['Rear Delt Fly', 3, '15', 15],
+      ['EZ-Bar Curl', 3, '10–12', 10],
+      ['Concentration Curl', 3, '12–15', 12],
+      ['Reverse Curl', 2, '12', 12],
+    ]},
+    { dow: 6, title: 'Leg Day 2 + Core', focus: 'Posterior Chain & Abs', tone: 'volt', lifts: [
+      ['Bulgarian Split Squat', 4, '10–12', 10],
+      ['Front Squat', 3, '10–12', 10],
+      ['Stiff-Leg Deadlift', 3, '12', 12],
+      ['Leg Extension', 3, '15–20', 15],
+      ['Leg Curl', 3, '12–15', 12],
+      ['Seated Calf Raise', 4, '15–20', 15],
+      ['Hanging Leg Raise', 3, '12–15', 12],
+      ['Plank', 3, '45–60s', 45],
+      ['Ab Wheel', 3, '10–12', 10],
+    ]},
+    { dow: 0, title: 'Rest', focus: 'Active Recovery', tone: 'rest', lifts: [] },
+  ];
+
+  const PLAN_BY_DOW = Object.fromEntries(PLAN.map((d) => [d.dow, d]));
+  const DOW_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
   const GROUP_KEYWORDS = [
     ['Chest', ['bench', 'chest', 'fly', 'push-up', 'pushup', 'dip', 'pec']],
@@ -55,6 +124,7 @@
   let charts = {};
   let chartsReady = false;
   let countersArmed = false;
+  let narrow = window.matchMedia('(max-width: 700px)').matches;
 
   /* ---------- tiny helpers ---------- */
 
@@ -284,6 +354,85 @@
     const row = addEntryRow();
     row.querySelector('input').focus();
   });
+
+  /* ---------- weekly plan ---------- */
+
+  function loadPlanIntoForm(day) {
+    entriesBox.innerHTML = '';
+    entriesBox.appendChild(entryHead());
+    for (const [name, sets, , reps] of day.lifts) {
+      addEntryRow({ exercise: name, sets, reps });
+    }
+    $('#sessionDate').value = todayStr();
+    $('#sessionNote').value = day.title;
+    applyUnitLabels();
+    $('#log').scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth' });
+    toast(`${day.title} loaded — add your weights and save.`);
+  }
+
+  function renderPlan() {
+    const track = $('#planTrack');
+    track.innerHTML = '';
+    const todayDow = new Date().getDay();
+    let todayCard = null;
+
+    PLAN.forEach((day, i) => {
+      const card = el('article', `plan-card plan-card--${day.tone} reveal`);
+      card.style.setProperty('--d', `${Math.min(i, 4) * 0.07}s`);
+      card.setAttribute('role', 'listitem');
+      const isToday = day.dow === todayDow;
+      if (isToday) { card.classList.add('is-today'); todayCard = card; }
+
+      const top = el('header', 'plan-card__top');
+      const dow = el('span', 'plan-card__dow');
+      dow.textContent = DOW_NAMES[day.dow];
+      top.appendChild(dow);
+      if (day.lifts.length) {
+        const time = el('span', 'plan-card__time');
+        time.textContent = '7:00 AM';
+        top.appendChild(time);
+      }
+      if (isToday) {
+        const badge = el('span', 'plan-card__badge');
+        badge.textContent = 'TODAY';
+        top.appendChild(badge);
+      }
+
+      const title = el('h3', 'plan-card__title');
+      title.textContent = day.title;
+      const focus = el('p', 'plan-card__focus');
+      focus.textContent = day.focus;
+      card.append(top, title, focus);
+
+      if (day.lifts.length) {
+        const ul = el('ul', 'plan-card__lifts');
+        for (const [name, sets, repLabel] of day.lifts) {
+          const li = el('li');
+          const n = el('span');
+          n.textContent = name;
+          const r = el('span');
+          r.textContent = `${sets}×${repLabel}`;
+          li.append(n, r);
+          ul.appendChild(li);
+        }
+        const btn = el('button', 'btn');
+        btn.type = 'button';
+        btn.textContent = 'Log this workout';
+        btn.addEventListener('click', () => loadPlanIntoForm(day));
+        card.append(ul, btn);
+      } else {
+        const rest = el('p', 'plan-card__rest');
+        rest.textContent = 'Walk, stretch, sleep. Your muscles grow during rest, not during the workout.';
+        card.appendChild(rest);
+      }
+
+      track.appendChild(card);
+      observeReveal(card);
+    });
+
+    // bring today's card into view without scrolling the page itself
+    if (todayCard) track.scrollLeft = Math.max(0, todayCard.offsetLeft - track.offsetLeft - 24);
+  }
 
   /* ---------- history ---------- */
 
@@ -574,8 +723,8 @@
         plugins: {
           legend: {
             display: true,
-            position: 'right',
-            labels: { boxWidth: 12, boxHeight: 12, borderRadius: 3, useBorderRadius: true, padding: 14, font: { weight: 600 } },
+            position: narrow ? 'bottom' : 'right',
+            labels: { boxWidth: 12, boxHeight: 12, borderRadius: 3, useBorderRadius: true, padding: narrow ? 10 : 14, font: { weight: 600 } },
           },
           tooltip: {
             callbacks: {
@@ -670,22 +819,44 @@
     start.setDate(start.getDate() - 7 * 25); // 26 columns of weeks
     const today = new Date();
 
+    const todayKey = todayStr();
     const cursor = new Date(start);
     while (cursor <= today || cursor.getDay() !== 1) {
       const key = dateStr(cursor);
       const cell = el('i');
       const v = dayVolume[key] || 0;
-      let lvl = 0;
-      if (v > 0) lvl = v < peak * 0.25 ? 1 : v < peak * 0.5 ? 2 : v < peak * 0.8 ? 3 : 4;
-      cell.className = `hm-${lvl}`;
-      cell.title = v > 0
-        ? `${shortDate(cursor)} — ${fmtInt(v)} ${unit}`
-        : `${shortDate(cursor)} — rest`;
-      if (cursor > today) cell.style.visibility = 'hidden';
+      const planned = PLAN_BY_DOW[cursor.getDay()];
+      const hasRoutine = planned && planned.lifts.length > 0;
+
+      if (cursor > today) {
+        // remaining days of the current week: show what's on the program
+        if (hasRoutine) {
+          cell.className = 'hm-sched';
+          cell.title = `${shortDate(cursor)} — scheduled: ${planned.title}`;
+        } else {
+          cell.className = 'hm-0';
+          cell.style.opacity = '0.35';
+          cell.title = `${shortDate(cursor)} — rest day`;
+        }
+      } else if (v === 0 && key === todayKey && hasRoutine) {
+        cell.className = 'hm-sched';
+        cell.title = `${shortDate(cursor)} — today: ${planned.title}`;
+      } else {
+        let lvl = 0;
+        if (v > 0) lvl = v < peak * 0.25 ? 1 : v < peak * 0.5 ? 2 : v < peak * 0.8 ? 3 : 4;
+        cell.className = `hm-${lvl}`;
+        cell.title = v > 0
+          ? `${shortDate(cursor)} — ${fmtInt(v)} ${unit}`
+          : `${shortDate(cursor)} — rest`;
+      }
       box.appendChild(cell);
       cursor.setDate(cursor.getDate() + 1);
       if (cursor > today && cursor.getDay() === 1) break;
     }
+
+    // land on the most recent weeks when the strip overflows (phones)
+    const wrap = box.parentElement;
+    wrap.scrollLeft = wrap.scrollWidth;
   }
 
   /* ---------- PR board ---------- */
@@ -961,6 +1132,19 @@
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
+  /* rebuild charts when crossing the phone breakpoint (legend layout changes) */
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const nowNarrow = window.matchMedia('(max-width: 700px)').matches;
+      if (nowNarrow !== narrow) {
+        narrow = nowNarrow;
+        if (chartsReady) buildCharts();
+      }
+    }, 250);
+  });
+
   /* ---------- init ---------- */
 
   function buildDatalist() {
@@ -976,5 +1160,6 @@
 
   buildDatalist();
   resetForm();
+  renderPlan();
   renderAll();
 })();
