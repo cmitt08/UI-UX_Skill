@@ -898,6 +898,210 @@ window.PL.units.push({
         { term: 'First aid expenses', def: 'Section II additional coverage for first aid to others rendered by the insured at the time of covered bodily injury.' }
       ]
     },
+
+    /* ---------------- Lesson 4.5 ---------------- */
+    {
+      id: 'u4l5',
+      title: 'Conditions & Loss Settlement — the 80% Rule',
+      minutes: 16,
+      objectives: [
+        'List the insured’s duties after a property loss',
+        'Apply the dwelling loss settlement provision: replacement cost when insured to at least 80% of replacement cost, with the formula',
+        'Work a complete underinsurance example, including the greater-of-ACV floor',
+        'Explain pair and set, appraisal, the mortgage clause, our option, and the other Section I conditions'
+      ],
+      blocks: [
+        {
+          type: 'text',
+          html: `<h3>Conditions: the rulebook of the claim</h3>
+<p>Section I conditions set the ground rules between insured and insurer. Start with the bookends: <strong>insurable interest and limit of liability</strong> — the insurer never pays more than the insured’s insurable interest, nor more than the applicable limit — and the insured’s <strong>duties after loss</strong>, because failing them can forfeit an otherwise valid claim.</p>`
+        },
+        {
+          type: 'steps',
+          title: 'Duties after loss — what the insured must do',
+          items: [
+            { title: 'Give prompt notice', text: 'Notify the insurer or agent promptly. In theft losses, also notify the police; in credit card losses, notify the card issuer. (Florida adds hard statutory deadlines — 1 year to give notice of a new claim — covered in Unit 5.)' },
+            { title: 'Protect the property', text: 'Make reasonable and necessary emergency repairs to prevent further damage — tarp the roof, shut off the water — and keep the receipts. Failing to do so triggers the neglect exclusion.' },
+            { title: 'Inventory the loss', text: 'Prepare an inventory of damaged personal property showing quantity, description, and actual cash value, with bills and receipts attached.' },
+            { title: 'Show the property and submit to examination', text: 'Exhibit the damaged property as often as reasonably required, provide records, and submit to examination under oath if requested.' },
+            { title: 'File proof of loss', text: 'Send a signed, sworn proof of loss within 60 days of the insurer’s request, stating the time, cause, interests, values, and other details of the loss.' }
+          ]
+        },
+        {
+          type: 'text',
+          html: `<h3>Loss settlement — the heart of the lesson</h3>
+<p>How much a Section I claim pays depends on <em>what</em> was damaged:</p>
+<ul>
+<li><strong>Personal property (Coverage C)</strong>, along with carpeting, appliances, awnings, antennas, and outdoor equipment, is settled at <strong>actual cash value</strong> — replacement cost minus depreciation — unless the personal property replacement cost endorsement is attached (Lesson 4.6).</li>
+<li><strong>The dwelling and other structures (A and B)</strong> are settled at <strong>replacement cost — but only if the insured carried insurance equal to at least 80% of the dwelling’s replacement cost at the time of loss.</strong></li>
+</ul>
+<p>Carry less than 80%, and the policy pays the <strong>greater</strong> of:</p>
+<ul>
+<li>the <strong>actual cash value</strong> of the damaged part, or</li>
+<li>the proportion of the loss that the formula produces: <strong>(amount carried ÷ amount you should have carried) × loss</strong>, where the amount you should have carried is <strong>80% of replacement cost</strong>.</li>
+</ul>
+<p>Then apply the deductible, and never pay more than the limit. This is the homeowners cousin of the coinsurance formula from Unit 2 — same did-over-should arithmetic, fixed at 80%.</p>`
+        },
+        {
+          type: 'callout', variant: 'example', title: 'Worked example — the 80% rule start to finish',
+          html: `<p>Replacement cost of the dwelling: <strong>$400,000</strong>. Required insurance: 80% × $400,000 = <strong>$320,000</strong>. The insured carries only <strong>$240,000</strong>. A kitchen fire causes an <strong>$80,000</strong> loss (ACV of the damaged part: $52,000; deductible $1,000).</p>
+<p>Formula: ($240,000 ÷ $320,000) × $80,000 = <strong>0.75 × $80,000 = $60,000</strong>. Compare with ACV ($52,000) and take the greater: <strong>$60,000</strong>. Subtract the $1,000 deductible: the claim check is <strong>$59,000</strong> — a $20,000 underinsurance penalty on an $80,000 loss.</p>
+<p>Had the insured carried $320,000 or more, the insurer would simply pay the <strong>full replacement cost of the repair, $80,000 minus the deductible</strong>.</p>`
+        },
+        {
+          type: 'chart',
+          chartType: 'line',
+          title: 'Share of a partial loss paid vs. percent of replacement cost insured (illustrative)',
+          labels: ['50%', '60%', '70%', '80%', '90%', '100%'],
+          datasets: [{ label: 'Percent of partial loss paid (before deductible)', data: [63, 75, 88, 100, 100, 100] }],
+          suffix: '%',
+          note: 'Illustrative curve from the did/should formula with the 80% benchmark. At or above 80% of replacement cost, partial losses are paid in full at replacement cost; below it, every claim is shaved — subject to the ACV floor.'
+        },
+        {
+          type: 'callout', variant: 'tip',
+          html: `<p>Two settlement quirks the exam likes: the insurer pays only the ACV portion <strong>until repair or replacement is actually completed</strong> (the insured can claim the replacement-cost holdback afterward), and for losses under both 5% of the insurance amount and $2,500, the insurer skips the holdback and pays replacement cost up front. Memorize the headline rule first: <strong>80% of replacement cost buys replacement-cost settlement</strong>.</p>`
+        },
+        {
+          type: 'quiz',
+          title: 'Checkpoint — compute the settlement',
+          questions: [
+            {
+              q: 'A home would cost $300,000 to rebuild. The insured carries $180,000 of Coverage A. Wind causes a $40,000 roof loss (ACV $26,000). Before the deductible, the policy pays:',
+              choices: ['$40,000', '$26,000', '$30,000 — (180,000 ÷ 240,000) × 40,000', '$24,000'],
+              answer: 2,
+              explain: 'Required amount = 80% × $300,000 = $240,000. The formula gives (180,000 ÷ 240,000) × $40,000 = $30,000, which beats the $26,000 ACV — the policy pays the greater of the two.'
+            },
+            {
+              q: 'On the same $300,000-replacement-cost home, how much Coverage A guarantees full replacement-cost settlement on partial losses?',
+              choices: ['$150,000', '$300,000 only', '$240,000 or more', '$200,000'],
+              answer: 2,
+              explain: 'The threshold is 80% of replacement cost: 0.80 × $300,000 = $240,000. At or above that figure, partial dwelling losses are settled at replacement cost without penalty.'
+            },
+            {
+              q: 'Under an unendorsed HO-3, damaged personal property is settled at:',
+              choices: ['Replacement cost in all cases', 'Actual cash value', 'Agreed value', 'Market value'],
+              answer: 1,
+              explain: 'Coverage C is settled at ACV — replacement cost minus depreciation — unless the personal property replacement cost endorsement is purchased. The 80% replacement-cost rule applies to the DWELLING, not contents.'
+            },
+            {
+              q: 'A sworn proof of loss must be submitted within how many days after the insurer requests it?',
+              choices: ['30 days', '90 days', '14 days', '60 days'],
+              answer: 3,
+              explain: 'The HO conditions give the insured 60 days from the insurer’s request to file the signed, sworn proof of loss. Do not confuse this with Florida’s claim-handling deadlines for the insurer (Unit 5).'
+            }
+          ]
+        },
+        {
+          type: 'text',
+          html: `<h3>The rest of the conditions toolbox</h3>
+<p>Each of these is a one-line exam answer waiting to happen:</p>
+<ul>
+<li><strong>Pair and set</strong> — lose one earring of a pair and the insurer may restore the set or pay the <em>difference in value</em> between the set before and after the loss. It does not owe the full pair’s value for half a pair.</li>
+<li><strong>Appraisal</strong> — when insurer and insured agree coverage exists but disagree on the <em>amount</em>: each side hires its own appraiser (and pays for it), the appraisers select an umpire, and agreement of any two binds both parties. The parties share the umpire’s cost.</li>
+<li><strong>Other insurance</strong> — if other insurance covers the same Section I loss, this policy pays its <strong>pro-rata</strong> share based on limits.</li>
+<li><strong>Suit against us</strong> — legal action requires compliance with all policy terms and must be brought within the time allowed (the form says within a stated period after the loss; Florida law sets its own clock, covered in Unit 5).</li>
+<li><strong>Our option</strong> — the insurer may choose to <strong>repair or replace</strong> with like kind and quality instead of paying cash, on written notice.</li>
+<li><strong>Loss payment</strong> — payment is due within 60 days after agreement, entry of final judgment, or filing of an appraisal award.</li>
+<li><strong>Abandonment</strong> — the insurer need not accept abandoned property. You cannot dump the charred house on the company and demand the limit.</li>
+<li><strong>Mortgage clause</strong> — the lender named in the declarations gets paid as its interest appears, and its right to recover survives the insured’s misdeeds: <strong>even if the insured’s claim is denied (say, for arson or concealment), the mortgagee still collects</strong>, provided it pays any premium due, notifies the insurer of changes in ownership or hazard it knows about, and submits its own proof of loss. The insurer that pays the mortgagee takes over the mortgage rights (subrogation against the insured).</li>
+<li><strong>No benefit to bailee</strong> — a dry cleaner or mover holding your property cannot collect under your policy.</li>
+<li><strong>Recovered property</strong> — if stolen property turns up after payment, the insured may keep it and return the money, or keep the money and surrender the property.</li>
+<li><strong>Volcanic eruption period</strong> — all eruptions within a <strong>72-hour</strong> period count as one occurrence (one deductible).</li>
+<li><strong>Policy period</strong> — only losses occurring during the policy period are covered. <strong>Concealment or fraud</strong> by an insured voids coverage as to that insured.</li>
+</ul>`
+        },
+        {
+          type: 'table',
+          caption: 'Condition quick-match (a favorite exam format)',
+          headers: ['Situation', 'Condition that answers it'],
+          rows: [
+            ['Insured and insurer agree the loss is covered but are $30,000 apart on value', '<strong>Appraisal</strong> — two appraisers plus an umpire; any two agreeing binds'],
+            ['One of a pair of antique lamps is destroyed', '<strong>Pair and set</strong> — pay the difference in value of the set, not the whole set'],
+            ['Insured torches his own house; the bank still wants its money', '<strong>Mortgage clause</strong> — the innocent mortgagee is still paid as its interest appears'],
+            ['Insurer prefers to rebuild rather than write a check', '<strong>Our option</strong> — repair or replace with like kind and quality on written notice'],
+            ['Insured ships the wreckage to the insurer and demands the limit', '<strong>Abandonment</strong> — the insurer is not obligated to accept abandoned property'],
+            ['Stolen painting recovered a year after the claim was paid', '<strong>Recovered property</strong> — insured chooses: keep property and refund, or keep payment'],
+            ['Two policies cover the same house fire', '<strong>Other insurance</strong> — each pays its pro-rata share by limits']
+          ]
+        },
+        {
+          type: 'callout', variant: 'warning',
+          html: `<p>The mortgage clause question is nearly guaranteed. The mortgagee’s protection is <strong>independent of the insured’s conduct</strong> — denial of the homeowner’s claim for fraud, arson, or breached conditions does <em>not</em> defeat the lender’s recovery, so long as the lender honors its own small duties (pay premium on demand, give notice of known ownership or hazard changes, file proof of loss). That independence is the whole point of the standard mortgage clause.</p>`
+        },
+        {
+          type: 'flashcards',
+          title: 'Lesson 4.5 key cards',
+          cards: [
+            { front: 'The 80% rule', back: 'Dwelling losses settle at replacement cost only if insurance ≥ 80% of the dwelling’s replacement cost at the time of loss.' },
+            { front: 'Underinsured formula', back: '(Amount carried ÷ 80% of replacement cost) × loss — pay the GREATER of that or ACV, minus deductible.' },
+            { front: 'Personal property settlement', back: 'Actual cash value (RC minus depreciation), unless the replacement cost endorsement is added.' },
+            { front: 'Proof of loss deadline', back: 'Within 60 days after the insurer requests it — signed and sworn.' },
+            { front: 'Appraisal', back: 'For disputes over AMOUNT only: each party an appraiser, appraisers pick an umpire, any two in agreement bind.' },
+            { front: 'Pair and set', back: 'Insurer pays the difference between the value of the set before and after losing one piece.' },
+            { front: 'Mortgage clause', back: 'Lender is paid as its interest appears — even when the insured’s own claim is denied for fraud or arson.' },
+            { front: 'Our option', back: 'Insurer may elect to repair or replace with like kind and quality instead of paying cash.' },
+            { front: 'Abandonment', back: 'Not allowed — the insurer never has to accept abandoned property.' },
+            { front: 'Volcanic eruption period', back: 'All eruptions within 72 hours = one occurrence, one deductible.' }
+          ]
+        },
+        {
+          type: 'quiz',
+          title: 'Checkpoint — conditions in practice',
+          questions: [
+            {
+              q: 'After a covered fire, the insured and insurer agree the loss is covered but cannot agree whether the repair is worth $45,000 or $70,000. The policy’s mechanism is:',
+              choices: ['Arbitration before the DFS', 'Appraisal — each picks an appraiser, the appraisers pick an umpire', 'Immediate lawsuit', 'Subrogation'],
+              answer: 1,
+              explain: 'Appraisal resolves disputes over the AMOUNT of a covered loss. Each side pays its own appraiser and splits the umpire; agreement of any two is binding. Coverage disputes (is it covered at all?) are not appraisal material.'
+            },
+            {
+              q: 'An insured is convicted of burning down his own insured home. The mortgagee bank with a properly listed interest:',
+              choices: [
+                'Collects nothing because the insured committed fraud',
+                'Collects only if it forecloses first',
+                'Is paid to the extent of its mortgage interest despite the denial of the insured’s claim',
+                'Must sue the insured’s spouse'
+              ],
+              answer: 2,
+              explain: 'The standard mortgage clause gives the lender rights independent of the insured. The insurer pays the mortgagee’s interest and is subrogated to the bank’s mortgage rights against the arsonist insured.'
+            },
+            {
+              q: 'One of the insured’s matched pair of $6,000 candlesticks (worth $2,000 each alone) is stolen. Under pair and set, the insurer owes:',
+              choices: [
+                '$6,000 — the value of the pair',
+                '$2,000 — the single-item value',
+                '$3,000 — half the pair value automatically',
+                '$4,000 — the difference between the pair’s value before ($6,000) and after ($2,000) the loss'
+              ],
+              answer: 3,
+              explain: 'Pair and set pays the difference in value of the set before and after the loss: $6,000 − $2,000 = $4,000. The insured is indemnified for the real economic harm, not gifted a full new pair.'
+            },
+            {
+              q: 'A home insured for $250,000 has a replacement cost of $250,000. A covered $30,000 partial loss occurs (deductible $2,500). The settlement is:',
+              choices: ['$27,500 at replacement cost — the 80% test is satisfied', '$24,000 after a coinsurance penalty', '$30,000 with no deductible', 'The ACV of the damaged part only'],
+              answer: 0,
+              explain: 'Carrying 100% of replacement cost easily clears the 80% benchmark ($200,000), so the partial loss is paid at full replacement cost minus the deductible: $30,000 − $2,500 = $27,500.'
+            }
+          ]
+        }
+      ],
+      terms: [
+        { term: 'Duties after loss', def: 'The insured’s claim obligations: prompt notice, protect the property, inventory, exhibit and cooperate, and sworn proof of loss within 60 days of request.' },
+        { term: 'Proof of loss', def: 'The insured’s signed, sworn statement of the loss details, due within 60 days after the insurer requests it.' },
+        { term: 'Loss settlement (dwelling)', def: 'Replacement cost settlement on Coverages A and B when insurance equals at least 80% of the dwelling’s replacement cost at the time of loss.' },
+        { term: '80% rule', def: 'The insurance-to-value benchmark for replacement cost settlement; below it the insurer pays the greater of ACV or the did/should proportion of the loss.' },
+        { term: 'Actual cash value (ACV)', def: 'Replacement cost minus depreciation — the default settlement basis for personal property.' },
+        { term: 'Replacement cost', def: 'The cost to repair or replace with like kind and quality at current prices, without deduction for depreciation.' },
+        { term: 'Pair and set clause', def: 'For loss to part of a pair or set, the insurer pays the difference in value of the set before and after the loss, or restores the set.' },
+        { term: 'Appraisal condition', def: 'The method for resolving disputes over loss amount: two party-chosen appraisers and an umpire; agreement of any two binds.' },
+        { term: 'Our option', def: 'The insurer’s right to repair or replace damaged property with like kind and quality instead of paying cash.' },
+        { term: 'Abandonment condition', def: 'The insurer is not required to accept property abandoned by the insured.' },
+        { term: 'Standard mortgage clause', def: 'Protects the lender’s interest independently of the insured’s conduct; the mortgagee is paid even when the insured’s claim is denied.' },
+        { term: 'No benefit to bailee', def: 'A party holding the insured’s property for a fee cannot benefit from the insured’s coverage.' },
+        { term: 'Recovered property', def: 'When paid-for stolen property is recovered, the insured elects to keep the property and refund the payment, or keep the payment.' },
+        { term: 'Other insurance (pro-rata)', def: 'When two policies cover the same loss, each pays in proportion to its limit.' }
+      ]
+    },
 /*__MORE__*/
   ],
   exam: { questions: [] }
