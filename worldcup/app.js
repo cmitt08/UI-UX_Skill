@@ -592,6 +592,8 @@
     return { kick, confetti };
   })();
 
+  window.WCFX = { confetti: FX.confetti, kick: FX.kick };
+
   function goalFlash(m, ev) {
     const node = $('#goalFlash');
     if (!node || REDUCED) return;
@@ -622,7 +624,6 @@
     dayId: null,
     tab: 'matches',
     roadStage: null,
-    demo: params.get('demo') === '1',
     nofeed: params.get('nofeed') === '1',
     timeOffset: params.get('simnow') ? new Date(params.get('simnow')).getTime() - Date.now() : 0,
     ticker: [],
@@ -633,7 +634,7 @@
   };
 
   const nowMs = () => Date.now() + App.timeOffset;
-  const getMatch = id => App.demo && App.demoMatches[id] ? App.demoMatches[id] : App.matchById[id];
+  const getMatch = id => App.matchById[id];
   const isLive = m => m && m.period !== 'pre' && m.period !== 'FT';
   const currentDay = () => App.days.find(d => d.id === App.dayId) || App.days[0];
 
@@ -808,7 +809,7 @@
         if (existed || !initial) applyFeed(m, ne, initial);
         if ((before === 'pre' || !existed) && m.period !== 'pre') layoutChanged = true;
       }
-      if (layoutChanged && App.tab === 'matches' && !App.demo) renderMatchesView();
+      if (layoutChanged && App.tab === 'matches') renderMatchesView();
 
       /* keep the official tables fresh while matches are running */
       if (day.fixtures.some(fx => isLive(App.matchById[fx.id]))) refreshStandings();
@@ -913,7 +914,7 @@
     const meta = h('div', 'match-meta');
     let modeChip;
     if (feed) modeChip = `<span class="chip chip--official">${ICONS.wifi}LIVE DATA · ESPN</span>`;
-    else if (m.mode === 'sprint') modeChip = `<span class="chip chip--sim">${App.demo ? 'DEMO SIM · 6×' : 'ALT-UNIVERSE SIM · 6×'}</span>`;
+    else if (m.mode === 'sprint') modeChip = `<span class="chip chip--sim">ALT-UNIVERSE SIM · 6×</span>`;
     else if (m.script) modeChip = `<span class="chip chip--official">OFFICIAL RESULT</span>`;
     else modeChip = `<span class="chip chip--sim">SIM FALLBACK</span>`;
     meta.innerHTML = `
@@ -1423,9 +1424,8 @@
       b.setAttribute('aria-pressed', d.id === day.id ? 'true' : 'false');
       b.addEventListener('click', () => {
         App.dayId = d.id;
-        if (App.demo) buildDemoDay();
         renderMatchesView();
-        if (App.feedOn && !App.demo) pollActiveDay();
+        if (App.feedOn) pollActiveDay();
         window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
       });
       chips.appendChild(b);
@@ -1552,9 +1552,9 @@
       .find(fx => new Date(fx.kickoffUTC).getTime() > nowMs() - 3 * 3600e3);
     if (preFx) {
       el.innerHTML = `${ICONS.clock} NEXT KICKOFF IN <b data-kick="${preFx.kickoffUTC}">—</b> — ${preFx.home} v ${preFx.away}
-        ${App.demo ? '' : `<button type="button" class="btn-ghost btn-ghost--sm" id="demoHint">${ICONS.play} CAN'T WAIT? RUN A DEMO SIM</button>`}`;
-      const hint = el.querySelector('#demoHint');
-      if (hint) hint.addEventListener('click', toggleDemo);
+        <button type="button" class="btn-ghost btn-ghost--sm" id="pkHint">${ICONS.play} PLAY PK BATTLE WHILE YOU WAIT</button>`;
+      const hint = el.querySelector('#pkHint');
+      if (hint) hint.addEventListener('click', () => setTab('shootout'));
     } else {
       el.innerHTML = `${ICONS.check} MATCHDAY COMPLETE — FULL RESULTS BELOW`;
     }
@@ -1698,9 +1698,8 @@
       ${row(fx.away, score[1], done && score[1] > score[0])}`;
     card.addEventListener('click', () => {
       App.dayId = item.dayId;
-      if (App.demo) buildDemoDay();
       setTab('matches');
-      if (App.feedOn && !App.demo) pollActiveDay();
+      if (App.feedOn) pollActiveDay();
     });
     return card;
   }
@@ -1922,6 +1921,42 @@
     observeReveals(view);
   }
 
+  /* ============================ pk battle ============================ */
+
+  /* the shootout always features the live game, or the most recent one */
+  function shootoutTeams() {
+    if (App.feedOn) {
+      const evs = [...App.schedule.values()].filter(e => e.home !== 'TBD' && e.away !== 'TBD');
+      const live = evs.filter(e => e.state === 'in').sort((a, b) => new Date(b.date) - new Date(a.date));
+      if (live[0]) return { home: live[0].home, away: live[0].away, live: true };
+      const post = evs.filter(e => e.state === 'post' && new Date(e.date) < new Date(nowMs())).sort((a, b) => new Date(b.date) - new Date(a.date));
+      if (post[0]) return { home: post[0].home, away: post[0].away, live: false };
+      const pre = evs.filter(e => e.state === 'pre').sort((a, b) => new Date(a.date) - new Date(b.date));
+      if (pre[0]) return { home: pre[0].home, away: pre[0].away, live: false };
+    }
+    const ms = App.matches.filter(m => m.mode !== 'sprint');
+    const live = ms.find(isLive);
+    if (live) return { home: live.fixture.home, away: live.fixture.away, live: true };
+    const post = ms.filter(m => m.period === 'FT')
+      .sort((a, b) => new Date(b.fixture.kickoffUTC) - new Date(a.fixture.kickoffUTC))[0];
+    if (post) return { home: post.fixture.home, away: post.fixture.away, live: false };
+    const fx = App.days[0].fixtures[0];
+    return { home: fx.home, away: fx.away, live: false };
+  }
+
+  function renderShootout() {
+    const view = $('#view-shootout');
+    if (!view) return;
+    view.innerHTML = `<div class="view-head reveal">${ICONS.target}<h2>PK Battle</h2><span class="panel__sub">beat the bot from the spot — the matchup follows the real games</span></div>`;
+    const t = shootoutTeams();
+    const host = h('div', 'panel panel--accent reveal pk-host');
+    host.style.setProperty('--tc-h', WC.TEAMS[t.home].color);
+    host.style.setProperty('--tc-a', WC.TEAMS[t.away].color);
+    view.appendChild(host);
+    if (window.Shootout) Shootout.mount(host, t.home, t.away, { live: t.live });
+    observeReveals(view);
+  }
+
   /* ============================ tabs ============================ */
 
   const TABS = [
@@ -1929,47 +1964,21 @@
     { id: 'groups', label: 'Groups', icon: ICONS.chart },
     { id: 'road', label: 'Road to Final', icon: ICONS.zap },
     { id: 'boot', label: 'Golden Boot', icon: ICONS.trophy },
-    { id: 'picks', label: 'Crew Picks', icon: ICONS.users }
+    { id: 'picks', label: 'Crew Picks', icon: ICONS.users },
+    { id: 'shootout', label: 'PK Battle', icon: ICONS.target }
   ];
 
   function setTab(id) {
     App.tab = id;
-    document.querySelectorAll('.tab-btn:not(.tab-btn--demo)').forEach(b => {
+    document.querySelectorAll('.tab-btn').forEach(b => {
       const on = b.dataset.tab === id;
       b.classList.toggle('is-on', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
     document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== 'view-' + id; });
-    const render = { matches: renderMatchesView, groups: renderGroups, road: renderRoad, boot: renderBoot, picks: renderPicks }[id];
+    const render = { matches: renderMatchesView, groups: renderGroups, road: renderRoad, boot: renderBoot, picks: renderPicks, shootout: renderShootout }[id];
     render();
     window.scrollTo({ top: 0 });
-  }
-
-  /* ============================ demo mode ============================ */
-
-  function buildDemoDay() {
-    App.demoMatches = {};
-    const day = currentDay();
-    const starts = [57, 14, 33, 72, 8, 49, 25, 64];
-    day.fixtures.forEach((fx, i) => {
-      if (fx.home === 'TBD' || fx.away === 'TBD') return;
-      const m = createMatch(fx, { mode: 'sprint', seed: (Math.random() * 2 ** 31) | 0, ignoreOfficial: true });
-      RNG = m.rng;
-      m.booting = true;
-      kickoffEvent(m);
-      fastForward(m, fx.startMinute != null ? fx.startMinute : starts[i % starts.length]);
-      m.booting = false;
-      App.demoMatches[fx.id] = m;
-    });
-  }
-
-  function toggleDemo() {
-    App.demo = !App.demo;
-    const btn = $('#demoBtn');
-    if (btn) { btn.classList.toggle('is-on', App.demo); btn.setAttribute('aria-pressed', App.demo ? 'true' : 'false'); }
-    if (App.demo) buildDemoDay(); else App.demoMatches = {};
-    setTab('matches');
-    toast(App.demo ? 'Demo sim running at 6× speed — not real scores' : App.feedOn ? 'Back to the live feed' : 'Back to the matchday clock');
   }
 
   /* ============================ boot ============================ */
@@ -2023,7 +2032,6 @@
       initSimMatches();
       toast('Live feed unreachable — running labeled sim mode');
     }
-    if (App.demo) buildDemoDay();
     seedTicker();
     setTab('matches');
     startLoops();
@@ -2064,9 +2072,9 @@
 
     if (App.feedOn) {
       /* the root fix: fresh scores from the feed every 60 seconds */
-      setInterval(() => { if (!App.demo) pollActiveDay(); }, 60000);
+      setInterval(pollActiveDay, 60000);
       setInterval(refreshSchedule, 300000);
-      document.addEventListener('visibilitychange', () => { if (!document.hidden && !App.demo) pollActiveDay(); });
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) pollActiveDay(); });
     }
 
     window.addEventListener('resize', () => {
@@ -2085,13 +2093,6 @@
       b.addEventListener('click', () => setTab(t.id));
       nav.appendChild(b);
     });
-    const demoBtn = h('button', 'tab-btn tab-btn--demo' + (App.demo ? ' is-on' : ''), `${ICONS.play}<span>Demo</span>`);
-    demoBtn.type = 'button';
-    demoBtn.id = 'demoBtn';
-    demoBtn.title = 'Toggle a sped-up demo sim of this matchday';
-    demoBtn.setAttribute('aria-pressed', App.demo ? 'true' : 'false');
-    demoBtn.addEventListener('click', toggleDemo);
-    nav.appendChild(demoBtn);
 
     $('#view-matches').innerHTML = `<div class="boot-splash">${ICONS.ball}<span>Loading the matchday…</span></div>`;
     renderTicker();
