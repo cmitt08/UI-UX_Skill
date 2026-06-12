@@ -137,12 +137,12 @@ WC.GROUPS = {
 };
 
 WC.STAGES = [
-  { name: 'Group Stage',   dates: 'Jun 11 – 27', detail: '72 matches · 12 groups · 16 host cities', games: 72 },
-  { name: 'Round of 32',   dates: 'Jun 28 – Jul 3', detail: 'Top two per group + eight best third-placed teams', games: 16 },
-  { name: 'Round of 16',   dates: 'Jul 4 – 7', detail: 'Single elimination begins to bite', games: 8 },
-  { name: 'Quarterfinals', dates: 'Jul 9 – 11', detail: 'Boston · KC · LA · Miami', games: 4 },
-  { name: 'Semifinals',    dates: 'Jul 14 – 15', detail: 'AT&T Stadium · Mercedes-Benz Stadium', games: 2 },
-  { name: 'Final',         dates: 'Jul 19', detail: 'MetLife Stadium · New York / New Jersey', games: 1, final: true }
+  { key: 'group', name: 'Group Stage',   dates: 'Jun 11 – 27', detail: '72 matches · 12 groups · 16 host cities', games: 72 },
+  { key: 'r32',   name: 'Round of 32',   dates: 'Jun 28 – Jul 3', detail: 'Top two per group + eight best third-placed teams', games: 16 },
+  { key: 'r16',   name: 'Round of 16',   dates: 'Jul 4 – 7', detail: 'Single elimination begins to bite', games: 8 },
+  { key: 'qf',    name: 'Quarterfinals', dates: 'Jul 9 – 11', detail: 'Boston · KC · LA · Miami', games: 4 },
+  { key: 'sf',    name: 'Semifinals',    dates: 'Jul 14 – 15', detail: 'AT&T Stadium · Mercedes-Benz Stadium', games: 2 },
+  { key: 'final', name: 'Final',         dates: 'Jul 19', detail: 'MetLife Stadium · New York / New Jersey', games: 1, final: true }
 ];
 
 /* kickoff trivia — one flips through these on the matchday page */
