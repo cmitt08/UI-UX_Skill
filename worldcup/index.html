@@ -13,6 +13,13 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="orb orb--g" aria-hidden="true"></div>
+  <div class="orb orb--gold" aria-hidden="true"></div>
+  <div id="scrollProgress" aria-hidden="true"></div>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div id="goalFlash" aria-hidden="true"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+
   <header class="topnav">
     <div class="brand">
       <div class="brand__mark" aria-hidden="true">
@@ -40,9 +47,10 @@
   </main>
 
   <footer class="footer">
-    <b>Pitchside ’26</b> is a fan-made matchday hub. Fixtures, venues and kickoff times are real;
-    live scores, statistics and betting lines are a <b>simulated demo feed</b> for entertainment only —
-    this is not a sportsbook and no real wagering takes place here.<br />
+    <b>Pitchside ’26</b> is a fan-made matchday hub. Fixtures, venues and kickoff times are real and
+    match clocks follow the actual time of day; finished matches marked <b>OFFICIAL RESULT</b> recreate
+    the real score. In-play statistics and betting lines are a <b>simulated feed</b> for entertainment
+    only — this is not a sportsbook and no real wagering takes place here.<br />
     FIFA World Cup 26™ is a trademark of FIFA. This site is not affiliated with FIFA.
   </footer>
 

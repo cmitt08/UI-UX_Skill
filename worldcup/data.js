@@ -30,6 +30,7 @@ WC.ROSTERS = {
   MEX: [
     { name: 'S. Giménez',   pos: 'ST', w: 4.0 },
     { name: 'R. Jiménez',   pos: 'ST', w: 3.4 },
+    { name: 'J. Quiñones',  pos: 'FW', w: 3.0 },
     { name: 'H. Lozano',    pos: 'LW', w: 2.6 },
     { name: 'A. Vega',      pos: 'RW', w: 2.2 },
     { name: 'L. Chávez',    pos: 'CM', w: 1.3 },
@@ -79,7 +80,21 @@ WC.DAYS = [
   {
     id: '2026-06-11', label: 'THU 11', title: 'Matchday 1 · Opening Day', live: true,
     fixtures: [
-      { id: 'm1', group: 'A', home: 'MEX', away: 'RSA', venue: 'Estadio Azteca', city: 'Mexico City', kickLocal: '1:00 PM CST', kickoffUTC: '2026-06-11T19:00:00Z', attendance: '87,523', referee: 'F. Rapallini (ARG)', weather: '72°F · Clear', startMinute: 57, note: 'Tournament opener' },
+      { id: 'm1', group: 'A', home: 'MEX', away: 'RSA', venue: 'Estadio Azteca', city: 'Mexico City', kickLocal: '1:00 PM CST', kickoffUTC: '2026-06-11T19:00:00Z', attendance: '87,523', referee: 'F. Rapallini (ARG)', weather: '72°F · Clear', startMinute: 57, note: 'Tournament opener',
+        /* real result — sim recreates the score/scorers/reds around it */
+        official: {
+          score: [2, 0],
+          goals: [
+            { min: 10, side: 0, scorer: 'J. Quiñones' },
+            { min: 64, side: 0, scorer: 'R. Jiménez' }
+          ],
+          reds: [
+            { min: 52, side: 1 },
+            { min: 71, side: 0 },
+            { min: 84, side: 1 }
+          ],
+          note: 'First World Cup opener ever with three red cards'
+        } },
       { id: 'm2', group: 'A', home: 'KOR', away: 'CZE', venue: 'Estadio Akron', city: 'Guadalajara', kickLocal: '8:00 PM CST', kickoffUTC: '2026-06-12T02:00:00Z', attendance: '46,212', referee: 'J. Brooks (USA)', weather: '66°F · Partly cloudy', startMinute: 14, note: 'Group A · Match 2' }
     ]
   },
@@ -115,6 +130,22 @@ WC.STAGES = [
   { name: 'Quarterfinals', dates: 'Jul 9 – 11', detail: 'Boston · KC · LA · Miami', games: 4 },
   { name: 'Semifinals',    dates: 'Jul 14 – 15', detail: 'AT&T Stadium · Mercedes-Benz Stadium', games: 2 },
   { name: 'Final',         dates: 'Jul 19', detail: 'MetLife Stadium · New York / New Jersey', games: 1, final: true }
+];
+
+/* kickoff trivia — one flips through these on the matchday page */
+WC.TRIVIA = [
+  { q: 'Who scored the fastest goal in World Cup history?', a: 'Hakan Şükür — 10.8 seconds for Türkiye vs South Korea in 2002.' },
+  { q: 'Which country has won the most World Cups?', a: 'Brazil, with five (1958, 1962, 1970, 1994, 2002).' },
+  { q: 'What makes the 2026 World Cup a first?', a: 'It is the first 48-team World Cup, the first with a Round of 32, and the first hosted by three nations.' },
+  { q: 'Who is the only player to win three World Cups?', a: 'Pelé — 1958, 1962 and 1970.' },
+  { q: 'Who is the all-time top World Cup goalscorer?', a: 'Miroslav Klose, with 16 goals across four tournaments.' },
+  { q: 'Which stadium has hosted two World Cup finals — and now a third opening match?', a: 'Estadio Azteca in Mexico City (finals in 1970 and 1986, opener in 2026).' },
+  { q: 'What is the highest-scoring World Cup match ever?', a: 'Austria 7–5 Switzerland in 1954 — twelve goals.' },
+  { q: 'Who holds the single-tournament scoring record?', a: 'Just Fontaine — 13 goals for France in 1958.' },
+  { q: 'Who scored five goals in a single World Cup match?', a: 'Oleg Salenko for Russia vs Cameroon in 1994 — still the only player to do it.' },
+  { q: 'Which nation has played in every single World Cup?', a: 'Brazil — never missed one since 1930.' },
+  { q: 'Who won the very first World Cup?', a: 'Uruguay, beating Argentina 4–2 in the 1930 final in Montevideo.' },
+  { q: 'How young was the youngest World Cup goalscorer?', a: 'Pelé was 17 years and 239 days old when he scored vs Wales in 1958.' }
 ];
 
 /* tournament futures — anytime tournament top scorer (entertainment only) */
