@@ -1,10 +1,11 @@
 /* Pitchside '26 — live matchday engine + UI.
-   The engine is pure (no DOM) and deterministic: each fixture's sim is seeded,
-   so every visitor sees the same match. Match clocks are anchored to the real
-   kickoff times in data.js — a fixture is upcoming, live (real-time clock) or
-   full-time based on the actual time of day. Fixtures with an `official` block
-   recreate the real result. A real data feed can replace simulateTo()/advance()
-   while every renderer keeps working off the same match-state shape. */
+
+   Data flow:
+   - feed.js (ESPN public API, no key) supplies the full tournament schedule,
+     live scores/clocks/scorers polled every 60s, and per-match team stats.
+   - Real matches render REAL data only. The deterministic seeded sim engine
+     below powers Demo mode, alt-universe replays, and the automatic fallback
+     when the feed is unreachable — always labeled as a sim. */
 (function () {
   'use strict';
 
@@ -90,10 +91,9 @@
     return n > 0 ? '+' + n : String(n);
   }
 
-  /* ============================ engine ============================ */
+  /* ============================ sim engine ============================ */
 
   const PHRASES = {
-    shotOff: ['drags the effort wide', 'fires over the bar', 'curls one just past the post', 'snatches at it — wide'],
     shotOn: ['stings the keeper\'s palms', 'forces a sharp save', 'tests the keeper from range', 'header straight at the keeper'],
     bigChance: ['HUGE chance goes begging', 'somehow stays out — chaos in the box', 'rattles the woodwork', 'inches away from the opener'],
     goal: ['buries it into the corner', 'finishes coolly', 'thunders it home', 'heads it in at the far post', 'slots the rebound'],
@@ -123,14 +123,14 @@
       },
       poss: clamp(basePoss, 32, 68), basePoss: clamp(basePoss, 32, 68),
       momentumVal: 0, momentum: [],
-      events: [], shotMap: [],
+      events: [], shotMap: [], goalLog: [],
       players: [
         (WC.ROSTERS[fixture.home] || []).map(initPlayer),
         (WC.ROSTERS[fixture.away] || []).map(initPlayer)
       ],
       ui: null, booting: false
     };
-    /* fixtures with a known real result get a scripted recreation (real mode only) */
+    /* fixtures with a known real result get a scripted recreation (sim fallback only) */
     m.script = (m.mode === 'real' && fixture.official && !opts.ignoreOfficial) ? fixture.official : null;
     return m;
   }
@@ -139,9 +139,7 @@
     return { ...p, shots: 0, goals: 0, passes: 0, acc: rand(76, 92), rating: 6.4 + rand(0, 0.5), yellow: 0, red: 0 };
   }
 
-  function sideBias(m) {
-    return ((m.home.strength + m.homeAdv) - m.away.strength) / 14;
-  }
+  const sideBias = m => ((m.home.strength + m.homeAdv) - m.away.strength) / 14;
 
   function attackSide(m) {
     const p = 1 / (1 + Math.exp(-(sideBias(m) + m.momentumVal / 150)));
@@ -153,9 +151,7 @@
     if (typeof onKeyEvent === 'function' && ['goal', 'yellow', 'red', 'ht', 'ft', 'big'].includes(ev.type)) onKeyEvent(m, ev);
   }
 
-  function shotXY(side) {
-    return side === 0 ? { x: rand(64, 96), y: rand(10, 54) } : { x: rand(4, 36), y: rand(10, 54) };
-  }
+  const shotXY = side => side === 0 ? { x: rand(64, 96), y: rand(10, 54) } : { x: rand(4, 36), y: rand(10, 54) };
 
   function scoreGoal(m, side, min, scorer) {
     const team = side === 0 ? m.home : m.away;
@@ -163,6 +159,7 @@
     m.stats.sot[side]++;
     m.momentumVal = side === 0 ? 60 : -60;
     if (scorer) { scorer.goals++; scorer.rating = clamp(scorer.rating + 0.55, 5.5, 10); }
+    m.goalLog.push({ name: scorer ? scorer.name : 'Unknown', team });
     const xy = side === 0 ? { x: rand(78, 95), y: rand(18, 46) } : { x: rand(5, 22), y: rand(18, 46) };
     m.shotMap.push({ side, goal: true, min, x: xy.x, y: xy.y });
     pushEvent(m, {
@@ -172,7 +169,7 @@
     });
   }
 
-  /* One integer game-minute of simulation. Swap this out for a real feed. */
+  /* One integer game-minute of simulation */
   function minuteTick(m) {
     const min = Math.floor(m.minute);
 
@@ -197,11 +194,8 @@
 
     m.momentumVal = clamp(m.momentumVal * 0.8 + gauss() * 30 + sideBias(m) * 9, -100, 100);
     m.momentum.push({ min, v: m.momentumVal });
-
-    // possession drifts toward base + momentum pull
     m.poss = clamp(m.poss + (m.basePoss - m.poss) * 0.03 + m.momentumVal * 0.012 + gauss() * 0.7, 28, 72);
 
-    // ball circulation
     for (const side of [0, 1]) {
       const share = side === 0 ? m.poss / 100 : 1 - m.poss / 100;
       m.stats.passes[side] += Math.round(5 * share * rand(0.7, 1.3) + 2);
@@ -265,7 +259,6 @@
       }
     }
 
-    // substitutions
     if (m.period === '2H' && min > 57 && RNG() < 0.05) {
       const side = randInt(0, 1);
       pushEvent(m, { min, side, type: 'sub', title: `Substitution — ${(side === 0 ? m.home : m.away).name}`, sub: pick(PHRASES.sub) });
@@ -280,13 +273,13 @@
     m.minute = to;
   }
 
-  /* ---- real-time anchoring: map the actual clock onto the match schedule ---- */
+  /* ---- real-time anchoring for sim-fallback matches ---- */
 
   function matchPhase(m, now) {
     const kick = new Date(m.fixture.kickoffUTC).getTime();
-    const e = (now - kick) / 60000; // real minutes since kickoff
+    const e = (now - kick) / 60000;
     if (e < 0) return { period: 'pre' };
-    const h1 = 45 + m.add1, h2start = h1 + 15; // 15-minute half-time break
+    const h1 = 45 + m.add1, h2start = h1 + 15;
     if (e < h1) return { period: '1H', minute: e };
     if (e < h2start) return { period: 'HT', minute: 45 };
     const g2 = 45 + (e - h2start);
@@ -298,7 +291,6 @@
     pushEvent(m, { min: 0, side: -1, type: 'ko', title: 'Kickoff', sub: `${m.home.name} get us underway at ${m.fixture.venue}` });
   }
 
-  /* advance the sim to wherever the real clock says the match should be */
   function simulateTo(m, ph) {
     if (ph.period === 'pre') { m.period = 'pre'; return; }
     RNG = m.rng;
@@ -361,11 +353,11 @@
   }
 
   function liveOdds(m) {
-    const p = probsFor(m.home.strength, m.away.strength, m.homeAdv, m.minute, m.score[0], m.score[1]);
+    const p = probsFor(m.home.strength, m.away.strength, m.homeAdv || 2, m.minute, m.score[0], m.score[1]);
     const scorers = [];
     for (const side of [0, 1]) {
       const roster = m.players[side];
-      if (!roster.length) continue;
+      if (!roster || !roster.length) continue;
       const sumW = roster.reduce((s, x) => s + x.w, 0);
       const lam = side === 0 ? p.lh : p.la;
       for (const pl of roster.slice(0, 4)) {
@@ -418,7 +410,8 @@
     bulb: I('<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.4 1 2.3h6c0-.9.4-1.8 1-2.3A7 7 0 0 0 12 2z"/>'),
     crown: I('<path d="M2 18h20M4 18l-1-9 5 4 4-7 4 7 5-4-1 9H4z"/>'),
     copy: I('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
-    play: I('<polygon points="5 3 19 12 5 21 5 3"/>')
+    play: I('<polygon points="5 3 19 12 5 21 5 3"/>'),
+    wifi: I('<path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/>')
   };
 
   /* ============================ UI helpers ============================ */
@@ -440,7 +433,6 @@
     node.classList.add(dir > 0 ? 'up' : 'down');
   }
 
-  /* set odds text + flash green/red on implied-probability change */
   function setOdds(node, text, prob) {
     const prev = parseFloat(node.dataset.prob || 'NaN');
     if (node.textContent !== text) {
@@ -459,7 +451,6 @@
     t._timer = setTimeout(() => t.classList.remove('show'), 2600);
   }
 
-  /* count a numeric stat up from zero when it first scrolls into view */
   function countUp(el) {
     const mm = el.textContent.trim().match(/^(\d+(?:\.\d+)?)(%?)$/);
     if (!mm) return;
@@ -620,10 +611,16 @@
 
   const params = new URLSearchParams(location.search);
   const App = {
-    matches: [],
+    days: WC.DAYS,                 // replaced by the live schedule when the feed loads
+    groups: WC.GROUPS,
+    schedule: new Map(),           // espn event id -> normalized event (feed mode)
+    feedOn: false, feedStale: false,
+    matches: [], matchById: {},
+    demoMatches: {},
     dayId: null,
     tab: 'matches',
     demo: params.get('demo') === '1',
+    nofeed: params.get('nofeed') === '1',
     timeOffset: params.get('simnow') ? new Date(params.get('simnow')).getTime() - Date.now() : 0,
     ticker: [],
     triviaIdx: Math.floor(Math.random() * (WC.TRIVIA || []).length),
@@ -633,10 +630,11 @@
   };
 
   const nowMs = () => Date.now() + App.timeOffset;
-  const getMatch = id => App.matches.find(x => x.fixture.id === id);
-  const isLive = m => m.period !== 'pre' && m.period !== 'FT';
+  const getMatch = id => App.demo && App.demoMatches[id] ? App.demoMatches[id] : App.matchById[id];
+  const isLive = m => m && m.period !== 'pre' && m.period !== 'FT';
+  const currentDay = () => App.days.find(d => d.id === App.dayId) || App.days[0];
 
-  /* engine → ticker/fx bridge */
+  /* engine/feed → ticker/fx bridge */
   window.onKeyEvent = function (m, ev) {
     if (m.booting) return;
     const minTxt = ev.min ? `${ev.min}'` : '';
@@ -658,19 +656,189 @@
     }
   };
 
+  /* ============================ feed match state ============================ */
+
+  function createFeedMatch(fx) {
+    const home = WC.TEAMS[fx.home], away = WC.TEAMS[fx.away];
+    return {
+      fixture: fx, home, away, homeAdv: fx.home === 'MEX' ? 4 : 2,
+      colors: teamColors(home, away), mode: 'feed',
+      period: 'pre', minute: 0, score: [0, 0],
+      realStats: null, events: [], seen: new Set(), goalLog: [],
+      feedMinute: null, feedAt: 0, espn: { homeId: '', awayId: '' },
+      players: [[], []], ui: null, booting: false
+    };
+  }
+
+  function pushFeedEvent(m, ev) {
+    m.events.push(ev);
+    if (!m.booting && typeof onKeyEvent === 'function' && ['goal', 'yellow', 'red', 'ht', 'ft'].includes(ev.type)) onKeyEvent(m, ev);
+  }
+
+  /* apply one normalized feed event onto a feed match state */
+  function applyFeed(m, ne, quiet) {
+    const wasBooting = m.booting;
+    if (quiet) m.booting = true;
+    try {
+      m.espn.homeId = ne.homeId; m.espn.awayId = ne.awayId;
+
+      let newPeriod;
+      if (ne.state === 'pre') newPeriod = 'pre';
+      else if (ne.state === 'post') newPeriod = 'FT';
+      else newPeriod = ne.halftime ? 'HT' : (ne.period >= 2 ? '2H' : '1H');
+
+      if (newPeriod !== 'pre' && m.period === 'pre' && !m.events.length) {
+        pushFeedEvent(m, { min: 0, side: -1, type: 'ko', title: 'Kickoff', sub: `${m.home.name} v ${m.away.name} under way${m.fixture.venue ? ' at ' + m.fixture.venue : ''}` });
+      }
+
+      /* clock */
+      if (ne.clockMin != null && newPeriod !== 'pre') {
+        m.feedMinute = ne.clockMin; m.feedAt = Date.now();
+        m.minute = ne.clockMin;
+      } else if (newPeriod === 'HT') { m.minute = 45; m.feedMinute = null; }
+      else if (newPeriod === 'FT') { m.minute = Math.max(m.minute, 90); m.feedMinute = null; }
+
+      /* new goal/card details */
+      const details = (ne.details || []).slice().sort((a, b) => (a.min || 0) - (b.min || 0));
+      for (const d of details) {
+        if (m.seen.has(d.key)) continue;
+        m.seen.add(d.key);
+        const rawSide = d.teamId === ne.homeId ? 0 : d.teamId === ne.awayId ? 1 : -1;
+        if (d.goal && rawSide !== -1) {
+          const side = d.ownGoal ? 1 - rawSide : rawSide;
+          m.score[side]++;
+          const team = side === 0 ? m.home : m.away;
+          if (d.player) m.goalLog.push({ name: d.player, team });
+          pushFeedEvent(m, {
+            min: d.min || 0, side, type: 'goal',
+            title: `GOAL — ${team.name}`,
+            sub: `${d.player ? d.player + ' ' : ''}${d.penalty ? 'converts the penalty' : d.ownGoal ? '(own goal)' : 'scores'} · ${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code}`
+          });
+        } else if (d.red && rawSide !== -1) {
+          const team = rawSide === 0 ? m.home : m.away;
+          pushFeedEvent(m, { min: d.min || 0, side: rawSide, type: 'red', title: `RED CARD — ${team.name}`, sub: d.player || 'Down to ten' });
+        } else if (d.yellow && rawSide !== -1) {
+          const team = rawSide === 0 ? m.home : m.away;
+          pushFeedEvent(m, { min: d.min || 0, side: rawSide, type: 'yellow', title: `Yellow card — ${team.name}`, sub: d.player || '' });
+        }
+      }
+
+      /* absolute score sync — the feed total is the truth */
+      if (Array.isArray(ne.score)) {
+        for (const side of [0, 1]) {
+          while (m.score[side] < ne.score[side]) {
+            m.score[side]++;
+            const team = side === 0 ? m.home : m.away;
+            pushFeedEvent(m, {
+              min: Math.round(m.minute) || 0, side, type: 'goal',
+              title: `GOAL — ${team.name}`,
+              sub: `${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code}`
+            });
+          }
+          if (m.score[side] > ne.score[side]) m.score[side] = ne.score[side]; // VAR correction
+        }
+      }
+
+      /* period transition events */
+      if (newPeriod !== m.period) {
+        if (newPeriod === 'HT') pushFeedEvent(m, { min: 45, side: -1, type: 'ht', title: 'Half-time', sub: `${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code} at the break` });
+        if (newPeriod === '2H' && m.period === 'HT') pushFeedEvent(m, { min: 45, side: -1, type: 'ko', title: 'Second half', sub: 'Back underway' });
+        if (newPeriod === 'FT') pushFeedEvent(m, { min: Math.max(90, Math.round(m.minute)), side: -1, type: 'ft', title: 'Full-time', sub: `Final: ${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code}` });
+        m.period = newPeriod;
+      }
+
+      if (ne.attendance) m.fixture.attendance = ne.attendance.toLocaleString('en-US');
+    } finally {
+      m.booting = wasBooting;
+    }
+  }
+
+  /* clock keeps moving between polls */
+  function tickFeed(m) {
+    if (m.period !== '1H' && m.period !== '2H') return;
+    if (m.feedMinute == null) return;
+    const cap = m.period === '1H' ? 53 : 100;
+    m.minute = Math.min(m.feedMinute + (Date.now() - m.feedAt) / 60000, m.feedMinute + 2.5, cap);
+  }
+
+  function ensureMatch(fx) {
+    let m = App.matchById[fx.id];
+    if (m) return m;
+    if (fx.feed && App.feedOn) {
+      m = createFeedMatch(fx);
+      const ne = App.schedule.get(fx.espnId);
+      if (ne && ne.state !== 'pre') applyFeed(m, ne, true);
+    } else {
+      m = createMatch(fx);
+      m.booting = true;
+      tickReal(m, nowMs());
+      m.booting = false;
+    }
+    App.matchById[fx.id] = m;
+    App.matches.push(m);
+    return m;
+  }
+
+  /* ============================ feed polling ============================ */
+
+  let pollBusy = false;
+  async function pollActiveDay(initial) {
+    if (!App.feedOn || pollBusy) return;
+    pollBusy = true;
+    try {
+      const day = currentDay();
+      const map = await Feed.pollDay(day.fixtures);
+      if (!map) { App.feedStale = true; return; }
+      App.feedStale = false;
+      let layoutChanged = false;
+      for (const fx of day.fixtures) {
+        const ne = map.get(fx.espnId);
+        if (!ne) continue;
+        App.schedule.set(ne.id, ne);
+        if (ne.state === 'pre') continue;
+        const existed = !!App.matchById[fx.id];
+        const m = ensureMatch(fx);
+        const before = m.period;
+        if (existed || !initial) applyFeed(m, ne, initial);
+        if ((before === 'pre' || !existed) && m.period !== 'pre') layoutChanged = true;
+      }
+      if (layoutChanged && App.tab === 'matches' && !App.demo) renderMatchesView();
+
+      /* real team stats for matches that are underway or done */
+      const targets = day.fixtures
+        .map(fx => App.matchById[fx.id])
+        .filter(m => m && m.mode === 'feed' && m.period !== 'pre')
+        .slice(0, 8);
+      await Promise.all(targets.map(async m => {
+        const stats = await Feed.summary(m.fixture.espnId, m.espn.homeId, m.espn.awayId);
+        if (stats && Object.keys(stats).length) m.realStats = stats;
+      }));
+    } finally {
+      pollBusy = false;
+    }
+  }
+
+  async function refreshSchedule() {
+    if (!App.feedOn) return;
+    const sched = await Feed.loadSchedule();
+    if (!sched) return;
+    for (const e of sched.events) App.schedule.set(e.id, e);
+    if (Object.keys(sched.groups).length) App.groups = sched.groups;
+  }
+
   /* ============================ ticker ============================ */
 
   function renderTicker() {
     const track = $('#tickerTrack');
     if (!track) return;
-    const items = App.ticker.length ? App.ticker : ['Welcome to the World Cup — matchday feeds update in real time'];
+    const items = App.ticker.length ? App.ticker : ['Welcome to the World Cup — live scores update every minute'];
     const seq = items.map(t => `<span class="ticker__item">${ICONS.zap}${t}</span>`).join('');
-    track.innerHTML = REDUCED ? seq : seq + seq; // duplicate for seamless loop
+    track.innerHTML = REDUCED ? seq : seq + seq;
   }
 
   /* ============================ match sections ============================ */
 
-  const STAT_DEFS = [
+  const SIM_STAT_DEFS = [
     { key: 'shots', label: 'Shots' },
     { key: 'sot', label: 'On Target' },
     { key: 'xg', label: 'Expected Goals (xG)', fmt: v => v.toFixed(2) },
@@ -685,8 +853,23 @@
     { key: 'reds', label: 'Red Cards' }
   ];
 
+  /* feed stats use ESPN's stat names */
+  const FEED_STAT_DEFS = [
+    { key: 'totalShots', label: 'Shots' },
+    { key: 'shotsOnTarget', label: 'On Target' },
+    { key: 'wonCorners', label: 'Corners' },
+    { key: 'saves', label: 'Saves' },
+    { key: 'foulsCommitted', label: 'Fouls' },
+    { key: 'offsides', label: 'Offsides' },
+    { key: 'totalPasses', label: 'Passes' },
+    { key: 'possessionPct', label: 'Possession %', fmt: v => Math.round(v) + '%' },
+    { key: 'yellowCards', label: 'Yellow Cards' },
+    { key: 'redCards', label: 'Red Cards' }
+  ];
+
   function buildMatchSection(m, index) {
     const fx = m.fixture;
+    const feed = m.mode === 'feed';
     const sec = h('section', 'match');
     sec.id = 'match-' + fx.id;
     sec.style.setProperty('--tc-h', m.colors[0]);
@@ -707,12 +890,14 @@
     /* hero scoreboard */
     const hero = h('header', 'match-hero reveal');
     const meta = h('div', 'match-meta');
-    let modeChip = '';
-    if (m.mode === 'sprint') modeChip = `<span class="chip chip--sim">${App.demo ? 'DEMO SIM · 6×' : 'ALT-UNIVERSE SIM · 6×'}</span>`;
+    let modeChip;
+    if (feed) modeChip = `<span class="chip chip--official">${ICONS.wifi}LIVE DATA · ESPN</span>`;
+    else if (m.mode === 'sprint') modeChip = `<span class="chip chip--sim">${App.demo ? 'DEMO SIM · 6×' : 'ALT-UNIVERSE SIM · 6×'}</span>`;
     else if (m.script) modeChip = `<span class="chip chip--official">OFFICIAL RESULT</span>`;
+    else modeChip = `<span class="chip chip--sim">SIM FALLBACK</span>`;
     meta.innerHTML = `
-      <span class="chip chip--group">GROUP ${fx.group}</span>${modeChip}
-      <span class="chip">${ICONS.pin}${fx.venue} · ${fx.city}</span>
+      <span class="chip chip--group">${fx.group ? 'GROUP ' + fx.group : 'WORLD CUP 26'}</span>${modeChip}
+      ${fx.venue ? `<span class="chip">${ICONS.pin}${fx.venue}${fx.city ? ' · ' + fx.city : ''}</span>` : ''}
       ${fx.attendance ? `<span class="chip">${ICONS.users}${fx.attendance}</span>` : ''}
       ${fx.referee ? `<span class="chip">${ICONS.whistle}${fx.referee}</span>` : ''}
       ${fx.weather ? `<span class="chip">${fx.weather}</span>` : ''}`;
@@ -727,7 +912,7 @@
     const scoreWrap = h('div', 'scoreboard__score', '0&nbsp;–&nbsp;0');
     scoreWrap.setAttribute('aria-live', 'off');
     const clock = h('div', 'scoreboard__clock', `<span class="live-dot" aria-hidden="true"></span><span class="clock-text">00:00</span>`);
-    const note = h('div', 'scoreboard__note', m.script && m.script.note ? m.script.note : '');
+    const note = h('div', 'scoreboard__note', !feed && m.script && m.script.note ? m.script.note : '');
     const replay = h('button', 'btn-replay', `${ICONS.play} Run an alt-universe sim`);
     replay.type = 'button';
     replay.hidden = true;
@@ -751,7 +936,7 @@
 
     /* odds panel */
     const odds = h('div', 'panel panel--accent reveal');
-    odds.innerHTML = `<div class="panel__head">${ICONS.zap}<h3>Live Betting Lines</h3><span class="sim-badge" title="Simulated demo feed">SIM FEED</span></div>`;
+    odds.innerHTML = `<div class="panel__head">${ICONS.zap}<h3>Live Betting Lines</h3><span class="sim-badge" title="Model-derived from the live score — not a sportsbook">MODEL ODDS</span></div>`;
     const ml = h('div', 'odds-row');
     ml.innerHTML = `
       <div class="odds-cell"><span class="odds-cell__label">${m.home.code} WIN</span><span class="odds-val" data-k="h">—</span></div>
@@ -764,109 +949,116 @@
       <div class="odds-cell"><span class="odds-cell__label">BOTH TEAMS TO SCORE</span><span class="odds-val" data-k="btts">—</span></div>`;
     odds.append(ml, totals);
 
-    const props = h('div', 'props');
-    for (const side of [0, 1]) {
-      const team = side === 0 ? m.home : m.away;
-      const col = h('div', 'props__col');
-      col.appendChild(h('div', 'props__head', `${team.code} — TO SCORE (REST OF MATCH)`));
-      const list = h('div', 'props__list');
-      list.dataset.side = String(side);
-      col.appendChild(list);
-      props.appendChild(col);
+    const hasRosters = m.players[0].length && m.players[1].length;
+    if (hasRosters) {
+      const props = h('div', 'props');
+      for (const side of [0, 1]) {
+        const team = side === 0 ? m.home : m.away;
+        const col = h('div', 'props__col');
+        col.appendChild(h('div', 'props__head', `${team.code} — TO SCORE (REST OF MATCH)`));
+        const list = h('div', 'props__list');
+        list.dataset.side = String(side);
+        col.appendChild(list);
+        props.appendChild(col);
+      }
+      odds.appendChild(props);
     }
-    odds.appendChild(props);
-    odds.appendChild(h('p', 'fine-print', 'Odds are simulated for entertainment — this is not a sportsbook.'));
+    odds.appendChild(h('p', 'fine-print', 'Lines are derived from the live score by our model, for entertainment — this is not a sportsbook.'));
     sec.appendChild(odds);
 
     /* stats panel */
     const statsPanel = h('div', 'panel panel--accent reveal');
-    statsPanel.innerHTML = `<div class="panel__head">${ICONS.chart}<h3>Live Match Stats</h3><span class="panel__sub live-min"></span></div>`;
+    statsPanel.innerHTML = `<div class="panel__head">${ICONS.chart}<h3>Live Match Stats</h3><span class="sim-badge stats-src">${feed ? 'AWAITING FEED' : 'SIM'}</span><span class="panel__sub live-min"></span></div>`;
     const possRow = h('div', 'poss');
     possRow.innerHTML = `
-      <div class="poss__nums"><span class="poss-h">50%</span><span class="poss__label">POSSESSION</span><span class="poss-a">50%</span></div>
+      <div class="poss__nums"><span class="poss-h">—</span><span class="poss__label">POSSESSION</span><span class="poss-a">—</span></div>
       <div class="poss__bar"><div class="poss__fill" style="width:50%;background:${m.colors[0]}"></div></div>`;
     statsPanel.appendChild(possRow);
     const statList = h('div', 'stat-list');
-    for (const def of STAT_DEFS) {
+    const defs = feed ? FEED_STAT_DEFS.filter(d => d.key !== 'possessionPct') : SIM_STAT_DEFS;
+    for (const def of defs) {
       const row = h('div', 'stat-row');
       row.dataset.key = def.key;
       row.innerHTML = `
-        <span class="stat-row__val stat-row__val--h">0</span>
+        <span class="stat-row__val stat-row__val--h">—</span>
         <div class="stat-row__mid">
           <span class="stat-row__label">${def.label}</span>
           <div class="tug"><div class="tug__h" style="background:${m.colors[0]}"></div><div class="tug__a" style="background:${m.colors[1]}"></div></div>
         </div>
-        <span class="stat-row__val stat-row__val--a">0</span>`;
+        <span class="stat-row__val stat-row__val--a">—</span>`;
       statList.appendChild(row);
     }
     statsPanel.appendChild(statList);
     sec.appendChild(statsPanel);
 
-    /* momentum + shot map */
-    const duo = h('div', 'grid2');
-    const mom = h('div', 'panel reveal reveal-l');
-    mom.innerHTML = `<div class="panel__head">${ICONS.flame}<h3>Attack Momentum</h3><span class="panel__sub">last 90'</span></div>`;
-    const canvas = document.createElement('canvas');
-    canvas.className = 'momentum';
-    canvas.height = 150;
-    canvas.setAttribute('role', 'img');
-    canvas.setAttribute('aria-label', 'Attack momentum chart');
-    mom.appendChild(canvas);
-    mom.appendChild(h('div', 'legend', `<span><i style="background:${m.colors[0]}"></i>${m.home.code}</span><span><i style="background:${m.colors[1]}"></i>${m.away.code}</span>`));
-    const shot = h('div', 'panel reveal reveal-r');
-    shot.innerHTML = `<div class="panel__head">${ICONS.target}<h3>Shot Map</h3><span class="panel__sub">● goal ○ attempt</span></div>`;
-    const pitch = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    pitch.setAttribute('viewBox', '0 0 100 64');
-    pitch.setAttribute('class', 'pitch');
-    pitch.setAttribute('role', 'img');
-    pitch.setAttribute('aria-label', 'Shot locations on the pitch');
-    pitch.innerHTML = `
-      <rect x="1" y="1" width="98" height="62" rx="2" class="pitch__line"/>
-      <line x1="50" y1="1" x2="50" y2="63" class="pitch__line"/>
-      <circle cx="50" cy="32" r="7" class="pitch__line"/>
-      <rect x="1" y="18" width="12" height="28" class="pitch__line"/>
-      <rect x="87" y="18" width="12" height="28" class="pitch__line"/>
-      <g class="pitch__dots"></g>`;
-    shot.appendChild(pitch);
-    shot.appendChild(h('div', 'legend', `<span><i style="background:${m.colors[0]}"></i>${m.home.code} attack →</span><span><i style="background:${m.colors[1]}"></i>← ${m.away.code} attack</span>`));
-    duo.append(mom, shot);
-    sec.appendChild(duo);
+    /* sim-only texture: momentum, shot map, player stat lines, MOTM */
+    let canvas = null, dots = null;
+    if (!feed) {
+      const duo = h('div', 'grid2');
+      const mom = h('div', 'panel reveal reveal-l');
+      mom.innerHTML = `<div class="panel__head">${ICONS.flame}<h3>Attack Momentum</h3><span class="panel__sub">last 90'</span></div>`;
+      canvas = document.createElement('canvas');
+      canvas.className = 'momentum';
+      canvas.height = 150;
+      canvas.setAttribute('role', 'img');
+      canvas.setAttribute('aria-label', 'Attack momentum chart');
+      mom.appendChild(canvas);
+      mom.appendChild(h('div', 'legend', `<span><i style="background:${m.colors[0]}"></i>${m.home.code}</span><span><i style="background:${m.colors[1]}"></i>${m.away.code}</span>`));
+      const shot = h('div', 'panel reveal reveal-r');
+      shot.innerHTML = `<div class="panel__head">${ICONS.target}<h3>Shot Map</h3><span class="panel__sub">● goal ○ attempt</span></div>`;
+      const pitch = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      pitch.setAttribute('viewBox', '0 0 100 64');
+      pitch.setAttribute('class', 'pitch');
+      pitch.setAttribute('role', 'img');
+      pitch.setAttribute('aria-label', 'Shot locations on the pitch');
+      pitch.innerHTML = `
+        <rect x="1" y="1" width="98" height="62" rx="2" class="pitch__line"/>
+        <line x1="50" y1="1" x2="50" y2="63" class="pitch__line"/>
+        <circle cx="50" cy="32" r="7" class="pitch__line"/>
+        <rect x="1" y="18" width="12" height="28" class="pitch__line"/>
+        <rect x="87" y="18" width="12" height="28" class="pitch__line"/>
+        <g class="pitch__dots"></g>`;
+      dots = pitch.querySelector('.pitch__dots');
+      shot.appendChild(pitch);
+      shot.appendChild(h('div', 'legend', `<span><i style="background:${m.colors[0]}"></i>${m.home.code} attack →</span><span><i style="background:${m.colors[1]}"></i>← ${m.away.code} attack</span>`));
+      duo.append(mom, shot);
+      sec.appendChild(duo);
 
-    /* player stat lines */
-    const pgrid = h('div', 'grid2');
-    for (const side of [0, 1]) {
-      const team = side === 0 ? m.home : m.away;
-      const panel = h('div', 'panel reveal ' + (side === 0 ? 'reveal-l' : 'reveal-r'));
-      panel.innerHTML = `<div class="panel__head">${ICONS.users}<h3>${team.name} — Stat Lines</h3></div>`;
-      const scroller = h('div', 'table-scroll');
-      const tbl = h('table', 'ptable');
-      tbl.innerHTML = `<thead><tr><th scope="col">Player</th><th scope="col">Pos</th><th scope="col">Sh</th><th scope="col">G</th><th scope="col">Pass</th><th scope="col">Acc</th><th scope="col">Rate</th></tr></thead><tbody data-side="${side}"></tbody>`;
-      scroller.appendChild(tbl);
-      panel.appendChild(scroller);
-      pgrid.appendChild(panel);
+      if (hasRosters) {
+        const pgrid = h('div', 'grid2');
+        for (const side of [0, 1]) {
+          const team = side === 0 ? m.home : m.away;
+          const panel = h('div', 'panel reveal ' + (side === 0 ? 'reveal-l' : 'reveal-r'));
+          panel.innerHTML = `<div class="panel__head">${ICONS.users}<h3>${team.name} — Stat Lines</h3></div>`;
+          const scroller = h('div', 'table-scroll');
+          const tbl = h('table', 'ptable');
+          tbl.innerHTML = `<thead><tr><th scope="col">Player</th><th scope="col">Pos</th><th scope="col">Sh</th><th scope="col">G</th><th scope="col">Pass</th><th scope="col">Acc</th><th scope="col">Rate</th></tr></thead><tbody data-side="${side}"></tbody>`;
+          scroller.appendChild(tbl);
+          panel.appendChild(scroller);
+          pgrid.appendChild(panel);
+        }
+        sec.appendChild(pgrid);
+
+        const motm = h('div', 'panel reveal');
+        motm.innerHTML = `<div class="panel__head">${ICONS.crown}<h3>Crew Man of the Match</h3><span class="panel__sub">tap to vote — saved on this device</span></div><div class="motm" data-fx="${fx.id}"></div>`;
+        sec.appendChild(motm);
+      }
     }
-    sec.appendChild(pgrid);
-
-    /* crew man of the match */
-    const motm = h('div', 'panel reveal');
-    motm.innerHTML = `<div class="panel__head">${ICONS.crown}<h3>Crew Man of the Match</h3><span class="panel__sub">tap to vote — saved on this device</span></div><div class="motm" data-fx="${fx.id}"></div>`;
-    sec.appendChild(motm);
 
     /* timeline */
     const tl = h('div', 'panel reveal');
-    tl.innerHTML = `<div class="panel__head">${ICONS.clock}<h3>Match Timeline</h3><span class="panel__sub">live feed</span></div><ol class="timeline" reversed></ol>`;
+    tl.innerHTML = `<div class="panel__head">${ICONS.clock}<h3>Match Timeline</h3><span class="panel__sub">${feed ? 'live feed' : 'sim feed'}</span></div><ol class="timeline" reversed></ol>`;
     sec.appendChild(tl);
 
     m.ui = {
       root: sec, sticky, stickyWrap, status, scoreWrap, clock: clock.querySelector('.clock-text'),
       liveDot: clock.querySelector('.live-dot'), replay, hero,
-      wp, oddsPanel: odds, statsPanel, statList, possRow, canvas,
-      dots: pitch.querySelector('.pitch__dots'), timeline: tl.querySelector('.timeline'),
-      motm: motm.querySelector('.motm'),
+      wp, oddsPanel: odds, statsPanel, statList, possRow, canvas, dots,
+      timeline: tl.querySelector('.timeline'),
+      motm: sec.querySelector('.motm'),
       renderedEvents: 0, renderedShots: 0
     };
 
-    /* sticky bar appears only when the hero scoreboard scrolls out of view */
     if ('IntersectionObserver' in window) {
       const io = new IntersectionObserver(([e]) => {
         const below = e.boundingClientRect.top < 0;
@@ -875,7 +1067,7 @@
       io.observe(hero);
     }
 
-    renderMotm(m);
+    if (m.ui.motm) renderMotm(m);
     updateMatchUI(m, true);
     return sec;
   }
@@ -906,7 +1098,7 @@
   }
 
   function periodBadge(m) {
-    if (m.period === 'FT') return [m.script ? 'FULL-TIME · OFFICIAL' : 'FULL-TIME', 'ft'];
+    if (m.period === 'FT') return [m.mode === 'feed' ? 'FULL-TIME · OFFICIAL' : m.script ? 'FULL-TIME · OFFICIAL' : 'FULL-TIME', 'ft'];
     if (m.period === 'HT') return ['HALF-TIME', 'ht'];
     return ['LIVE · ' + (m.period === '1H' ? '1ST HALF' : '2ND HALF'), 'live'];
   }
@@ -914,6 +1106,7 @@
   function updateMatchUI(m, force) {
     const u = m.ui;
     if (!u || !document.body.contains(u.root) || m.period === 'pre') return;
+    const feed = m.mode === 'feed';
 
     const [label, cls] = periodBadge(m);
     if (u.status.dataset.cls !== cls || force) {
@@ -933,7 +1126,7 @@
       <b>${m.away.code}</b><span class="ms-flag" style="background:${m.away.flag}"></span>
       <span class="ms-clock ${cls === 'live' ? 'is-live' : ''}">${clockText(m)}</span>`;
 
-    /* odds + win prob */
+    /* odds + win prob (model-derived from the live score in every mode) */
     const o = liveOdds(m);
     const set = (k, txt, prob) => setOdds(u.oddsPanel.querySelector(`[data-k="${k}"]`), txt, prob);
     if (m.period === 'FT') {
@@ -962,9 +1155,10 @@
       else set('btts', toAmerican(o.pBtts), o.pBtts);
     }
 
-    /* scorer props */
+    /* scorer props (only when rosters exist) */
     for (const side of [0, 1]) {
       const list = u.oddsPanel.querySelector(`.props__list[data-side="${side}"]`);
+      if (!list) continue;
       const rows = o.scorers.filter(s => s.side === side);
       if (list.children.length !== rows.length) {
         list.innerHTML = '';
@@ -996,59 +1190,97 @@
 
     /* stats */
     u.statsPanel.querySelector('.live-min').textContent = m.period === 'FT' ? 'final' : `updating · ${clockText(m)}`;
-    const possH = Math.round(m.poss);
-    const pH2 = u.possRow.querySelector('.poss-h'), pA2 = u.possRow.querySelector('.poss-a');
-    if (!pH2.dataset.counting) pH2.textContent = possH + '%';
-    if (!pA2.dataset.counting) pA2.textContent = (100 - possH) + '%';
-    u.possRow.querySelector('.poss__fill').style.width = possH + '%';
-    for (const def of STAT_DEFS) {
-      const row = u.statList.querySelector(`[data-key="${def.key}"]`);
-      const vh = m.stats[def.key][0], va = m.stats[def.key][1];
-      const fmt = def.fmt || (v => String(Math.round(v)));
-      const vhEl = row.querySelector('.stat-row__val--h'), vaEl = row.querySelector('.stat-row__val--a');
-      if (!vhEl.dataset.counting) vhEl.textContent = fmt(vh);
-      if (!vaEl.dataset.counting) vaEl.textContent = fmt(va);
-      const sum = vh + va;
-      row.querySelector('.tug__h').style.width = (sum ? vh / sum * 50 : 0) + '%';
-      row.querySelector('.tug__a').style.width = (sum ? va / sum * 50 : 0) + '%';
+    const srcBadge = u.statsPanel.querySelector('.stats-src');
+    if (feed) {
+      const got = m.realStats && Object.keys(m.realStats).length;
+      srcBadge.textContent = got ? 'LIVE FEED' : 'AWAITING FEED';
+      srcBadge.classList.toggle('sim-badge--live', !!got);
     }
 
-    /* shot map */
-    while (u.renderedShots < m.shotMap.length) {
-      const s = m.shotMap[u.renderedShots++];
-      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      c.setAttribute('cx', (s.x || 50).toFixed(1));
-      c.setAttribute('cy', (s.y || 32).toFixed(1));
-      c.setAttribute('r', s.goal ? 2.4 : 1.4);
-      c.setAttribute('class', 'shot-dot' + (s.goal ? ' shot-dot--goal' : ''));
-      c.setAttribute('fill', s.goal ? m.colors[s.side] : 'transparent');
-      c.setAttribute('stroke', m.colors[s.side]);
-      u.dots.appendChild(c);
-    }
-
-    /* player tables */
-    for (const side of [0, 1]) {
-      const tbody = u.root.querySelector(`.ptable tbody[data-side="${side}"]`);
-      const roster = m.players[side];
-      if (tbody.children.length !== roster.length) {
-        tbody.innerHTML = roster.map(() =>
-          `<tr><td class="pt-name"></td><td class="pt-pos"></td><td></td><td class="pt-g"></td><td></td><td></td><td><span class="rating"></span></td></tr>`
-        ).join('');
+    if (feed) {
+      const rs = m.realStats || {};
+      const poss = rs.possessionPct;
+      const pH2 = u.possRow.querySelector('.poss-h'), pA2 = u.possRow.querySelector('.poss-a');
+      if (poss) {
+        if (!pH2.dataset.counting) pH2.textContent = Math.round(poss[0]) + '%';
+        if (!pA2.dataset.counting) pA2.textContent = Math.round(poss[1]) + '%';
+        u.possRow.querySelector('.poss__fill').style.width = Math.round(poss[0]) + '%';
       }
-      roster.forEach((p, i) => {
-        const tr = tbody.children[i];
-        const cards = (p.yellow ? '<span class="mini-card mini-card--y"></span>' : '') + (p.red ? '<span class="mini-card mini-card--r"></span>' : '');
-        tr.children[0].innerHTML = `${p.name}${p.goals ? ' ' + ICONS.ball : ''}${cards}`;
-        tr.children[1].textContent = p.pos;
-        tr.children[2].textContent = p.shots;
-        tr.children[3].textContent = p.goals;
-        tr.children[3].classList.toggle('has-goal', p.goals > 0);
-        tr.children[4].textContent = p.passes;
-        tr.children[5].textContent = Math.round(p.acc) + '%';
-        const r = tr.children[6].firstElementChild;
-        r.textContent = p.rating.toFixed(1);
-        r.className = 'rating ' + (p.rating >= 7.4 ? 'rating--hot' : p.rating < 6.3 ? 'rating--cold' : '');
-      });
+      for (const def of FEED_STAT_DEFS) {
+        if (def.key === 'possessionPct') continue;
+        const row = u.statList.querySelector(`[data-key="${def.key}"]`);
+        if (!row) continue;
+        const pair = rs[def.key];
+        const vhEl = row.querySelector('.stat-row__val--h'), vaEl = row.querySelector('.stat-row__val--a');
+        if (!pair) { vhEl.textContent = '—'; vaEl.textContent = '—'; continue; }
+        const fmt = def.fmt || (v => String(Math.round(v)));
+        if (!vhEl.dataset.counting) vhEl.textContent = fmt(pair[0]);
+        if (!vaEl.dataset.counting) vaEl.textContent = fmt(pair[1]);
+        const sum = pair[0] + pair[1];
+        row.querySelector('.tug__h').style.width = (sum ? pair[0] / sum * 50 : 0) + '%';
+        row.querySelector('.tug__a').style.width = (sum ? pair[1] / sum * 50 : 0) + '%';
+      }
+    } else {
+      const possH = Math.round(m.poss);
+      const pH2 = u.possRow.querySelector('.poss-h'), pA2 = u.possRow.querySelector('.poss-a');
+      if (!pH2.dataset.counting) pH2.textContent = possH + '%';
+      if (!pA2.dataset.counting) pA2.textContent = (100 - possH) + '%';
+      u.possRow.querySelector('.poss__fill').style.width = possH + '%';
+      for (const def of SIM_STAT_DEFS) {
+        const row = u.statList.querySelector(`[data-key="${def.key}"]`);
+        if (!row) continue;
+        const vh = m.stats[def.key][0], va = m.stats[def.key][1];
+        const fmt = def.fmt || (v => String(Math.round(v)));
+        const vhEl = row.querySelector('.stat-row__val--h'), vaEl = row.querySelector('.stat-row__val--a');
+        if (!vhEl.dataset.counting) vhEl.textContent = fmt(vh);
+        if (!vaEl.dataset.counting) vaEl.textContent = fmt(va);
+        const sum = vh + va;
+        row.querySelector('.tug__h').style.width = (sum ? vh / sum * 50 : 0) + '%';
+        row.querySelector('.tug__a').style.width = (sum ? va / sum * 50 : 0) + '%';
+      }
+    }
+
+    /* shot map (sim texture only) */
+    if (u.dots) {
+      while (u.renderedShots < m.shotMap.length) {
+        const s = m.shotMap[u.renderedShots++];
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', (s.x || 50).toFixed(1));
+        c.setAttribute('cy', (s.y || 32).toFixed(1));
+        c.setAttribute('r', s.goal ? 2.4 : 1.4);
+        c.setAttribute('class', 'shot-dot' + (s.goal ? ' shot-dot--goal' : ''));
+        c.setAttribute('fill', s.goal ? m.colors[s.side] : 'transparent');
+        c.setAttribute('stroke', m.colors[s.side]);
+        u.dots.appendChild(c);
+      }
+    }
+
+    /* player tables (sim texture only) */
+    if (!feed) {
+      for (const side of [0, 1]) {
+        const tbody = u.root.querySelector(`.ptable tbody[data-side="${side}"]`);
+        if (!tbody) continue;
+        const roster = m.players[side];
+        if (tbody.children.length !== roster.length) {
+          tbody.innerHTML = roster.map(() =>
+            `<tr><td class="pt-name"></td><td class="pt-pos"></td><td></td><td class="pt-g"></td><td></td><td></td><td><span class="rating"></span></td></tr>`
+          ).join('');
+        }
+        roster.forEach((p, i) => {
+          const tr = tbody.children[i];
+          const cards = (p.yellow ? '<span class="mini-card mini-card--y"></span>' : '') + (p.red ? '<span class="mini-card mini-card--r"></span>' : '');
+          tr.children[0].innerHTML = `${p.name}${p.goals ? ' ' + ICONS.ball : ''}${cards}`;
+          tr.children[1].textContent = p.pos;
+          tr.children[2].textContent = p.shots;
+          tr.children[3].textContent = p.goals;
+          tr.children[3].classList.toggle('has-goal', p.goals > 0);
+          tr.children[4].textContent = p.passes;
+          tr.children[5].textContent = Math.round(p.acc) + '%';
+          const r = tr.children[6].firstElementChild;
+          r.textContent = p.rating.toFixed(1);
+          r.className = 'rating ' + (p.rating >= 7.4 ? 'rating--hot' : p.rating < 6.3 ? 'rating--cold' : '');
+        });
+      }
     }
 
     /* timeline (newest first) */
@@ -1063,10 +1295,9 @@
     }
   }
 
-  /* momentum chart */
   function drawMomentum(m) {
     const u = m.ui;
-    if (!u || !document.body.contains(u.canvas)) return;
+    if (!u || !u.canvas || !document.body.contains(u.canvas)) return;
     const c = u.canvas, dpr = window.devicePixelRatio || 1;
     const w = c.clientWidth, ht = c.clientHeight;
     if (!w) return;
@@ -1096,13 +1327,14 @@
   }
 
   function replayMatch(m) {
-    const idx = App.matches.indexOf(m);
     const fresh = createMatch(m.fixture, { mode: 'sprint', seed: (Math.random() * 2 ** 31) | 0, ignoreOfficial: true });
     RNG = fresh.rng;
     fresh.booting = true;
     kickoffEvent(fresh);
     fresh.booting = false;
-    App.matches[idx] = fresh;
+    /* replays live in the demo slot so the real feed state stays untouched */
+    App.demoMatches[m.fixture.id] = fresh;
+    fresh._replayOnly = true;
     const old = m.ui.root;
     const sec = buildMatchSection(fresh, 0);
     old.replaceWith(sec);
@@ -1113,37 +1345,63 @@
 
   /* ============================ matches view ============================ */
 
+  function stageFor(dayId) {
+    if (dayId <= '2026-06-27') return 'Group Stage';
+    if (dayId <= '2026-07-03') return 'Round of 32';
+    if (dayId <= '2026-07-07') return 'Round of 16';
+    if (dayId <= '2026-07-11') return 'Quarterfinals';
+    if (dayId <= '2026-07-15') return 'Semifinals';
+    if (dayId <= '2026-07-18') return 'Third Place';
+    return 'The Final';
+  }
+
   function renderMatchesView() {
     const view = $('#view-matches');
     view.innerHTML = '';
-    const day = WC.DAYS.find(d => d.id === App.dayId) || WC.DAYS[0];
+    const day = currentDay();
 
     /* hero strip */
     const hero = h('div', 'dayhero reveal');
     hero.innerHTML = `
       <div class="dayhero__left">
-        <div class="dayhero__kicker">${ICONS.trophy} FIFA WORLD CUP 26™ · ${day.title.toUpperCase()}</div>
-        <h2 class="dayhero__title">${day.id === '2026-06-11' ? 'OPENING DAY.<br><span>IT ALL STARTS HERE.</span>' : day.title.toUpperCase()}</h2>
+        <div class="dayhero__kicker">${ICONS.trophy} FIFA WORLD CUP 26™ · ${stageFor(day.id).toUpperCase()} ${App.feedOn ? '· <span class="feed-pill">' + (App.feedStale ? 'FEED STALE' : 'LIVE FEED') + '</span>' : '· SIM MODE'}</div>
+        <h2 class="dayhero__title">${day.id === '2026-06-11' ? 'OPENING DAY.<br><span>IT ALL STARTS HERE.</span>' : (day.title || day.id).toUpperCase() + '<span>.</span>'}</h2>
         <div class="dayhero__status" id="heroStatus"></div>
-      </div>
-      <div class="dayhero__chips" id="dayChips" aria-label="Pick a matchday"></div>`;
+      </div>`;
     view.appendChild(hero);
-    const chips = hero.querySelector('#dayChips');
-    for (const d of WC.DAYS) {
-      const liveNow = d.fixtures.some(fx => { const m = getMatch(fx.id); return m && isLive(m); });
+
+    /* full-tournament day strip */
+    const strip = h('div', 'dayscroll reveal');
+    const chips = h('div', 'dayscroll__track');
+    chips.id = 'dayChips';
+    chips.setAttribute('aria-label', 'Pick a matchday');
+    for (const d of App.days) {
+      const liveNow = d.fixtures.some(fx => isLive(App.matchById[fx.id]));
       const b = h('button', 'day-chip' + (d.id === day.id ? ' is-on' : ''),
-        `<span class="day-chip__top">${d.label}${liveNow ? '<span class="live-dot live-dot--sm"></span>' : ''}</span><small>${d.fixtures.length} matches</small>`);
+        `<span class="day-chip__top">${d.label}${liveNow ? '<span class="live-dot live-dot--sm"></span>' : ''}</span><small>${d.fixtures.length} ${d.fixtures.length === 1 ? 'match' : 'matches'}</small>`);
       b.type = 'button';
       b.setAttribute('aria-pressed', d.id === day.id ? 'true' : 'false');
-      b.addEventListener('click', () => { App.dayId = d.id; renderMatchesView(); window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' }); });
+      b.addEventListener('click', () => {
+        App.dayId = d.id;
+        if (App.demo) buildDemoDay();
+        renderMatchesView();
+        if (App.feedOn && !App.demo) pollActiveDay();
+        window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
+      });
       chips.appendChild(b);
     }
+    strip.appendChild(chips);
+    view.appendChild(strip);
+    requestAnimationFrame(() => {
+      const on = chips.querySelector('.is-on');
+      if (on) chips.scrollLeft = Math.max(0, on.offsetLeft - chips.clientWidth / 2 + on.clientWidth / 2);
+    });
 
     /* quick-jump strip */
-    const playing = day.fixtures.map(fx => getMatch(fx.id)).filter(m => m && m.period !== 'pre');
-    if (playing.length) {
+    const dayMatches = day.fixtures.map(fx => getMatch(fx.id)).filter(m => m && m.period !== 'pre');
+    if (dayMatches.length > 1) {
       const jump = h('div', 'jumpstrip reveal');
-      playing.forEach(m => {
+      dayMatches.forEach(m => {
         const a = h('a', 'jump-card', '');
         a.href = '#match-' + m.fixture.id;
         a.dataset.mid = m.fixture.id;
@@ -1155,7 +1413,13 @@
     /* match sections + upcoming cards, in fixture order */
     let grid = null, sectionIndex = 0;
     for (const fx of day.fixtures) {
-      const m = getMatch(fx.id);
+      let m = getMatch(fx.id);
+      if (!m && App.feedOn && fx.feed) {
+        const ne = App.schedule.get(fx.espnId);
+        if (ne && ne.state !== 'pre') m = ensureMatch(fx);
+      } else if (!m && !App.feedOn) {
+        m = ensureMatch(fx);
+      }
       if (!m || m.period === 'pre') {
         if (!grid) { grid = h('div', 'upcoming-grid'); view.appendChild(grid); }
         grid.appendChild(buildUpcomingCard(fx));
@@ -1164,9 +1428,8 @@
         view.appendChild(buildMatchSection(m, sectionIndex++));
       }
     }
-    playing.forEach(m => drawMomentum(m));
+    dayMatches.forEach(m => drawMomentum(m));
 
-    /* kickoff trivia */
     view.appendChild(buildTrivia());
 
     updateJumpCards();
@@ -1176,23 +1439,30 @@
 
   function buildUpcomingCard(fx) {
     const home = WC.TEAMS[fx.home], away = WC.TEAMS[fx.away];
-    const p = probsFor(home.strength, away.strength, fx.home === 'MEX' ? 4 : 2, 0, 0, 0);
+    const tbd = fx.home === 'TBD' || fx.away === 'TBD';
     const card = h('article', 'panel panel--accent upcoming reveal');
     card.style.setProperty('--tc-h', home.color);
-    card.style.setProperty('--tc-a', away.color2 && teamColors(home, away)[1] || away.color);
-    card.innerHTML = `
-      <div class="upcoming__meta"><span class="chip chip--group">GROUP ${fx.group}</span><span class="chip">${ICONS.pin}${fx.venue} · ${fx.city}</span></div>
-      <div class="upcoming__teams">
-        <div class="upcoming__team"><span class="flag flag--lg" style="background:${home.flag}" role="img" aria-label="${home.name} flag"></span><b>${home.name}</b></div>
-        <div class="upcoming__vs"><span class="upcoming__count" data-kick="${fx.kickoffUTC}">—</span><small>${fx.kickLocal}</small></div>
-        <div class="upcoming__team"><span class="flag flag--lg" style="background:${away.flag}" role="img" aria-label="${away.name} flag"></span><b>${away.name}</b></div>
-      </div>
+    card.style.setProperty('--tc-a', teamColors(home, away)[1]);
+    let oddsRow = '';
+    if (!tbd) {
+      const p = probsFor(home.strength, away.strength, fx.home === 'MEX' ? 4 : 2, 0, 0, 0);
+      oddsRow = `
       <div class="odds-row odds-row--secondary">
         <div class="odds-cell"><span class="odds-cell__label">${home.code} WIN</span><span class="odds-val">${toAmerican(p.pH)}</span></div>
         <div class="odds-cell"><span class="odds-cell__label">DRAW</span><span class="odds-val">${toAmerican(p.pD)}</span></div>
         <div class="odds-cell"><span class="odds-cell__label">${away.code} WIN</span><span class="odds-val">${toAmerican(p.pA)}</span></div>
+      </div>`;
+    }
+    const stars = (WC.STARS[fx.home] || []).length || (WC.STARS[fx.away] || []).length
+      ? `<div class="upcoming__stars">${ICONS.flame} Ones to watch: <b>${(WC.STARS[fx.home] || ['—']).join(', ')}</b> vs <b>${(WC.STARS[fx.away] || ['—']).join(', ')}</b></div>` : '';
+    card.innerHTML = `
+      <div class="upcoming__meta"><span class="chip chip--group">${fx.group ? 'GROUP ' + fx.group : stageFor((fx.kickoffUTC || '').slice(0, 10)).toUpperCase()}</span>${fx.venue ? `<span class="chip">${ICONS.pin}${fx.venue}${fx.city ? ' · ' + fx.city : ''}</span>` : ''}</div>
+      <div class="upcoming__teams">
+        <div class="upcoming__team"><span class="flag flag--lg" style="background:${home.flag}" role="img" aria-label="${home.name} flag"></span><b>${home.name}</b></div>
+        <div class="upcoming__vs"><span class="upcoming__count" data-kick="${fx.kickoffUTC}">—</span><small>${fx.kickLocal || ''}</small></div>
+        <div class="upcoming__team"><span class="flag flag--lg" style="background:${away.flag}" role="img" aria-label="${away.name} flag"></span><b>${away.name}</b></div>
       </div>
-      <div class="upcoming__stars">${ICONS.flame} Ones to watch: <b>${(WC.STARS[fx.home] || []).join(', ')}</b> vs <b>${(WC.STARS[fx.away] || []).join(', ')}</b></div>`;
+      ${oddsRow}${stars}`;
     return card;
   }
 
@@ -1223,24 +1493,25 @@
       if (!m) return;
       const live = isLive(m);
       a.innerHTML = `<span class="jump-card__live ${live ? '' : 'is-ft'}">${live ? '<span class="live-dot"></span>LIVE ' + clockText(m) : 'FULL-TIME'}</span>
-        <b>${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code}</b><small>${m.fixture.venue}</small>`;
+        <b>${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code}</b><small>${m.fixture.venue || ''}</small>`;
     });
   }
 
   function updateHeroStatus() {
     const el = $('#heroStatus');
     if (!el) return;
-    const day = WC.DAYS.find(d => d.id === App.dayId) || WC.DAYS[0];
-    const states = day.fixtures.map(fx => getMatch(fx.id)).filter(Boolean);
-    const live = states.filter(isLive);
+    const day = currentDay();
+    const live = day.fixtures.map(fx => getMatch(fx.id)).filter(isLive);
     if (live.length) {
-      el.innerHTML = `<span class="hero-live"><span class="live-dot"></span>${live.length === 1 ? '1 MATCH LIVE NOW' : live.length + ' MATCHES LIVE NOW'}</span>`;
+      el.innerHTML = `<span class="hero-live"><span class="live-dot"></span>${live.length === 1 ? '1 MATCH LIVE NOW' : live.length + ' MATCHES LIVE NOW'}</span>${App.feedOn ? ' <span class="hero-feed">scores refresh every 60s</span>' : ''}`;
       return;
     }
-    const pre = states.filter(m => m.period === 'pre')
-      .sort((a, b) => new Date(a.fixture.kickoffUTC) - new Date(b.fixture.kickoffUTC))[0];
-    if (pre) {
-      el.innerHTML = `${ICONS.clock} NEXT KICKOFF IN <b data-kick="${pre.fixture.kickoffUTC}">—</b> — ${pre.home.code} v ${pre.away.code}
+    const preFx = day.fixtures
+      .filter(fx => { const m = getMatch(fx.id); return !m || m.period === 'pre'; })
+      .sort((a, b) => new Date(a.kickoffUTC) - new Date(b.kickoffUTC))
+      .find(fx => new Date(fx.kickoffUTC).getTime() > nowMs() - 3 * 3600e3);
+    if (preFx) {
+      el.innerHTML = `${ICONS.clock} NEXT KICKOFF IN <b data-kick="${preFx.kickoffUTC}">—</b> — ${preFx.home} v ${preFx.away}
         ${App.demo ? '' : `<button type="button" class="btn-ghost btn-ghost--sm" id="demoHint">${ICONS.play} CAN'T WAIT? RUN A DEMO SIM</button>`}`;
       const hint = el.querySelector('#demoHint');
       if (hint) hint.addEventListener('click', toggleDemo);
@@ -1260,18 +1531,31 @@
 
   /* ============================ groups ============================ */
 
-  function liveTable(groupKey) {
-    const codes = WC.GROUPS[groupKey];
+  /* every played/playing result, from the feed schedule or the sim fallback */
+  function resultEntries() {
+    if (App.feedOn) {
+      return [...App.schedule.values()]
+        .filter(e => e.state !== 'pre')
+        .map(e => ({ group: e.group, home: e.home, away: e.away, score: e.score, live: e.state === 'in' }));
+    }
+    return App.matches
+      .filter(m => m.period !== 'pre' && m.mode !== 'sprint')
+      .map(m => ({ group: m.fixture.group, home: m.fixture.home, away: m.fixture.away, score: m.score, live: m.period !== 'FT' }));
+  }
+
+  function liveTable(groupKey, entries) {
+    const codes = App.groups[groupKey] || [];
     const rows = codes.map(c => ({ code: c, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0, live: false }));
-    for (const m of App.matches) {
-      if (m.fixture.group !== groupKey || m.period === 'pre') continue;
-      const rh = rows.find(r => r.code === m.fixture.home);
-      const ra = rows.find(r => r.code === m.fixture.away);
-      const [gh, ga] = m.score;
-      const done = m.period === 'FT';
+    for (const e of entries) {
+      if (e.group !== groupKey) continue;
+      const rh = rows.find(r => r.code === e.home);
+      const ra = rows.find(r => r.code === e.away);
+      if (!rh || !ra) continue;
+      const [gh, ga] = e.score;
       for (const [r, f, a] of [[rh, gh, ga], [ra, ga, gh]]) {
-        r.p = 1; r.gf = f; r.ga = a; r.live = !done;
-        if (f > a) { r.w = 1; r.pts = 3; } else if (f === a) { r.d = 1; r.pts = 1; } else r.l = 1;
+        r.p++; r.gf += f; r.ga += a;
+        if (e.live) r.live = true;
+        if (f > a) { r.w++; r.pts += 3; } else if (f === a) { r.d++; r.pts += 1; } else r.l++;
       }
     }
     rows.sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf);
@@ -1282,16 +1566,21 @@
     const view = $('#view-groups');
     if (!view) return;
     view.innerHTML = `<div class="view-head reveal">${ICONS.trophy}<h2>Group Standings</h2><span class="panel__sub">updates live as goals go in · top 2 + best thirds advance</span></div>`;
+    const entries = resultEntries();
     const grid = h('div', 'groups-grid');
-    for (const g of Object.keys(WC.GROUPS)) {
-      const anyLive = App.matches.some(m => m.fixture.group === g && isLive(m));
+    const groupKeys = Object.keys(App.groups).sort();
+    for (const g of groupKeys) {
+      const table = liveTable(g, entries);
+      if (!table.length) continue;
+      const anyLive = table.some(r => r.live);
       const panel = h('div', 'panel reveal');
       panel.innerHTML = `<div class="panel__head"><h3>GROUP ${g}</h3>${anyLive ? '<span class="sim-badge sim-badge--live">LIVE</span>' : ''}</div>`;
       const tbl = h('table', 'gtable');
       tbl.innerHTML = `<thead><tr><th scope="col">Team</th><th scope="col">P</th><th scope="col">W</th><th scope="col">D</th><th scope="col">L</th><th scope="col">GD</th><th scope="col">Pts</th></tr></thead>`;
       const tb = h('tbody');
-      liveTable(g).forEach((r, i) => {
+      table.forEach((r, i) => {
         const t = WC.TEAMS[r.code];
+        if (!t) return;
         const tr = h('tr', r.live ? 'is-live' : '');
         tr.innerHTML = `
           <td class="gt-team"><span class="gt-rank ${i < 2 ? 'gt-rank--q' : ''}">${i + 1}</span><span class="flag" style="background:${t.flag}"></span>${t.short}${r.live ? '<span class="live-dot live-dot--sm"></span>' : ''}</td>
@@ -1337,23 +1626,40 @@
     if (!view) return;
     view.innerHTML = `<div class="view-head reveal">${ICONS.ball}<h2>Golden Boot Race</h2><span class="panel__sub">live tournament scorers + futures</span></div>`;
 
-    const scorers = [];
-    for (const m of App.matches) {
-      if (m.period === 'pre') continue;
-      for (const side of [0, 1]) {
-        const team = side === 0 ? m.home : m.away;
-        for (const p of m.players[side]) if (p.goals > 0) scorers.push({ name: p.name, team: team.name, flag: team.flag, goals: p.goals });
+    /* aggregate goal scorers across the whole tournament feed */
+    const tally = new Map();
+    if (App.feedOn) {
+      for (const e of App.schedule.values()) {
+        for (const d of (e.details || [])) {
+          if (!d.goal || !d.player || d.ownGoal) continue;
+          const teamCode = d.teamId === e.homeId ? e.home : d.teamId === e.awayId ? e.away : null;
+          const team = teamCode && WC.TEAMS[teamCode];
+          const k = d.player + '|' + (teamCode || '');
+          const cur = tally.get(k) || { name: d.player, team: team ? team.name : '', flag: team ? team.flag : '', goals: 0 };
+          cur.goals++;
+          tally.set(k, cur);
+        }
+      }
+    } else {
+      for (const m of App.matches) {
+        if (m.mode === 'sprint') continue;
+        for (const g of m.goalLog) {
+          const k = g.name + '|' + g.team.code;
+          const cur = tally.get(k) || { name: g.name, team: g.team.name, flag: g.team.flag, goals: 0 };
+          cur.goals++;
+          tally.set(k, cur);
+        }
       }
     }
-    scorers.sort((a, b) => b.goals - a.goals);
+    const scorers = [...tally.values()].filter(s => s.name && s.name !== 'Unknown').sort((a, b) => b.goals - a.goals);
 
     const livePanel = h('div', 'panel reveal');
     livePanel.innerHTML = `<div class="panel__head"><h3>Tournament top scorers</h3><span class="sim-badge sim-badge--live">LIVE</span></div>`;
     if (!scorers.length) {
-      livePanel.appendChild(h('p', 'road-note', 'No goals yet — the race starts today.'));
+      livePanel.appendChild(h('p', 'road-note', 'No goals logged yet — the race is on.'));
     } else {
       const ol = h('ol', 'boot-list');
-      scorers.slice(0, 10).forEach((s, i) => {
+      scorers.slice(0, 12).forEach((s, i) => {
         const li = h('li', 'boot-row' + (i === 0 ? ' boot-row--lead' : ''));
         li.innerHTML = `<span class="boot-rank">${i + 1}</span><span class="flag" style="background:${s.flag}"></span>
           <span class="boot-name">${s.name}<small>${s.team}</small></span>
@@ -1365,13 +1671,13 @@
     view.appendChild(livePanel);
 
     const fut = h('div', 'panel reveal');
-    fut.innerHTML = `<div class="panel__head">${ICONS.zap}<h3>Golden Boot futures</h3><span class="sim-badge">SIM FEED</span></div>`;
+    fut.innerHTML = `<div class="panel__head">${ICONS.zap}<h3>Golden Boot futures</h3><span class="sim-badge">MODEL ODDS</span></div>`;
     const grid = h('div', 'futures-grid');
     WC.GOLDEN_BOOT_FUTURES.forEach(f => {
       grid.appendChild(h('div', 'odds-cell', `<span class="odds-cell__label">${f.player} · ${f.team}</span><span class="odds-val">${f.odds}</span>`));
     });
     fut.appendChild(grid);
-    fut.appendChild(h('p', 'fine-print', 'Futures are simulated for entertainment — not a sportsbook.'));
+    fut.appendChild(h('p', 'fine-print', 'Futures are model estimates for entertainment — not a sportsbook.'));
     view.appendChild(fut);
     observeReveals(view);
   }
@@ -1381,25 +1687,39 @@
   function pickVerdict(fx) {
     const pickVal = App.picks[fx.id];
     if (!pickVal) return null;
-    const m = getMatch(fx.id);
-    if (!m || m.period === 'pre') return { label: 'LOCKED IN', cls: 'wait' };
-    const lead = m.score[0] > m.score[1] ? 'h' : m.score[0] < m.score[1] ? 'a' : 'd';
-    if (m.period === 'FT') return pickVal === lead ? { label: 'WON', cls: 'won' } : { label: 'LOST', cls: 'lost' };
+    let state = null;
+    if (App.feedOn && fx.espnId) {
+      const ne = App.schedule.get(fx.espnId);
+      if (ne && ne.state !== 'pre') state = { score: ne.score, done: ne.state === 'post' };
+    } else {
+      const m = App.matchById[fx.id];
+      if (m && m.period !== 'pre') state = { score: m.score, done: m.period === 'FT' };
+    }
+    if (!state) return { label: 'LOCKED IN', cls: 'wait' };
+    const lead = state.score[0] > state.score[1] ? 'h' : state.score[0] < state.score[1] ? 'a' : 'd';
+    if (state.done) return pickVal === lead ? { label: 'WON', cls: 'won' } : { label: 'LOST', cls: 'lost' };
     return pickVal === lead ? { label: 'ON TRACK', cls: 'track' } : { label: 'BEHIND', cls: 'behind' };
+  }
+
+  /* days worth showing in the picks tab: recent past + near future + anything picked */
+  function pickableDays() {
+    const today = new Date(nowMs());
+    const lo = new Date(today); lo.setDate(lo.getDate() - 2);
+    const hi = new Date(today); hi.setDate(hi.getDate() + 5);
+    const loId = lo.toISOString().slice(0, 10), hiId = hi.toISOString().slice(0, 10);
+    return App.days.filter(d =>
+      (d.id >= loId && d.id <= hiId) || d.fixtures.some(fx => App.picks[fx.id]));
   }
 
   function picksShareText() {
     const lines = ["My World Cup '26 crew picks:"];
-    for (const day of WC.DAYS) {
+    for (const day of App.days) {
       for (const fx of day.fixtures) {
         const pickVal = App.picks[fx.id];
         if (!pickVal) continue;
-        const home = WC.TEAMS[fx.home], away = WC.TEAMS[fx.away];
-        const label = pickVal === 'h' ? home.code : pickVal === 'a' ? away.code : 'DRAW';
+        const label = pickVal === 'h' ? fx.home : pickVal === 'a' ? fx.away : 'DRAW';
         const v = pickVerdict(fx);
-        const m = getMatch(fx.id);
-        const score = m && m.period !== 'pre' ? ` (${m.home.code} ${m.score[0]}-${m.score[1]} ${m.away.code}${m.period === 'FT' ? ' FT' : ` ${clockText(m)}`})` : '';
-        lines.push(`${home.code} v ${away.code}: ${label}${v && (v.cls === 'won' || v.cls === 'lost') ? ' — ' + v.label : ''}${score}`);
+        lines.push(`${fx.home} v ${fx.away}: ${label}${v && (v.cls === 'won' || v.cls === 'lost') ? ' — ' + v.label : ''}`);
       }
     }
     lines.push("— picked on Pitchside '26");
@@ -1411,18 +1731,19 @@
     if (!view) return;
     view.innerHTML = `<div class="view-head reveal">${ICONS.users}<h2>Crew Picks</h2><span class="panel__sub">call every match — saved on this device, settle the bragging rights later</span></div>`;
     let won = 0, lost = 0;
-    for (const day of WC.DAYS) {
+    for (const day of pickableDays()) {
       const panel = h('div', 'panel reveal');
-      panel.innerHTML = `<div class="panel__head">${ICONS.calendar}<h3>${day.label} — ${day.title}</h3></div>`;
+      panel.innerHTML = `<div class="panel__head">${ICONS.calendar}<h3>${day.label} — ${day.title || ''}</h3></div>`;
       for (const fx of day.fixtures) {
+        if (fx.home === 'TBD' && fx.away === 'TBD') continue;
         const home = WC.TEAMS[fx.home], away = WC.TEAMS[fx.away];
         const row = h('div', 'pick-row');
         const verdict = pickVerdict(fx);
         if (verdict && verdict.cls === 'won') won++;
         if (verdict && verdict.cls === 'lost') lost++;
-        row.innerHTML = `<span class="pick-row__match"><span class="flag" style="background:${home.flag}"></span>${home.code} v ${away.code}<span class="flag" style="background:${away.flag}"></span></span>`;
+        row.innerHTML = `<span class="pick-row__match"><span class="flag" style="background:${home.flag}"></span>${fx.home} v ${fx.away}<span class="flag" style="background:${away.flag}"></span></span>`;
         const btns = h('div', 'pick-row__btns');
-        [['h', home.code], ['d', 'DRAW'], ['a', away.code]].forEach(([val, label]) => {
+        [['h', fx.home], ['d', 'DRAW'], ['a', fx.away]].forEach(([val, label]) => {
           const b = h('button', 'pick-btn' + (App.picks[fx.id] === val ? ' is-on' : ''), label);
           b.type = 'button';
           b.setAttribute('aria-pressed', App.picks[fx.id] === val ? 'true' : 'false');
@@ -1441,7 +1762,7 @@
     }
     const summary = h('div', 'panel reveal pick-summary');
     summary.innerHTML = `<div class="panel__head">${ICONS.trophy}<h3>Your record</h3></div>
-      <p class="road-note">Settled so far: <b class="pick-verdict--won">${won} won</b> · <b class="pick-verdict--lost">${lost} lost</b>.</p>
+      <p class="road-note">Settled so far: <b class="pick-verdict--won">${won} won</b> · <b class="pick-verdict--lost">${lost} lost</b>. More matchdays unlock as the tournament rolls on.</p>
       <button type="button" class="btn-ghost" id="sharePicks">${ICONS.copy} Copy picks for the group chat</button>`;
     summary.querySelector('#sharePicks').addEventListener('click', async () => {
       try {
@@ -1467,7 +1788,7 @@
 
   function setTab(id) {
     App.tab = id;
-    document.querySelectorAll('.tab-btn').forEach(b => {
+    document.querySelectorAll('.tab-btn:not(.tab-btn--demo)').forEach(b => {
       const on = b.dataset.tab === id;
       b.classList.toggle('is-on', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -1475,61 +1796,138 @@
     document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== 'view-' + id; });
     const render = { matches: renderMatchesView, groups: renderGroups, road: renderRoad, boot: renderBoot, picks: renderPicks }[id];
     render();
-    if (id === 'matches') App.matches.forEach(drawMomentum);
     window.scrollTo({ top: 0 });
   }
 
-  /* ============================ boot ============================ */
+  /* ============================ demo mode ============================ */
 
-  function pickToday() {
-    for (const d of WC.DAYS) {
-      if (d.fixtures.some(fx => { const m = getMatch(fx.id); return m && m.period !== 'FT'; })) return d.id;
-    }
-    return WC.DAYS[WC.DAYS.length - 1].id;
-  }
-
-  function initMatches() {
-    App.matches = [];
-    WC.DAYS.forEach((day, di) => {
-      for (const fx of day.fixtures) {
-        if (App.demo && di === 0) {
-          const m = createMatch(fx, { mode: 'sprint', seed: (Math.random() * 2 ** 31) | 0, ignoreOfficial: true });
-          RNG = m.rng;
-          m.booting = true;
-          kickoffEvent(m);
-          fastForward(m, fx.startMinute || 0);
-          m.booting = false;
-          App.matches.push(m);
-        } else {
-          const m = createMatch(fx);
-          m.booting = true;
-          tickReal(m, nowMs());
-          m.booting = false;
-          App.matches.push(m);
-        }
-      }
+  function buildDemoDay() {
+    App.demoMatches = {};
+    const day = currentDay();
+    const starts = [57, 14, 33, 72, 8, 49, 25, 64];
+    day.fixtures.forEach((fx, i) => {
+      if (fx.home === 'TBD' || fx.away === 'TBD') return;
+      const m = createMatch(fx, { mode: 'sprint', seed: (Math.random() * 2 ** 31) | 0, ignoreOfficial: true });
+      RNG = m.rng;
+      m.booting = true;
+      kickoffEvent(m);
+      fastForward(m, fx.startMinute != null ? fx.startMinute : starts[i % starts.length]);
+      m.booting = false;
+      App.demoMatches[fx.id] = m;
     });
-    App.dayId = App.demo ? WC.DAYS[0].id : pickToday();
-
-    /* seed ticker with the latest pre-existing events */
-    const seedEvents = App.matches
-      .flatMap(m => m.events.filter(e => ['goal', 'red', 'ht', 'ft'].includes(e.type)).map(e => ({ m, e })))
-      .slice(-6).reverse();
-    App.ticker = seedEvents.map(({ e }) => (e.type === 'goal' ? `GOAL ${e.min}' — ${e.sub}` : `${e.title} — ${e.sub}`));
-    renderTicker();
   }
 
   function toggleDemo() {
     App.demo = !App.demo;
     const btn = $('#demoBtn');
     if (btn) { btn.classList.toggle('is-on', App.demo); btn.setAttribute('aria-pressed', App.demo ? 'true' : 'false'); }
-    initMatches();
+    if (App.demo) buildDemoDay(); else App.demoMatches = {};
     setTab('matches');
-    toast(App.demo ? 'Demo sim running at 6× speed' : 'Back to the real matchday clock');
+    toast(App.demo ? 'Demo sim running at 6× speed — not real scores' : App.feedOn ? 'Back to the live feed' : 'Back to the matchday clock');
+  }
+
+  /* ============================ boot ============================ */
+
+  function pickToday() {
+    const todayId = (() => {
+      const d = new Date(nowMs());
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    })();
+    const exact = App.days.find(d => d.id === todayId);
+    if (exact) return exact.id;
+    const next = App.days.find(d => d.id > todayId);
+    return next ? next.id : App.days[App.days.length - 1].id;
+  }
+
+  function initSimMatches() {
+    /* sim fallback: engine states for the static fixture list */
+    for (const day of App.days) {
+      for (const fx of day.fixtures) ensureMatch(fx);
+    }
+  }
+
+  function seedTicker() {
+    const evs = App.matches
+      .flatMap(m => m.events.filter(e => ['goal', 'red', 'ht', 'ft'].includes(e.type)))
+      .slice(-6).reverse();
+    App.ticker = evs.map(e => (e.type === 'goal' ? `GOAL ${e.min}' — ${e.sub}` : `${e.title} — ${e.sub}`));
+    renderTicker();
+  }
+
+  async function bootData() {
+    let sched = null;
+    if (!App.nofeed && window.Feed) sched = await Feed.loadSchedule();
+    if (sched) {
+      App.feedOn = true;
+      App.days = sched.days;
+      App.schedule = new Map(sched.events.map(e => [e.id, e]));
+      if (Object.keys(sched.groups).length) App.groups = sched.groups;
+    } else {
+      App.feedOn = false;
+      App.days = WC.DAYS;
+      App.groups = WC.GROUPS;
+    }
+    App.dayId = pickToday();
+    if (App.feedOn) {
+      await pollActiveDay(true);
+    } else {
+      initSimMatches();
+      toast('Live feed unreachable — running labeled sim mode');
+    }
+    if (App.demo) buildDemoDay();
+    seedTicker();
+    setTab('matches');
+    startLoops();
+  }
+
+  function startLoops() {
+    /* 1s UI tick: clocks, countdowns, sprints */
+    setInterval(() => {
+      const live = [];
+      for (const m of App.matches) {
+        if (m.mode === 'feed') tickFeed(m);
+        else if (m.mode === 'real') tickReal(m, nowMs());
+        updateMatchUI(m);
+        if (m.mode !== 'feed') {
+          const curMin = Math.floor(m.minute);
+          if (m._lastDrawnMin !== curMin && m.period !== 'FT') { m._lastDrawnMin = curMin; drawMomentum(m); }
+        }
+        if (isLive(m)) live.push(m);
+      }
+      for (const id of Object.keys(App.demoMatches)) {
+        const m = App.demoMatches[id];
+        advance(m);
+        updateMatchUI(m);
+        const curMin = Math.floor(m.minute);
+        if (m._lastDrawnMin !== curMin && m.period !== 'FT') { m._lastDrawnMin = curMin; drawMomentum(m); }
+      }
+      updateJumpCards();
+      updateCountdowns();
+
+      const day = currentDay();
+      const lead = day.fixtures.map(fx => getMatch(fx.id)).find(isLive) || getMatch((day.fixtures[0] || {}).id);
+      if (lead && lead.period !== 'pre') {
+        document.title = `${lead.home.code} ${lead.score[0]}–${lead.score[1]} ${lead.away.code} · ${clockText(lead)} — Pitchside '26`;
+      } else if (day.fixtures[0]) {
+        document.title = `${day.fixtures[0].home} v ${day.fixtures[0].away} soon — Pitchside '26`;
+      }
+    }, 1000);
+
+    if (App.feedOn) {
+      /* the root fix: fresh scores from the feed every 60 seconds */
+      setInterval(() => { if (!App.demo) pollActiveDay(); }, 60000);
+      setInterval(refreshSchedule, 300000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && !App.demo) pollActiveDay(); });
+    }
+
+    window.addEventListener('resize', () => {
+      if (App.tab !== 'matches') return;
+      App.matches.forEach(drawMomentum);
+      Object.values(App.demoMatches).forEach(drawMomentum);
+    });
   }
 
   function init() {
-    /* nav */
     const nav = $('#tabs');
     TABS.forEach(t => {
       const b = h('button', 'tab-btn', `${t.icon}<span>${t.label}</span>`);
@@ -1541,21 +1939,19 @@
     const demoBtn = h('button', 'tab-btn tab-btn--demo' + (App.demo ? ' is-on' : ''), `${ICONS.play}<span>Demo</span>`);
     demoBtn.type = 'button';
     demoBtn.id = 'demoBtn';
-    demoBtn.title = 'Toggle a sped-up demo sim of today\'s matches';
+    demoBtn.title = 'Toggle a sped-up demo sim of this matchday';
     demoBtn.setAttribute('aria-pressed', App.demo ? 'true' : 'false');
     demoBtn.addEventListener('click', toggleDemo);
     nav.appendChild(demoBtn);
 
-    initMatches();
-    setTab('matches');
+    $('#view-matches').innerHTML = `<div class="boot-splash">${ICONS.ball}<span>Loading the matchday…</span></div>`;
+    renderTicker();
 
-    /* cursor ball-kick on any press */
     document.addEventListener('pointerdown', e => {
       if (e.target.closest('a, input, textarea')) return;
       FX.kick(e.clientX, e.clientY);
     });
 
-    /* scroll progress bar */
     const prog = $('#scrollProgress');
     if (prog) {
       let raf = 0;
@@ -1569,32 +1965,7 @@
       }, { passive: true });
     }
 
-    /* main loop: real matches track the actual clock; sprints run at ~6× */
-    setInterval(() => {
-      const now = nowMs();
-      let wentLive = false;
-      for (const m of App.matches) {
-        const wasPre = m.period === 'pre';
-        if (m.mode === 'sprint') advance(m); else tickReal(m, now);
-        if (wasPre && m.period !== 'pre') wentLive = true;
-        updateMatchUI(m);
-        const curMin = Math.floor(m.minute);
-        if (m._lastDrawnMin !== curMin && m.period !== 'FT') { m._lastDrawnMin = curMin; drawMomentum(m); }
-      }
-      if (wentLive && App.tab === 'matches') { renderMatchesView(); toast('We are live — kickoff!'); }
-      updateJumpCards();
-      updateCountdowns();
-      /* live score in the browser tab */
-      const today = WC.DAYS.find(d => d.id === App.dayId) || WC.DAYS[0];
-      const lead = today.fixtures.map(fx => getMatch(fx.id)).find(m => m && isLive(m)) || getMatch(today.fixtures[0].id);
-      if (lead && lead.period !== 'pre') {
-        document.title = `${lead.home.code} ${lead.score[0]}–${lead.score[1]} ${lead.away.code} · ${clockText(lead)} — Pitchside '26`;
-      } else if (lead) {
-        document.title = `${lead.home.code} v ${lead.away.code} soon — Pitchside '26`;
-      }
-    }, 1000);
-
-    window.addEventListener('resize', () => { if (App.tab === 'matches') App.matches.forEach(drawMomentum); });
+    bootData();
   }
 
   document.addEventListener('DOMContentLoaded', init);
