@@ -613,6 +613,8 @@
   const App = {
     days: WC.DAYS,                 // replaced by the live schedule when the feed loads
     groups: WC.GROUPS,
+    standings: null,               // official group tables from the feed
+    standingsAt: 0,
     schedule: new Map(),           // espn event id -> normalized event (feed mode)
     feedOn: false, feedStale: false,
     matches: [], matchById: {},
@@ -804,6 +806,9 @@
       }
       if (layoutChanged && App.tab === 'matches' && !App.demo) renderMatchesView();
 
+      /* keep the official tables fresh while matches are running */
+      if (day.fixtures.some(fx => isLive(App.matchById[fx.id]))) refreshStandings();
+
       /* real team stats for matches that are underway or done */
       const targets = day.fixtures
         .map(fx => App.matchById[fx.id])
@@ -824,6 +829,18 @@
     if (!sched) return;
     for (const e of sched.events) App.schedule.set(e.id, e);
     if (Object.keys(sched.groups).length) App.groups = sched.groups;
+    refreshStandings();
+  }
+
+  async function refreshStandings(force) {
+    if (!App.feedOn) return;
+    if (!force && Date.now() - App.standingsAt < 120000) return; // at most every 2 min
+    App.standingsAt = Date.now();
+    const standings = await Feed.loadStandings();
+    if (standings) {
+      App.standings = standings;
+      if (App.tab === 'groups') renderGroups();
+    }
   }
 
   /* ============================ ticker ============================ */
@@ -1562,34 +1579,65 @@
     return rows;
   }
 
+  function groupRow(r, i, t, live) {
+    const tr = h('tr', live ? 'is-live' : '');
+    tr.innerHTML = `
+      <td class="gt-team"><span class="gt-rank ${i < 2 ? 'gt-rank--q' : ''}">${i + 1}</span><span class="flag" style="background:${t.flag}"></span>${t.short}${live ? '<span class="live-dot live-dot--sm"></span>' : ''}</td>
+      <td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.gd > 0 ? '+' : ''}${r.gd}</td><td class="gt-pts">${r.pts}</td>`;
+    return tr;
+  }
+
+  function groupPanel(label, rows, liveCodes) {
+    const anyLive = rows.some(r => liveCodes.has(r.code));
+    const panel = h('div', 'panel reveal');
+    panel.innerHTML = `<div class="panel__head"><h3>${label}</h3>${anyLive ? '<span class="sim-badge sim-badge--live">LIVE</span>' : ''}</div>`;
+    const tbl = h('table', 'gtable');
+    tbl.innerHTML = `<thead><tr><th scope="col">Team</th><th scope="col">P</th><th scope="col">W</th><th scope="col">D</th><th scope="col">L</th><th scope="col">GD</th><th scope="col">Pts</th></tr></thead>`;
+    const tb = h('tbody');
+    rows.forEach((r, i) => {
+      const t = WC.TEAMS[r.code];
+      if (t) tb.appendChild(groupRow(r, i, t, liveCodes.has(r.code)));
+    });
+    tbl.appendChild(tb);
+    panel.appendChild(tbl);
+    return panel;
+  }
+
+  /* teams currently in an in-progress match */
+  function liveTeamCodes() {
+    const live = new Set();
+    if (App.feedOn) {
+      for (const e of App.schedule.values()) {
+        if (e.state === 'in') { live.add(e.home); live.add(e.away); }
+      }
+    } else {
+      for (const m of App.matches) {
+        if (isLive(m) && m.mode !== 'sprint') { live.add(m.fixture.home); live.add(m.fixture.away); }
+      }
+    }
+    return live;
+  }
+
   function renderGroups() {
     const view = $('#view-groups');
     if (!view) return;
-    view.innerHTML = `<div class="view-head reveal">${ICONS.trophy}<h2>Group Standings</h2><span class="panel__sub">updates live as goals go in · top 2 + best thirds advance</span></div>`;
-    const entries = resultEntries();
+    const official = App.standings && App.standings.length;
+    view.innerHTML = `<div class="view-head reveal">${ICONS.trophy}<h2>Group Standings</h2><span class="panel__sub">${official ? 'official tables · live matches marked' : 'computed from results'} · top 2 + best thirds advance</span></div>`;
     const grid = h('div', 'groups-grid');
-    const groupKeys = Object.keys(App.groups).sort();
-    for (const g of groupKeys) {
-      const table = liveTable(g, entries);
-      if (!table.length) continue;
-      const anyLive = table.some(r => r.live);
-      const panel = h('div', 'panel reveal');
-      panel.innerHTML = `<div class="panel__head"><h3>GROUP ${g}</h3>${anyLive ? '<span class="sim-badge sim-badge--live">LIVE</span>' : ''}</div>`;
-      const tbl = h('table', 'gtable');
-      tbl.innerHTML = `<thead><tr><th scope="col">Team</th><th scope="col">P</th><th scope="col">W</th><th scope="col">D</th><th scope="col">L</th><th scope="col">GD</th><th scope="col">Pts</th></tr></thead>`;
-      const tb = h('tbody');
-      table.forEach((r, i) => {
-        const t = WC.TEAMS[r.code];
-        if (!t) return;
-        const tr = h('tr', r.live ? 'is-live' : '');
-        tr.innerHTML = `
-          <td class="gt-team"><span class="gt-rank ${i < 2 ? 'gt-rank--q' : ''}">${i + 1}</span><span class="flag" style="background:${t.flag}"></span>${t.short}${r.live ? '<span class="live-dot live-dot--sm"></span>' : ''}</td>
-          <td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.gf - r.ga > 0 ? '+' : ''}${r.gf - r.ga}</td><td class="gt-pts">${r.pts}</td>`;
-        tb.appendChild(tr);
-      });
-      tbl.appendChild(tb);
-      panel.appendChild(tbl);
-      grid.appendChild(panel);
+    const liveCodes = liveTeamCodes();
+
+    if (official) {
+      /* authoritative group memberships + table order from the feed */
+      for (const g of App.standings) {
+        grid.appendChild(groupPanel(g.label, g.rows, liveCodes));
+      }
+    } else {
+      const entries = resultEntries();
+      for (const g of Object.keys(App.groups).sort()) {
+        const table = liveTable(g, entries).map(r => ({ ...r, gd: r.gf - r.ga }));
+        if (!table.length) continue;
+        grid.appendChild(groupPanel('GROUP ' + g, table, liveCodes));
+      }
     }
     view.appendChild(grid);
     observeReveals(view);
@@ -1855,13 +1903,16 @@
   }
 
   async function bootData() {
-    let sched = null;
-    if (!App.nofeed && window.Feed) sched = await Feed.loadSchedule();
+    let sched = null, standings = null;
+    if (!App.nofeed && window.Feed) {
+      [sched, standings] = await Promise.all([Feed.loadSchedule(), Feed.loadStandings()]);
+    }
     if (sched) {
       App.feedOn = true;
       App.days = sched.days;
       App.schedule = new Map(sched.events.map(e => [e.id, e]));
       if (Object.keys(sched.groups).length) App.groups = sched.groups;
+      if (standings) { App.standings = standings; App.standingsAt = Date.now(); }
     } else {
       App.feedOn = false;
       App.days = WC.DAYS;
