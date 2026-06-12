@@ -1,5 +1,9 @@
 /* Pitchside '26 — live matchday engine + UI.
-   The engine is pure (no DOM) so a real data feed can replace simulateTick()
+   The engine is pure (no DOM) and deterministic: each fixture's sim is seeded,
+   so every visitor sees the same match. Match clocks are anchored to the real
+   kickoff times in data.js — a fixture is upcoming, live (real-time clock) or
+   full-time based on the actual time of day. Fixtures with an `official` block
+   recreate the real result. A real data feed can replace simulateTo()/advance()
    while every renderer keeps working off the same match-state shape. */
 (function () {
   'use strict';
@@ -7,16 +11,33 @@
   /* ============================ utilities ============================ */
 
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-  const rand = (lo, hi) => lo + Math.random() * (hi - lo);
+
+  /* engine randomness goes through RNG so sims can be seeded per match */
+  let RNG = Math.random;
+  const rand = (lo, hi) => lo + RNG() * (hi - lo);
   const randInt = (lo, hi) => Math.floor(rand(lo, hi + 1));
-  const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) * 2;
-  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const gauss = () => (RNG() + RNG() + RNG() - 1.5) * 2;
+  const pick = arr => arr[Math.floor(RNG() * arr.length)];
 
   function weightedPick(items, weightOf) {
     const total = items.reduce((s, it) => s + weightOf(it), 0);
-    let r = Math.random() * total;
+    let r = RNG() * total;
     for (const it of items) { r -= weightOf(it); if (r <= 0) return it; }
     return items[items.length - 1];
+  }
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function hashStr(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
   }
 
   /* if both kits read as the same color on charts, switch the away side to its alt */
@@ -81,13 +102,19 @@
     sub: ['fresh legs on', 'tactical switch', 'change up front']
   };
 
-  function createMatch(fixture) {
+  function createMatch(fixture, opts) {
+    opts = opts || {};
     const home = WC.TEAMS[fixture.home], away = WC.TEAMS[fixture.away];
     const homeAdv = fixture.home === 'MEX' ? 4 : 2;
+    const seed = opts.seed != null ? opts.seed : hashStr(fixture.id + ':wc26');
+    const rng = mulberry32(seed);
+    RNG = rng;
     const basePoss = 50 + (home.strength + homeAdv - away.strength) * 0.9;
     const m = {
       fixture, home, away, homeAdv, colors: teamColors(home, away),
-      minute: 0, period: '1H', add1: randInt(1, 3), add2: randInt(3, 6), holdTicks: 0,
+      rng, mode: opts.mode || 'real',
+      minute: 0, period: opts.mode === 'sprint' ? '1H' : 'pre',
+      add1: randInt(1, 3), add2: randInt(3, 6), holdTicks: 0,
       score: [0, 0],
       stats: {
         shots: [0, 0], sot: [0, 0], xg: [0, 0], corners: [0, 0], big: [0, 0],
@@ -101,9 +128,10 @@
         (WC.ROSTERS[fixture.home] || []).map(initPlayer),
         (WC.ROSTERS[fixture.away] || []).map(initPlayer)
       ],
-      tickCount: 0, ui: null
+      ui: null, booting: false
     };
-    m.events.push({ min: 0, side: -1, type: 'ko', title: 'Kickoff', sub: `${home.name} get us underway at ${fixture.venue}` });
+    /* fixtures with a known real result get a scripted recreation (real mode only) */
+    m.script = (m.mode === 'real' && fixture.official && !opts.ignoreOfficial) ? fixture.official : null;
     return m;
   }
 
@@ -117,12 +145,16 @@
 
   function attackSide(m) {
     const p = 1 / (1 + Math.exp(-(sideBias(m) + m.momentumVal / 150)));
-    return Math.random() < p ? 0 : 1;
+    return RNG() < p ? 0 : 1;
   }
 
   function pushEvent(m, ev) {
     m.events.push(ev);
     if (typeof onKeyEvent === 'function' && ['goal', 'yellow', 'red', 'ht', 'ft', 'big'].includes(ev.type)) onKeyEvent(m, ev);
+  }
+
+  function shotXY(side) {
+    return side === 0 ? { x: rand(64, 96), y: rand(10, 54) } : { x: rand(4, 36), y: rand(10, 54) };
   }
 
   function scoreGoal(m, side, min, scorer) {
@@ -131,7 +163,8 @@
     m.stats.sot[side]++;
     m.momentumVal = side === 0 ? 60 : -60;
     if (scorer) { scorer.goals++; scorer.rating = clamp(scorer.rating + 0.55, 5.5, 10); }
-    m.shotMap.push({ side, goal: true, min });
+    const xy = side === 0 ? { x: rand(78, 95), y: rand(18, 46) } : { x: rand(5, 22), y: rand(18, 46) };
+    m.shotMap.push({ side, goal: true, min, x: xy.x, y: xy.y });
     pushEvent(m, {
       min, side, type: 'goal',
       title: `GOAL — ${team.name}`,
@@ -142,6 +175,26 @@
   /* One integer game-minute of simulation. Swap this out for a real feed. */
   function minuteTick(m) {
     const min = Math.floor(m.minute);
+
+    /* scripted recreation of an official result */
+    if (m.script) {
+      for (const g of m.script.goals) {
+        if (g.min === min) {
+          const scorer = m.players[g.side].find(p => p.name === g.scorer) || null;
+          m.stats.shots[g.side]++; m.stats.xg[g.side] += 0.42; m.stats.big[g.side]++;
+          if (scorer) scorer.shots++;
+          scoreGoal(m, g.side, min, scorer);
+        }
+      }
+      for (const r of m.script.reds) {
+        if (r.min === min) {
+          m.stats.reds[r.side]++;
+          const team = r.side === 0 ? m.home : m.away;
+          pushEvent(m, { min, side: r.side, type: 'red', title: `RED CARD — ${team.name}`, sub: 'Down to ' + (m.stats.reds[r.side] > 1 ? 'nine' : 'ten') });
+        }
+      }
+    }
+
     m.momentumVal = clamp(m.momentumVal * 0.8 + gauss() * 30 + sideBias(m) * 9, -100, 100);
     m.momentum.push({ min, v: m.momentumVal });
 
@@ -160,29 +213,29 @@
       }
     }
 
-    if (Math.random() < 0.42) {
+    if (RNG() < 0.42) {
       const side = attackSide(m);
       const att = side === 0 ? m.home : m.away;
       const def = side === 0 ? m.away : m.home;
       const o = 1 - side;
       const roster = m.players[side];
-      const r = Math.random();
+      const r = RNG();
 
       if (r < 0.58) { // a shot
-        const q = 0.03 + 0.35 * Math.pow(Math.random(), 2.6);
+        const q = 0.03 + 0.35 * Math.pow(RNG(), 2.6);
         const shooter = roster.length ? weightedPick(roster, p => p.w) : null;
         m.stats.shots[side]++;
         m.stats.xg[side] += q;
         if (q > 0.25) m.stats.big[side]++;
         if (shooter) shooter.shots++;
-        if (Math.random() < q * 0.82) {
+        if (!m.script && RNG() < q * 0.82) {
           scoreGoal(m, side, min, shooter);
-        } else if (Math.random() < 0.5) {
+        } else if (RNG() < 0.5) {
           m.stats.sot[side]++; m.stats.saves[o]++;
-          m.shotMap.push({ side, goal: false, on: true, min });
+          m.shotMap.push({ side, goal: false, on: true, min, ...shotXY(side) });
           if (q > 0.22) pushEvent(m, { min, side, type: 'big', title: `Big chance — ${att.name}`, sub: `${shooter ? shooter.name + ' ' : ''}${pick(PHRASES.shotOn)}` });
         } else {
-          m.shotMap.push({ side, goal: false, on: false, min });
+          m.shotMap.push({ side, goal: false, on: false, min, ...shotXY(side) });
           if (q > 0.24) pushEvent(m, { min, side, type: 'big', title: `Big chance — ${att.name}`, sub: `${shooter ? shooter.name + ' ' : ''}${pick(PHRASES.bigChance)}` });
         }
       } else if (r < 0.72) {
@@ -190,13 +243,13 @@
         if (m.stats.corners[side] % 3 === 1) pushEvent(m, { min, side, type: 'corner', title: `Corner — ${att.name}`, sub: pick(PHRASES.corner) });
       } else if (r < 0.86) {
         m.stats.fouls[o]++;
-        const card = Math.random();
+        const card = RNG();
         if (card < 0.18) {
           m.stats.yellows[o]++;
           const offender = m.players[o].length ? weightedPick(m.players[o], p => 1 / (p.w + 0.4)) : null;
           if (offender) { offender.yellow++; offender.rating = clamp(offender.rating - 0.25, 5.5, 10); }
           pushEvent(m, { min, side: o, type: 'yellow', title: `Yellow card — ${def.name}`, sub: `${offender ? offender.name + ' — ' : ''}${pick(PHRASES.foul)}` });
-        } else if (card < 0.195) {
+        } else if (!m.script && card < 0.195) {
           m.stats.reds[o]++;
           const offender = m.players[o].length ? weightedPick(m.players[o], p => 1 / (p.w + 0.4)) : null;
           if (offender) { offender.red++; offender.rating = clamp(offender.rating - 1.2, 5.5, 10); }
@@ -207,13 +260,13 @@
       } else {
         m.stats.shots[side]++; m.stats.sot[side]++; m.stats.saves[o]++;
         const q = rand(0.15, 0.4); m.stats.xg[side] += q; m.stats.big[side]++;
-        m.shotMap.push({ side, goal: false, on: true, min });
+        m.shotMap.push({ side, goal: false, on: true, min, ...shotXY(side) });
         pushEvent(m, { min, side, type: 'big', title: `Big chance — ${att.name}`, sub: pick(PHRASES.bigChance) });
       }
     }
 
     // substitutions
-    if (m.period === '2H' && min > 57 && Math.random() < 0.05) {
+    if (m.period === '2H' && min > 57 && RNG() < 0.05) {
       const side = randInt(0, 1);
       pushEvent(m, { min, side, type: 'sub', title: `Substitution — ${(side === 0 ? m.home : m.away).name}`, sub: pick(PHRASES.sub) });
     }
@@ -227,10 +280,58 @@
     m.minute = to;
   }
 
-  /* advance one real-time tick (~6 game-seconds) */
+  /* ---- real-time anchoring: map the actual clock onto the match schedule ---- */
+
+  function matchPhase(m, now) {
+    const kick = new Date(m.fixture.kickoffUTC).getTime();
+    const e = (now - kick) / 60000; // real minutes since kickoff
+    if (e < 0) return { period: 'pre' };
+    const h1 = 45 + m.add1, h2start = h1 + 15; // 15-minute half-time break
+    if (e < h1) return { period: '1H', minute: e };
+    if (e < h2start) return { period: 'HT', minute: 45 };
+    const g2 = 45 + (e - h2start);
+    if (g2 < 90 + m.add2) return { period: '2H', minute: g2 };
+    return { period: 'FT', minute: 90 + m.add2 };
+  }
+
+  function kickoffEvent(m) {
+    pushEvent(m, { min: 0, side: -1, type: 'ko', title: 'Kickoff', sub: `${m.home.name} get us underway at ${m.fixture.venue}` });
+  }
+
+  /* advance the sim to wherever the real clock says the match should be */
+  function simulateTo(m, ph) {
+    if (ph.period === 'pre') { m.period = 'pre'; return; }
+    RNG = m.rng;
+    if (m.period === 'pre') { m.period = '1H'; m.minute = 0; kickoffEvent(m); }
+    if (m.period === '1H') {
+      if (ph.period === '1H') { crossMinutes(m, m.minute, ph.minute); return; }
+      crossMinutes(m, m.minute, 45 + m.add1);
+      pushEvent(m, { min: 45, side: -1, type: 'ht', title: 'Half-time', sub: `${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code} at the break` });
+      m.period = 'HT'; m.minute = 45;
+    }
+    if (m.period === 'HT') {
+      if (ph.period === 'HT') return;
+      m.period = '2H'; m.minute = 45;
+      pushEvent(m, { min: 45, side: -1, type: 'ko', title: 'Second half', sub: 'Back underway' });
+    }
+    if (m.period === '2H') {
+      if (ph.period === '2H') { crossMinutes(m, m.minute, ph.minute); return; }
+      crossMinutes(m, m.minute, 90 + m.add2);
+      m.period = 'FT';
+      pushEvent(m, { min: 90, side: -1, type: 'ft', title: 'Full-time', sub: `Final: ${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code}` });
+    }
+  }
+
+  function tickReal(m, now) {
+    if (m.period === 'FT') return;
+    simulateTo(m, matchPhase(m, now));
+  }
+
+  /* ---- sprint mode (demo / alt-universe replays): ~6 game-seconds per second ---- */
+
   function advance(m) {
     if (m.period === 'FT') return;
-    m.tickCount++;
+    RNG = m.rng;
     if (m.period === 'HT') {
       m.holdTicks--;
       if (m.holdTicks <= 0) { m.period = '2H'; m.minute = 45; pushEvent(m, { min: 45, side: -1, type: 'ko', title: 'Second half', sub: 'Back underway' }); }
@@ -248,26 +349,25 @@
   }
 
   function fastForward(m, toMinute) {
-    let target = toMinute;
-    if (toMinute > 45) { // burn through first half + HT
+    RNG = m.rng;
+    if (toMinute > 45) {
       crossMinutes(m, 0, 45 + m.add1);
       m.events.push({ min: 45, side: -1, type: 'ht', title: 'Half-time', sub: `${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code} at the break` });
       m.period = '2H'; m.minute = 45;
-      crossMinutes(m, 45, target);
+      crossMinutes(m, 45, toMinute);
     } else {
-      crossMinutes(m, 0, target);
+      crossMinutes(m, 0, toMinute);
     }
   }
 
   function liveOdds(m) {
     const p = probsFor(m.home.strength, m.away.strength, m.homeAdv, m.minute, m.score[0], m.score[1]);
-    const remH = p.lh, remA = p.la;
     const scorers = [];
     for (const side of [0, 1]) {
       const roster = m.players[side];
       if (!roster.length) continue;
       const sumW = roster.reduce((s, x) => s + x.w, 0);
-      const lam = side === 0 ? remH : remA;
+      const lam = side === 0 ? p.lh : p.la;
       for (const pl of roster.slice(0, 4)) {
         const share = clamp(pl.w / sumW * 1.6, 0.05, 0.5);
         const prob = 1 - Math.exp(-lam * share);
@@ -278,18 +378,17 @@
   }
 
   function clockText(m) {
+    if (m.period === 'pre') return '—';
     if (m.period === 'FT') return 'FT';
     if (m.period === 'HT') return 'HT';
     const base = Math.floor(m.minute);
     const sec = Math.floor((m.minute % 1) * 60);
-    const over1 = m.period === '1H' && base >= 45;
-    const over2 = m.period === '2H' && base >= 90;
-    if (over1) return `45+${base - 44}'`;
-    if (over2) return `90+${base - 89}'`;
+    if (m.period === '1H' && base >= 45) return `45+${base - 44}'`;
+    if (m.period === '2H' && base >= 90) return `90+${base - 89}'`;
     return `${String(base).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   }
 
-  const Engine = { createMatch, advance, fastForward, liveOdds, probsFor, toAmerican, clockText };
+  const Engine = { createMatch, advance, tickReal, matchPhase, simulateTo, fastForward, liveOdds, probsFor, toAmerican, clockText };
 
   /* node smoke-test hook (no DOM below this point runs in node) */
   if (typeof document === 'undefined') {
@@ -315,7 +414,11 @@
     pin: I('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'),
     zap: I('<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'),
     check: I('<polyline points="20 6 9 17 4 12"/>'),
-    chev: I('<polyline points="6 9 12 15 18 9"/>')
+    chev: I('<polyline points="6 9 12 15 18 9"/>'),
+    bulb: I('<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.4 1 2.3h6c0-.9.4-1.8 1-2.3A7 7 0 0 0 12 2z"/>'),
+    crown: I('<path d="M2 18h20M4 18l-1-9 5 4 4-7 4 7 5-4-1 9H4z"/>'),
+    copy: I('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+    play: I('<polygon points="5 3 19 12 5 21 5 3"/>')
   };
 
   /* ============================ UI helpers ============================ */
@@ -347,6 +450,32 @@
     node.dataset.prob = String(prob);
   }
 
+  function toast(msg) {
+    const t = $('#toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  /* count a numeric stat up from zero when it first scrolls into view */
+  function countUp(el) {
+    const mm = el.textContent.trim().match(/^(\d+(?:\.\d+)?)(%?)$/);
+    if (!mm) return;
+    const target = parseFloat(mm[1]);
+    if (!target) return;
+    const dec = mm[1].includes('.') ? 2 : 0, suf = mm[2];
+    el.dataset.counting = '1';
+    const t0 = performance.now();
+    (function step(t) {
+      const k = Math.min(1, (t - t0) / 750);
+      el.textContent = (target * (1 - Math.pow(1 - k, 3))).toFixed(dec) + suf;
+      if (k < 1) requestAnimationFrame(step);
+      else { el.textContent = target.toFixed(dec) + suf; delete el.dataset.counting; }
+    })(t0);
+  }
+
   let revealObserver = null;
   function observeReveals(scope) {
     const targets = (scope || document).querySelectorAll('.reveal:not(.in)');
@@ -357,7 +486,11 @@
     if (!revealObserver) {
       revealObserver = new IntersectionObserver(entries => {
         for (const e of entries) {
-          if (e.isIntersecting) { e.target.classList.add('in'); revealObserver.unobserve(e.target); }
+          if (e.isIntersecting) {
+            e.target.classList.add('in');
+            e.target.querySelectorAll('.stat-row__val, .poss-h, .poss-a').forEach(countUp);
+            revealObserver.unobserve(e.target);
+          }
         }
       }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     }
@@ -372,17 +505,138 @@
     return f;
   }
 
+  /* ============================ FX: cursor kicks + goal confetti ============================ */
+
+  const FX = (() => {
+    let canvas, ctx, parts = [], running = false;
+    function ensure() {
+      if (canvas) return true;
+      canvas = $('#fx');
+      if (!canvas) return false;
+      ctx = canvas.getContext('2d');
+      resize();
+      window.addEventListener('resize', resize);
+      return true;
+    }
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = innerWidth * dpr;
+      canvas.height = innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function start() {
+      if (running) return;
+      running = true;
+      requestAnimationFrame(loop);
+    }
+    function loop() {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      parts = parts.filter(p => p.life < p.ttl);
+      for (const p of parts) {
+        p.life++;
+        p.x += p.vx; p.y += p.vy;
+        p.vy += p.g; p.vx *= 0.99;
+        p.rot += p.vr;
+        const a = 1 - p.life / p.ttl;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.globalAlpha = a;
+        if (p.kind === 'ball') drawBall(p.r);
+        else if (p.kind === 'conf') { ctx.fillStyle = p.color; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * (0.4 + 0.6 * Math.abs(Math.sin(p.life / 6)))); }
+        else { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(0, 0, p.r, 0, 7); ctx.fill(); }
+        ctx.restore();
+      }
+      if (parts.length) requestAnimationFrame(loop);
+      else { running = false; ctx.clearRect(0, 0, innerWidth, innerHeight); }
+    }
+    function drawBall(r) {
+      ctx.fillStyle = '#f4f6f8';
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill();
+      ctx.strokeStyle = 'rgba(2,6,23,.55)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = '#0b1220';
+      ctx.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const a = i / 5 * Math.PI * 2 - Math.PI / 2;
+        const px = Math.cos(a) * r * 0.42, py = Math.sin(a) * r * 0.42;
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.closePath(); ctx.fill();
+      for (let i = 0; i < 5; i++) {
+        const a = i / 5 * Math.PI * 2 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * r * 0.42, Math.sin(a) * r * 0.42);
+        ctx.lineTo(Math.cos(a) * r * 0.95, Math.sin(a) * r * 0.95);
+        ctx.strokeStyle = 'rgba(2,6,23,.35)';
+        ctx.stroke();
+      }
+    }
+    function kick(x, y) {
+      if (REDUCED || !ensure()) return;
+      parts.push({ kind: 'ball', x, y, vx: rand2(-3.4, 3.4), vy: rand2(-9.5, -6), g: 0.32, rot: 0, vr: rand2(-0.3, 0.3), r: 9, life: 0, ttl: 70 });
+      for (let i = 0; i < 6; i++) {
+        parts.push({ kind: 'spark', x, y, vx: rand2(-2.6, 2.6), vy: rand2(-3, 0.5), g: 0.12, rot: 0, vr: 0, r: rand2(1, 2.4), color: pick2(['#22c55e', '#eab308', '#f1f5f9']), life: 0, ttl: 38 });
+      }
+      start();
+    }
+    function confetti(x, y, colors) {
+      if (REDUCED || !ensure()) return;
+      const palette = colors.concat(['#eab308', '#f1f5f9', '#22c55e']);
+      for (let i = 0; i < 90; i++) {
+        parts.push({
+          kind: 'conf', x, y,
+          vx: rand2(-6, 6), vy: rand2(-9, -2), g: 0.18,
+          rot: rand2(0, 6), vr: rand2(-0.25, 0.25),
+          w: rand2(4, 7), h: rand2(6, 11),
+          color: palette[Math.floor(Math.random() * palette.length)],
+          life: 0, ttl: 110
+        });
+      }
+      start();
+    }
+    const rand2 = (a, b) => a + Math.random() * (b - a);
+    const pick2 = a => a[Math.floor(Math.random() * a.length)];
+    return { kick, confetti };
+  })();
+
+  function goalFlash(m, ev) {
+    const node = $('#goalFlash');
+    if (!node || REDUCED) return;
+    const team = ev.side === 0 ? m.home : m.away;
+    node.innerHTML = `<span class="goal-flash__word">GOOOAL!</span><span class="goal-flash__team">${team.name}</span>`;
+    node.classList.remove('show');
+    void node.offsetWidth;
+    node.classList.add('show');
+    clearTimeout(node._timer);
+    node._timer = setTimeout(() => node.classList.remove('show'), 1700);
+    const rect = m.ui && document.body.contains(m.ui.scoreWrap) ? m.ui.scoreWrap.getBoundingClientRect() : null;
+    const onScreen = rect && rect.top > -40 && rect.top < innerHeight;
+    FX.confetti(onScreen ? rect.left + rect.width / 2 : innerWidth / 2, onScreen ? rect.top + rect.height / 2 : 170, m.colors);
+  }
+
   /* ============================ app state ============================ */
 
+  const params = new URLSearchParams(location.search);
   const App = {
-    matches: [],            // live engine states for today's fixtures
-    dayId: WC.DAYS[0].id,
+    matches: [],
+    dayId: null,
     tab: 'matches',
+    demo: params.get('demo') === '1',
+    timeOffset: params.get('simnow') ? new Date(params.get('simnow')).getTime() - Date.now() : 0,
     ticker: [],
-    picks: JSON.parse(localStorage.getItem('wc26-picks') || '{}')
+    triviaIdx: Math.floor(Math.random() * (WC.TRIVIA || []).length),
+    triviaOpen: false,
+    picks: JSON.parse(localStorage.getItem('wc26-picks') || '{}'),
+    motm: JSON.parse(localStorage.getItem('wc26-motm') || '{}')
   };
 
-  /* engine → ticker bridge */
+  const nowMs = () => Date.now() + App.timeOffset;
+  const getMatch = id => App.matches.find(x => x.fixture.id === id);
+  const isLive = m => m.period !== 'pre' && m.period !== 'FT';
+
+  /* engine → ticker/fx bridge */
   window.onKeyEvent = function (m, ev) {
     if (m.booting) return;
     const minTxt = ev.min ? `${ev.min}'` : '';
@@ -394,10 +648,13 @@
     else if (ev.type === 'big') txt = `${minTxt} ${ev.title}`;
     if (txt) { App.ticker.unshift(txt); App.ticker = App.ticker.slice(0, 12); renderTicker(); }
     if (ev.type === 'goal' || ev.type === 'ft') { renderGroups(); renderBoot(); renderPicks(); }
-    if (ev.type === 'goal' && m.ui) {
-      m.ui.scoreWrap.classList.remove('goal-pop');
-      void m.ui.scoreWrap.offsetWidth;
-      m.ui.scoreWrap.classList.add('goal-pop');
+    if (ev.type === 'goal') {
+      goalFlash(m, ev);
+      if (m.ui) {
+        m.ui.scoreWrap.classList.remove('goal-pop');
+        void m.ui.scoreWrap.offsetWidth;
+        m.ui.scoreWrap.classList.add('goal-pop');
+      }
     }
   };
 
@@ -406,7 +663,7 @@
   function renderTicker() {
     const track = $('#tickerTrack');
     if (!track) return;
-    const items = App.ticker.length ? App.ticker : ['Welcome to opening day — Estadio Azteca is bouncing'];
+    const items = App.ticker.length ? App.ticker : ['Welcome to the World Cup — matchday feeds update in real time'];
     const seq = items.map(t => `<span class="ticker__item">${ICONS.zap}${t}</span>`).join('');
     track.innerHTML = REDUCED ? seq : seq + seq; // duplicate for seamless loop
   }
@@ -424,17 +681,20 @@
     { key: 'offsides', label: 'Offsides' },
     { key: 'passes', label: 'Passes' },
     { key: 'acc', label: 'Pass Accuracy', fmt: v => Math.round(v) + '%' },
-    { key: 'yellows', label: 'Yellow Cards' }
+    { key: 'yellows', label: 'Yellow Cards' },
+    { key: 'reds', label: 'Red Cards' }
   ];
 
   function buildMatchSection(m, index) {
     const fx = m.fixture;
     const sec = h('section', 'match');
     sec.id = 'match-' + fx.id;
+    sec.style.setProperty('--tc-h', m.colors[0]);
+    sec.style.setProperty('--tc-a', m.colors[1]);
 
     if (index > 0) {
       const div = h('div', 'match-divider reveal');
-      div.innerHTML = `<span class="match-divider__line"></span><span class="match-divider__label">${ICONS.chev} NEXT MATCH ${ICONS.chev}</span><span class="match-divider__line"></span>`;
+      div.innerHTML = `<span class="match-divider__line"></span><span class="match-divider__circle">${ICONS.ball}</span><span class="match-divider__label">NEXT MATCH</span><span class="match-divider__circle">${ICONS.ball}</span><span class="match-divider__line"></span>`;
       sec.appendChild(div);
     }
 
@@ -447,12 +707,15 @@
     /* hero scoreboard */
     const hero = h('header', 'match-hero reveal');
     const meta = h('div', 'match-meta');
+    let modeChip = '';
+    if (m.mode === 'sprint') modeChip = `<span class="chip chip--sim">${App.demo ? 'DEMO SIM · 6×' : 'ALT-UNIVERSE SIM · 6×'}</span>`;
+    else if (m.script) modeChip = `<span class="chip chip--official">OFFICIAL RESULT</span>`;
     meta.innerHTML = `
-      <span class="chip chip--group">GROUP ${fx.group}</span>
+      <span class="chip chip--group">GROUP ${fx.group}</span>${modeChip}
       <span class="chip">${ICONS.pin}${fx.venue} · ${fx.city}</span>
-      <span class="chip">${ICONS.users}${fx.attendance}</span>
-      <span class="chip">${ICONS.whistle}${fx.referee}</span>
-      <span class="chip">${fx.weather}</span>`;
+      ${fx.attendance ? `<span class="chip">${ICONS.users}${fx.attendance}</span>` : ''}
+      ${fx.referee ? `<span class="chip">${ICONS.whistle}${fx.referee}</span>` : ''}
+      ${fx.weather ? `<span class="chip">${fx.weather}</span>` : ''}`;
     hero.appendChild(meta);
 
     const board = h('div', 'scoreboard');
@@ -464,11 +727,12 @@
     const scoreWrap = h('div', 'scoreboard__score', '0&nbsp;–&nbsp;0');
     scoreWrap.setAttribute('aria-live', 'off');
     const clock = h('div', 'scoreboard__clock', `<span class="live-dot" aria-hidden="true"></span><span class="clock-text">00:00</span>`);
-    const replay = h('button', 'btn-replay', `${ICONS.ball} Replay this match sim`);
+    const note = h('div', 'scoreboard__note', m.script && m.script.note ? m.script.note : '');
+    const replay = h('button', 'btn-replay', `${ICONS.play} Run an alt-universe sim`);
     replay.type = 'button';
     replay.hidden = true;
     replay.addEventListener('click', () => replayMatch(m));
-    center.append(status, scoreWrap, clock, replay);
+    center.append(status, scoreWrap, clock, note, replay);
     const tA = h('div', 'scoreboard__team scoreboard__team--away');
     tA.appendChild(flagEl(m.away, 'xl'));
     tA.appendChild(h('div', 'scoreboard__name', `<strong>${m.away.name}</strong><span>${m.away.code} · AWAY</span>`));
@@ -486,7 +750,7 @@
     sec.appendChild(hero);
 
     /* odds panel */
-    const odds = h('div', 'panel reveal');
+    const odds = h('div', 'panel panel--accent reveal');
     odds.innerHTML = `<div class="panel__head">${ICONS.zap}<h3>Live Betting Lines</h3><span class="sim-badge" title="Simulated demo feed">SIM FEED</span></div>`;
     const ml = h('div', 'odds-row');
     ml.innerHTML = `
@@ -515,7 +779,7 @@
     sec.appendChild(odds);
 
     /* stats panel */
-    const statsPanel = h('div', 'panel reveal');
+    const statsPanel = h('div', 'panel panel--accent reveal');
     statsPanel.innerHTML = `<div class="panel__head">${ICONS.chart}<h3>Live Match Stats</h3><span class="panel__sub live-min"></span></div>`;
     const possRow = h('div', 'poss');
     possRow.innerHTML = `
@@ -540,7 +804,7 @@
 
     /* momentum + shot map */
     const duo = h('div', 'grid2');
-    const mom = h('div', 'panel reveal');
+    const mom = h('div', 'panel reveal reveal-l');
     mom.innerHTML = `<div class="panel__head">${ICONS.flame}<h3>Attack Momentum</h3><span class="panel__sub">last 90'</span></div>`;
     const canvas = document.createElement('canvas');
     canvas.className = 'momentum';
@@ -549,7 +813,7 @@
     canvas.setAttribute('aria-label', 'Attack momentum chart');
     mom.appendChild(canvas);
     mom.appendChild(h('div', 'legend', `<span><i style="background:${m.colors[0]}"></i>${m.home.code}</span><span><i style="background:${m.colors[1]}"></i>${m.away.code}</span>`));
-    const shot = h('div', 'panel reveal');
+    const shot = h('div', 'panel reveal reveal-r');
     shot.innerHTML = `<div class="panel__head">${ICONS.target}<h3>Shot Map</h3><span class="panel__sub">● goal ○ attempt</span></div>`;
     const pitch = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     pitch.setAttribute('viewBox', '0 0 100 64');
@@ -572,7 +836,7 @@
     const pgrid = h('div', 'grid2');
     for (const side of [0, 1]) {
       const team = side === 0 ? m.home : m.away;
-      const panel = h('div', 'panel reveal');
+      const panel = h('div', 'panel reveal ' + (side === 0 ? 'reveal-l' : 'reveal-r'));
       panel.innerHTML = `<div class="panel__head">${ICONS.users}<h3>${team.name} — Stat Lines</h3></div>`;
       const scroller = h('div', 'table-scroll');
       const tbl = h('table', 'ptable');
@@ -583,6 +847,11 @@
     }
     sec.appendChild(pgrid);
 
+    /* crew man of the match */
+    const motm = h('div', 'panel reveal');
+    motm.innerHTML = `<div class="panel__head">${ICONS.crown}<h3>Crew Man of the Match</h3><span class="panel__sub">tap to vote — saved on this device</span></div><div class="motm" data-fx="${fx.id}"></div>`;
+    sec.appendChild(motm);
+
     /* timeline */
     const tl = h('div', 'panel reveal');
     tl.innerHTML = `<div class="panel__head">${ICONS.clock}<h3>Match Timeline</h3><span class="panel__sub">live feed</span></div><ol class="timeline" reversed></ol>`;
@@ -590,9 +859,10 @@
 
     m.ui = {
       root: sec, sticky, stickyWrap, status, scoreWrap, clock: clock.querySelector('.clock-text'),
-      liveDot: clock.querySelector('.live-dot'), replay,
+      liveDot: clock.querySelector('.live-dot'), replay, hero,
       wp, oddsPanel: odds, statsPanel, statList, possRow, canvas,
       dots: pitch.querySelector('.pitch__dots'), timeline: tl.querySelector('.timeline'),
+      motm: motm.querySelector('.motm'),
       renderedEvents: 0, renderedShots: 0
     };
 
@@ -605,19 +875,45 @@
       io.observe(hero);
     }
 
+    renderMotm(m);
     updateMatchUI(m, true);
     return sec;
   }
 
+  function renderMotm(m) {
+    if (!m.ui || !m.ui.motm) return;
+    const all = [];
+    for (const side of [0, 1]) {
+      const team = side === 0 ? m.home : m.away;
+      for (const p of m.players[side]) all.push({ p, team });
+    }
+    all.sort((a, b) => b.p.rating - a.p.rating);
+    const current = App.motm[m.fixture.id];
+    m.ui.motm.innerHTML = '';
+    all.slice(0, 6).forEach(({ p, team }) => {
+      const on = current === p.name;
+      const b = h('button', 'motm-chip' + (on ? ' is-on' : ''), `${on ? ICONS.crown : ''}<span class="flag" style="background:${team.flag}"></span>${p.name}<small>${p.rating.toFixed(1)}</small>`);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.addEventListener('click', () => {
+        App.motm[m.fixture.id] = on ? undefined : p.name;
+        localStorage.setItem('wc26-motm', JSON.stringify(App.motm));
+        renderMotm(m);
+        if (!on) toast(`${p.name} is your Man of the Match`);
+      });
+      m.ui.motm.appendChild(b);
+    });
+  }
+
   function periodBadge(m) {
-    if (m.period === 'FT') return ['FULL-TIME', 'ft'];
+    if (m.period === 'FT') return [m.script ? 'FULL-TIME · OFFICIAL' : 'FULL-TIME', 'ft'];
     if (m.period === 'HT') return ['HALF-TIME', 'ht'];
     return ['LIVE · ' + (m.period === '1H' ? '1ST HALF' : '2ND HALF'), 'live'];
   }
 
   function updateMatchUI(m, force) {
     const u = m.ui;
-    if (!u || !document.body.contains(u.root)) return;
+    if (!u || !document.body.contains(u.root) || m.period === 'pre') return;
 
     const [label, cls] = periodBadge(m);
     if (u.status.dataset.cls !== cls || force) {
@@ -626,6 +922,7 @@
       u.status.textContent = label;
       u.liveDot.style.display = cls === 'ft' ? 'none' : '';
       u.replay.hidden = cls !== 'ft';
+      u.hero.classList.toggle('is-live', cls !== 'ft');
     }
     const scoreTxt = `${m.score[0]}&nbsp;–&nbsp;${m.score[1]}`;
     if (u.scoreWrap.innerHTML !== scoreTxt) u.scoreWrap.innerHTML = scoreTxt;
@@ -671,7 +968,7 @@
       const rows = o.scorers.filter(s => s.side === side);
       if (list.children.length !== rows.length) {
         list.innerHTML = '';
-        for (const s of rows) {
+        for (let i = 0; i < rows.length; i++) {
           const row = h('div', 'prop-row');
           row.innerHTML = `<span class="prop-row__name"></span><span class="prop-row__goals"></span><span class="odds-val odds-val--sm"></span>`;
           list.appendChild(row);
@@ -700,15 +997,17 @@
     /* stats */
     u.statsPanel.querySelector('.live-min').textContent = m.period === 'FT' ? 'final' : `updating · ${clockText(m)}`;
     const possH = Math.round(m.poss);
-    u.possRow.querySelector('.poss-h').textContent = possH + '%';
-    u.possRow.querySelector('.poss-a').textContent = (100 - possH) + '%';
+    const pH2 = u.possRow.querySelector('.poss-h'), pA2 = u.possRow.querySelector('.poss-a');
+    if (!pH2.dataset.counting) pH2.textContent = possH + '%';
+    if (!pA2.dataset.counting) pA2.textContent = (100 - possH) + '%';
     u.possRow.querySelector('.poss__fill').style.width = possH + '%';
     for (const def of STAT_DEFS) {
       const row = u.statList.querySelector(`[data-key="${def.key}"]`);
       const vh = m.stats[def.key][0], va = m.stats[def.key][1];
       const fmt = def.fmt || (v => String(Math.round(v)));
-      row.querySelector('.stat-row__val--h').textContent = fmt(vh);
-      row.querySelector('.stat-row__val--a').textContent = fmt(va);
+      const vhEl = row.querySelector('.stat-row__val--h'), vaEl = row.querySelector('.stat-row__val--a');
+      if (!vhEl.dataset.counting) vhEl.textContent = fmt(vh);
+      if (!vaEl.dataset.counting) vaEl.textContent = fmt(va);
       const sum = vh + va;
       row.querySelector('.tug__h').style.width = (sum ? vh / sum * 50 : 0) + '%';
       row.querySelector('.tug__a').style.width = (sum ? va / sum * 50 : 0) + '%';
@@ -718,10 +1017,8 @@
     while (u.renderedShots < m.shotMap.length) {
       const s = m.shotMap[u.renderedShots++];
       const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      const x = s.side === 0 ? rand(64, 96) : rand(4, 36);
-      const y = rand(10, 54);
-      c.setAttribute('cx', x.toFixed(1));
-      c.setAttribute('cy', y.toFixed(1));
+      c.setAttribute('cx', (s.x || 50).toFixed(1));
+      c.setAttribute('cy', (s.y || 32).toFixed(1));
       c.setAttribute('r', s.goal ? 2.4 : 1.4);
       c.setAttribute('class', 'shot-dot' + (s.goal ? ' shot-dot--goal' : ''));
       c.setAttribute('fill', s.goal ? m.colors[s.side] : 'transparent');
@@ -759,11 +1056,10 @@
       const ev = m.events[u.renderedEvents++];
       const li = h('li', 'tl-item tl-item--' + ev.type);
       const icon = { goal: ICONS.ball, yellow: ICONS.card, red: ICONS.card, sub: ICONS.sub, big: ICONS.flame, corner: ICONS.target, ht: ICONS.whistle, ft: ICONS.whistle, ko: ICONS.whistle }[ev.type] || ICONS.clock;
-      const side = ev.side === 0 ? 'h' : ev.side === 1 ? 'a' : 'n';
-      li.dataset.side = side;
+      li.dataset.side = ev.side === 0 ? 'h' : ev.side === 1 ? 'a' : 'n';
       li.innerHTML = `<span class="tl-min">${ev.min ? ev.min + "'" : '—'}</span><span class="tl-icon">${icon}</span><div class="tl-body"><b>${ev.title}</b><span>${ev.sub || ''}</span></div>`;
       u.timeline.prepend(li);
-      if (!REDUCED && !force) { li.classList.add('tl-enter'); }
+      if (!REDUCED && !force) li.classList.add('tl-enter');
     }
   }
 
@@ -782,7 +1078,6 @@
     ctx.strokeStyle = 'rgba(148,163,184,.25)';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(w, mid); ctx.stroke();
-    // HT marker
     const x45 = 45 / 96 * w;
     ctx.strokeStyle = 'rgba(148,163,184,.15)';
     ctx.beginPath(); ctx.moveTo(x45, 4); ctx.lineTo(x45, ht - 4); ctx.stroke();
@@ -802,13 +1097,18 @@
 
   function replayMatch(m) {
     const idx = App.matches.indexOf(m);
-    const fresh = createMatch(m.fixture);
+    const fresh = createMatch(m.fixture, { mode: 'sprint', seed: (Math.random() * 2 ** 31) | 0, ignoreOfficial: true });
+    RNG = fresh.rng;
+    fresh.booting = true;
+    kickoffEvent(fresh);
+    fresh.booting = false;
     App.matches[idx] = fresh;
     const old = m.ui.root;
-    const sec = buildMatchSection(fresh, idx);
+    const sec = buildMatchSection(fresh, 0);
     old.replaceWith(sec);
     sec.querySelectorAll('.reveal').forEach(r => r.classList.add('in'));
     drawMomentum(fresh);
+    toast('Alt-universe sim running — anything can happen');
   }
 
   /* ============================ matches view ============================ */
@@ -816,51 +1116,70 @@
   function renderMatchesView() {
     const view = $('#view-matches');
     view.innerHTML = '';
-    const day = WC.DAYS.find(d => d.id === App.dayId);
+    const day = WC.DAYS.find(d => d.id === App.dayId) || WC.DAYS[0];
 
     /* hero strip */
     const hero = h('div', 'dayhero reveal');
     hero.innerHTML = `
       <div class="dayhero__left">
         <div class="dayhero__kicker">${ICONS.trophy} FIFA WORLD CUP 26™ · ${day.title.toUpperCase()}</div>
-        <h2 class="dayhero__title">${day.live ? 'OPENING DAY.<br><span>IT ALL STARTS HERE.</span>' : day.title}</h2>
+        <h2 class="dayhero__title">${day.id === '2026-06-11' ? 'OPENING DAY.<br><span>IT ALL STARTS HERE.</span>' : day.title.toUpperCase()}</h2>
+        <div class="dayhero__status" id="heroStatus"></div>
       </div>
-      <div class="dayhero__chips" id="dayChips" role="tablist" aria-label="Pick a matchday"></div>`;
+      <div class="dayhero__chips" id="dayChips" aria-label="Pick a matchday"></div>`;
     view.appendChild(hero);
     const chips = hero.querySelector('#dayChips');
     for (const d of WC.DAYS) {
-      const b = h('button', 'day-chip' + (d.id === App.dayId ? ' is-on' : ''), `${ICONS.calendar}<span>${d.label}</span><small>${d.fixtures.length} matches</small>`);
+      const liveNow = d.fixtures.some(fx => { const m = getMatch(fx.id); return m && isLive(m); });
+      const b = h('button', 'day-chip' + (d.id === day.id ? ' is-on' : ''),
+        `<span class="day-chip__top">${d.label}${liveNow ? '<span class="live-dot live-dot--sm"></span>' : ''}</span><small>${d.fixtures.length} matches</small>`);
       b.type = 'button';
-      b.setAttribute('aria-pressed', d.id === App.dayId ? 'true' : 'false');
+      b.setAttribute('aria-pressed', d.id === day.id ? 'true' : 'false');
       b.addEventListener('click', () => { App.dayId = d.id; renderMatchesView(); window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' }); });
       chips.appendChild(b);
     }
 
-    if (day.live) {
-      /* quick-jump strip for live games */
+    /* quick-jump strip */
+    const playing = day.fixtures.map(fx => getMatch(fx.id)).filter(m => m && m.period !== 'pre');
+    if (playing.length) {
       const jump = h('div', 'jumpstrip reveal');
-      App.matches.forEach(m => {
+      playing.forEach(m => {
         const a = h('a', 'jump-card', '');
         a.href = '#match-' + m.fixture.id;
-        a.innerHTML = `<span class="jump-card__live"><span class="live-dot"></span>LIVE</span><b>${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code}</b><small>${m.fixture.venue}</small>`;
         a.dataset.mid = m.fixture.id;
         jump.appendChild(a);
       });
       view.appendChild(jump);
-      App.matches.forEach((m, i) => view.appendChild(buildMatchSection(m, i)));
-      App.matches.forEach(m => drawMomentum(m));
-    } else {
-      const grid = h('div', 'upcoming-grid');
-      day.fixtures.forEach(fx => grid.appendChild(buildUpcomingCard(fx)));
-      view.appendChild(grid);
     }
+
+    /* match sections + upcoming cards, in fixture order */
+    let grid = null, sectionIndex = 0;
+    for (const fx of day.fixtures) {
+      const m = getMatch(fx.id);
+      if (!m || m.period === 'pre') {
+        if (!grid) { grid = h('div', 'upcoming-grid'); view.appendChild(grid); }
+        grid.appendChild(buildUpcomingCard(fx));
+      } else {
+        grid = null;
+        view.appendChild(buildMatchSection(m, sectionIndex++));
+      }
+    }
+    playing.forEach(m => drawMomentum(m));
+
+    /* kickoff trivia */
+    view.appendChild(buildTrivia());
+
+    updateJumpCards();
+    updateHeroStatus();
     observeReveals(view);
   }
 
   function buildUpcomingCard(fx) {
     const home = WC.TEAMS[fx.home], away = WC.TEAMS[fx.away];
-    const p = probsFor(home.strength, away.strength, 2, 0, 0, 0);
-    const card = h('article', 'panel upcoming reveal');
+    const p = probsFor(home.strength, away.strength, fx.home === 'MEX' ? 4 : 2, 0, 0, 0);
+    const card = h('article', 'panel panel--accent upcoming reveal');
+    card.style.setProperty('--tc-h', home.color);
+    card.style.setProperty('--tc-a', away.color2 && teamColors(home, away)[1] || away.color);
     card.innerHTML = `
       <div class="upcoming__meta"><span class="chip chip--group">GROUP ${fx.group}</span><span class="chip">${ICONS.pin}${fx.venue} · ${fx.city}</span></div>
       <div class="upcoming__teams">
@@ -877,9 +1196,62 @@
     return card;
   }
 
+  function buildTrivia() {
+    const wrap = h('div', 'panel panel--trivia reveal');
+    wrap.innerHTML = `<div class="panel__head">${ICONS.bulb}<h3>Kickoff Trivia</h3><span class="panel__sub">for the group chat</span></div>
+      <p class="trivia__q"></p><p class="trivia__a" hidden></p>
+      <div class="trivia__btns">
+        <button type="button" class="btn-ghost" data-t="reveal">${ICONS.zap} Reveal answer</button>
+        <button type="button" class="btn-ghost" data-t="next">Next question ${ICONS.chev}</button>
+      </div>`;
+    const qEl = wrap.querySelector('.trivia__q'), aEl = wrap.querySelector('.trivia__a');
+    const sync = () => {
+      const t = WC.TRIVIA[App.triviaIdx % WC.TRIVIA.length];
+      qEl.textContent = t.q;
+      aEl.textContent = t.a;
+      aEl.hidden = !App.triviaOpen;
+    };
+    wrap.querySelector('[data-t="reveal"]').addEventListener('click', () => { App.triviaOpen = !App.triviaOpen; sync(); });
+    wrap.querySelector('[data-t="next"]').addEventListener('click', () => { App.triviaIdx++; App.triviaOpen = false; sync(); });
+    sync();
+    return wrap;
+  }
+
+  function updateJumpCards() {
+    document.querySelectorAll('.jump-card').forEach(a => {
+      const m = getMatch(a.dataset.mid);
+      if (!m) return;
+      const live = isLive(m);
+      a.innerHTML = `<span class="jump-card__live ${live ? '' : 'is-ft'}">${live ? '<span class="live-dot"></span>LIVE ' + clockText(m) : 'FULL-TIME'}</span>
+        <b>${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code}</b><small>${m.fixture.venue}</small>`;
+    });
+  }
+
+  function updateHeroStatus() {
+    const el = $('#heroStatus');
+    if (!el) return;
+    const day = WC.DAYS.find(d => d.id === App.dayId) || WC.DAYS[0];
+    const states = day.fixtures.map(fx => getMatch(fx.id)).filter(Boolean);
+    const live = states.filter(isLive);
+    if (live.length) {
+      el.innerHTML = `<span class="hero-live"><span class="live-dot"></span>${live.length === 1 ? '1 MATCH LIVE NOW' : live.length + ' MATCHES LIVE NOW'}</span>`;
+      return;
+    }
+    const pre = states.filter(m => m.period === 'pre')
+      .sort((a, b) => new Date(a.fixture.kickoffUTC) - new Date(b.fixture.kickoffUTC))[0];
+    if (pre) {
+      el.innerHTML = `${ICONS.clock} NEXT KICKOFF IN <b data-kick="${pre.fixture.kickoffUTC}">—</b> — ${pre.home.code} v ${pre.away.code}
+        ${App.demo ? '' : `<button type="button" class="btn-ghost btn-ghost--sm" id="demoHint">${ICONS.play} CAN'T WAIT? RUN A DEMO SIM</button>`}`;
+      const hint = el.querySelector('#demoHint');
+      if (hint) hint.addEventListener('click', toggleDemo);
+    } else {
+      el.innerHTML = `${ICONS.check} MATCHDAY COMPLETE — FULL RESULTS BELOW`;
+    }
+  }
+
   function updateCountdowns() {
     document.querySelectorAll('[data-kick]').forEach(node => {
-      const diff = new Date(node.dataset.kick).getTime() - Date.now();
+      const diff = new Date(node.dataset.kick).getTime() - nowMs();
       if (diff <= 0) { node.textContent = 'KICKOFF'; return; }
       const hrs = Math.floor(diff / 3.6e6), min = Math.floor(diff % 3.6e6 / 6e4), sec = Math.floor(diff % 6e4 / 1e3);
       node.textContent = `${hrs}H ${String(min).padStart(2, '0')}M ${String(sec).padStart(2, '0')}S`;
@@ -892,7 +1264,7 @@
     const codes = WC.GROUPS[groupKey];
     const rows = codes.map(c => ({ code: c, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0, live: false }));
     for (const m of App.matches) {
-      if (m.fixture.group !== groupKey) continue;
+      if (m.fixture.group !== groupKey || m.period === 'pre') continue;
       const rh = rows.find(r => r.code === m.fixture.home);
       const ra = rows.find(r => r.code === m.fixture.away);
       const [gh, ga] = m.score;
@@ -909,11 +1281,12 @@
   function renderGroups() {
     const view = $('#view-groups');
     if (!view) return;
-    view.innerHTML = `<div class="view-head reveal">${ICONS.trophy}<h2>Group Standings</h2><span class="panel__sub">Group A updates live · top 2 + best thirds advance</span></div>`;
+    view.innerHTML = `<div class="view-head reveal">${ICONS.trophy}<h2>Group Standings</h2><span class="panel__sub">updates live as goals go in · top 2 + best thirds advance</span></div>`;
     const grid = h('div', 'groups-grid');
     for (const g of Object.keys(WC.GROUPS)) {
+      const anyLive = App.matches.some(m => m.fixture.group === g && isLive(m));
       const panel = h('div', 'panel reveal');
-      panel.innerHTML = `<div class="panel__head"><h3>GROUP ${g}</h3>${g === 'A' ? '<span class="sim-badge sim-badge--live">LIVE</span>' : ''}</div>`;
+      panel.innerHTML = `<div class="panel__head"><h3>GROUP ${g}</h3>${anyLive ? '<span class="sim-badge sim-badge--live">LIVE</span>' : ''}</div>`;
       const tbl = h('table', 'gtable');
       tbl.innerHTML = `<thead><tr><th scope="col">Team</th><th scope="col">P</th><th scope="col">W</th><th scope="col">D</th><th scope="col">L</th><th scope="col">GD</th><th scope="col">Pts</th></tr></thead>`;
       const tb = h('tbody');
@@ -966,9 +1339,10 @@
 
     const scorers = [];
     for (const m of App.matches) {
+      if (m.period === 'pre') continue;
       for (const side of [0, 1]) {
         const team = side === 0 ? m.home : m.away;
-        for (const p of m.players[side]) if (p.goals > 0) scorers.push({ name: p.name, team: team.name, code: team.code, flag: team.flag, goals: p.goals });
+        for (const p of m.players[side]) if (p.goals > 0) scorers.push({ name: p.name, team: team.name, flag: team.flag, goals: p.goals });
       }
     }
     scorers.sort((a, b) => b.goals - a.goals);
@@ -1007,11 +1381,29 @@
   function pickVerdict(fx) {
     const pickVal = App.picks[fx.id];
     if (!pickVal) return null;
-    const m = App.matches.find(x => x.fixture.id === fx.id);
-    if (!m) return { label: 'LOCKED IN', cls: 'wait' };
+    const m = getMatch(fx.id);
+    if (!m || m.period === 'pre') return { label: 'LOCKED IN', cls: 'wait' };
     const lead = m.score[0] > m.score[1] ? 'h' : m.score[0] < m.score[1] ? 'a' : 'd';
     if (m.period === 'FT') return pickVal === lead ? { label: 'WON', cls: 'won' } : { label: 'LOST', cls: 'lost' };
     return pickVal === lead ? { label: 'ON TRACK', cls: 'track' } : { label: 'BEHIND', cls: 'behind' };
+  }
+
+  function picksShareText() {
+    const lines = ["My World Cup '26 crew picks:"];
+    for (const day of WC.DAYS) {
+      for (const fx of day.fixtures) {
+        const pickVal = App.picks[fx.id];
+        if (!pickVal) continue;
+        const home = WC.TEAMS[fx.home], away = WC.TEAMS[fx.away];
+        const label = pickVal === 'h' ? home.code : pickVal === 'a' ? away.code : 'DRAW';
+        const v = pickVerdict(fx);
+        const m = getMatch(fx.id);
+        const score = m && m.period !== 'pre' ? ` (${m.home.code} ${m.score[0]}-${m.score[1]} ${m.away.code}${m.period === 'FT' ? ' FT' : ` ${clockText(m)}`})` : '';
+        lines.push(`${home.code} v ${away.code}: ${label}${v && (v.cls === 'won' || v.cls === 'lost') ? ' — ' + v.label : ''}${score}`);
+      }
+    }
+    lines.push("— picked on Pitchside '26");
+    return lines.join('\n');
   }
 
   function renderPicks() {
@@ -1049,7 +1441,16 @@
     }
     const summary = h('div', 'panel reveal pick-summary');
     summary.innerHTML = `<div class="panel__head">${ICONS.trophy}<h3>Your record</h3></div>
-      <p class="road-note">Settled today: <b class="pick-verdict--won">${won} won</b> · <b class="pick-verdict--lost">${lost} lost</b>. Share a screenshot in the group chat.</p>`;
+      <p class="road-note">Settled so far: <b class="pick-verdict--won">${won} won</b> · <b class="pick-verdict--lost">${lost} lost</b>.</p>
+      <button type="button" class="btn-ghost" id="sharePicks">${ICONS.copy} Copy picks for the group chat</button>`;
+    summary.querySelector('#sharePicks').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(picksShareText());
+        toast('Picks copied — paste them in the chat');
+      } catch (e) {
+        toast('Could not copy — your browser blocked it');
+      }
+    });
     view.appendChild(summary);
     observeReveals(view);
   }
@@ -1080,6 +1481,53 @@
 
   /* ============================ boot ============================ */
 
+  function pickToday() {
+    for (const d of WC.DAYS) {
+      if (d.fixtures.some(fx => { const m = getMatch(fx.id); return m && m.period !== 'FT'; })) return d.id;
+    }
+    return WC.DAYS[WC.DAYS.length - 1].id;
+  }
+
+  function initMatches() {
+    App.matches = [];
+    WC.DAYS.forEach((day, di) => {
+      for (const fx of day.fixtures) {
+        if (App.demo && di === 0) {
+          const m = createMatch(fx, { mode: 'sprint', seed: (Math.random() * 2 ** 31) | 0, ignoreOfficial: true });
+          RNG = m.rng;
+          m.booting = true;
+          kickoffEvent(m);
+          fastForward(m, fx.startMinute || 0);
+          m.booting = false;
+          App.matches.push(m);
+        } else {
+          const m = createMatch(fx);
+          m.booting = true;
+          tickReal(m, nowMs());
+          m.booting = false;
+          App.matches.push(m);
+        }
+      }
+    });
+    App.dayId = App.demo ? WC.DAYS[0].id : pickToday();
+
+    /* seed ticker with the latest pre-existing events */
+    const seedEvents = App.matches
+      .flatMap(m => m.events.filter(e => ['goal', 'red', 'ht', 'ft'].includes(e.type)).map(e => ({ m, e })))
+      .slice(-6).reverse();
+    App.ticker = seedEvents.map(({ e }) => (e.type === 'goal' ? `GOAL ${e.min}' — ${e.sub}` : `${e.title} — ${e.sub}`));
+    renderTicker();
+  }
+
+  function toggleDemo() {
+    App.demo = !App.demo;
+    const btn = $('#demoBtn');
+    if (btn) { btn.classList.toggle('is-on', App.demo); btn.setAttribute('aria-pressed', App.demo ? 'true' : 'false'); }
+    initMatches();
+    setTab('matches');
+    toast(App.demo ? 'Demo sim running at 6× speed' : 'Back to the real matchday clock');
+  }
+
   function init() {
     /* nav */
     const nav = $('#tabs');
@@ -1090,44 +1538,60 @@
       b.addEventListener('click', () => setTab(t.id));
       nav.appendChild(b);
     });
+    const demoBtn = h('button', 'tab-btn tab-btn--demo' + (App.demo ? ' is-on' : ''), `${ICONS.play}<span>Demo</span>`);
+    demoBtn.type = 'button';
+    demoBtn.id = 'demoBtn';
+    demoBtn.title = 'Toggle a sped-up demo sim of today\'s matches';
+    demoBtn.setAttribute('aria-pressed', App.demo ? 'true' : 'false');
+    demoBtn.addEventListener('click', toggleDemo);
+    nav.appendChild(demoBtn);
 
-    /* spin up today's matches and fast-forward to "now" */
-    const today = WC.DAYS[0];
-    for (const fx of today.fixtures) {
-      const m = createMatch(fx);
-      m.booting = true;
-      fastForward(m, fx.startMinute);
-      m.booting = false;
-      App.matches.push(m);
-    }
-
-    /* seed ticker with the latest pre-existing events */
-    const seedEvents = App.matches
-      .flatMap(m => m.events.filter(e => ['goal', 'red', 'ht'].includes(e.type)).map(e => ({ m, e })))
-      .sort((a, b) => b.e.min - a.e.min)
-      .slice(0, 6);
-    App.ticker = seedEvents.map(({ e }) => (e.type === 'goal' ? `GOAL ${e.min}' — ${e.sub}` : `${e.min}' ${e.title} — ${e.sub}`));
-    renderTicker();
-
+    initMatches();
     setTab('matches');
 
-    /* main loop: 1 real second ≈ 6 seconds of match time */
+    /* cursor ball-kick on any press */
+    document.addEventListener('pointerdown', e => {
+      if (e.target.closest('a, input, textarea')) return;
+      FX.kick(e.clientX, e.clientY);
+    });
+
+    /* scroll progress bar */
+    const prog = $('#scrollProgress');
+    if (prog) {
+      let raf = 0;
+      window.addEventListener('scroll', () => {
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          const max = document.documentElement.scrollHeight - innerHeight;
+          prog.style.width = (max > 0 ? scrollY / max * 100 : 0) + '%';
+        });
+      }, { passive: true });
+    }
+
+    /* main loop: real matches track the actual clock; sprints run at ~6× */
     setInterval(() => {
+      const now = nowMs();
+      let wentLive = false;
       for (const m of App.matches) {
-        advance(m);
+        const wasPre = m.period === 'pre';
+        if (m.mode === 'sprint') advance(m); else tickReal(m, now);
+        if (wasPre && m.period !== 'pre') wentLive = true;
         updateMatchUI(m);
         const curMin = Math.floor(m.minute);
         if (m._lastDrawnMin !== curMin && m.period !== 'FT') { m._lastDrawnMin = curMin; drawMomentum(m); }
       }
-      /* keep the quick-jump cards fresh */
-      document.querySelectorAll('.jump-card').forEach(a => {
-        const m = App.matches.find(x => x.fixture.id === a.dataset.mid);
-        if (m) a.querySelector('b').textContent = `${m.home.code} ${m.score[0]}–${m.score[1]} ${m.away.code}`;
-      });
+      if (wentLive && App.tab === 'matches') { renderMatchesView(); toast('We are live — kickoff!'); }
+      updateJumpCards();
       updateCountdowns();
       /* live score in the browser tab */
-      const m1 = App.matches[0];
-      if (m1) document.title = `${m1.home.code} ${m1.score[0]}–${m1.score[1]} ${m1.away.code} · ${clockText(m1)} — Pitchside '26`;
+      const today = WC.DAYS.find(d => d.id === App.dayId) || WC.DAYS[0];
+      const lead = today.fixtures.map(fx => getMatch(fx.id)).find(m => m && isLive(m)) || getMatch(today.fixtures[0].id);
+      if (lead && lead.period !== 'pre') {
+        document.title = `${lead.home.code} ${lead.score[0]}–${lead.score[1]} ${lead.away.code} · ${clockText(lead)} — Pitchside '26`;
+      } else if (lead) {
+        document.title = `${lead.home.code} v ${lead.away.code} soon — Pitchside '26`;
+      }
     }, 1000);
 
     window.addEventListener('resize', () => { if (App.tab === 'matches') App.matches.forEach(drawMomentum); });
