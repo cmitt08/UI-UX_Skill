@@ -162,6 +162,63 @@ window.Feed = (function () {
     return { days, events, groups };
   }
 
+  /* Official group standings — authoritative for group memberships and
+     table order (ESPN applies the real tiebreakers). The standings API
+     lives under /apis/v2/ rather than /apis/site/v2/. */
+  function standingsURL() {
+    if (BASE.includes('/apis/site/v2/')) {
+      return BASE.replace('/apis/site/v2/', '/apis/v2/') + '/standings?season=2026';
+    }
+    return BASE + '/standings';
+  }
+
+  function registerStandingsTeam(t) {
+    t = t || {};
+    const logo = (t.logos && t.logos[0] && t.logos[0].href) || t.logo || null;
+    return registerTeam({ team: { ...t, logo } });
+  }
+
+  async function loadStandings() {
+    const data = await getJSON(standingsURL());
+    const children = data && data.children;
+    if (!Array.isArray(children) || !children.length) return null;
+    const groups = [];
+    for (const child of children) {
+      const label = child.name || child.displayName || child.abbreviation || '';
+      const gm = label.match(/group\s+([a-l])\b/i);
+      const entries = child.standings && child.standings.entries;
+      if (!Array.isArray(entries) || !entries.length) continue;
+      const rows = [];
+      for (const en of entries) {
+        const code = registerStandingsTeam(en.team);
+        const st = {};
+        for (const s of (en.stats || [])) {
+          if (s && s.name != null) {
+            const v = s.value != null ? s.value : parseFloat(s.displayValue);
+            if (!isNaN(v)) st[s.name] = v;
+          }
+        }
+        rows.push({
+          code,
+          p: st.gamesPlayed || 0,
+          w: st.wins || 0,
+          d: st.ties != null ? st.ties : (st.draws || 0),
+          l: st.losses || 0,
+          gf: st.pointsFor || 0,
+          ga: st.pointsAgainst || 0,
+          gd: st.pointDifferential != null ? st.pointDifferential : ((st.pointsFor || 0) - (st.pointsAgainst || 0)),
+          pts: st.points || 0,
+          rank: st.rank || rows.length + 1
+        });
+      }
+      rows.sort((a, b) => a.rank - b.rank);
+      groups.push({ key: gm ? gm[1].toUpperCase() : label, label: gm ? 'GROUP ' + gm[1].toUpperCase() : label.toUpperCase(), rows });
+    }
+    if (!groups.length) return null;
+    groups.sort((a, b) => a.key < b.key ? -1 : 1);
+    return groups;
+  }
+
   /* fresh scores/details for one local day (its fixtures may span two UTC dates) */
   async function pollDay(fixtures) {
     if (!fixtures || !fixtures.length) return null;
@@ -200,5 +257,5 @@ window.Feed = (function () {
     return stats;
   }
 
-  return { BASE, loadSchedule, pollDay, summary, parseClock };
+  return { BASE, loadSchedule, loadStandings, pollDay, summary, parseClock };
 })();
