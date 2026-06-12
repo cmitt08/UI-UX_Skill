@@ -6,6 +6,19 @@
 
 window.WC = window.WC || {};
 
+/* rough power ratings used to derive odds for any team the live feed sends.
+   Unknown codes fall back to 74. */
+WC.STRENGTHS = {
+  ARG: 89, FRA: 88, BRA: 88, ESP: 87, ENG: 86, GER: 85, POR: 85, NED: 84,
+  ITA: 83, BEL: 82, CRO: 81, URU: 81, COL: 81, MAR: 80, NOR: 80, JPN: 79,
+  USA: 79, AUT: 79, MEX: 78, SUI: 78, SEN: 78, DEN: 78, ECU: 77, TUR: 77,
+  KOR: 76, NGA: 76, ALG: 76, CIV: 76, POL: 75, IRN: 75, CAN: 75, EGY: 75,
+  PAR: 74, CZE: 74, SRB: 74, UKR: 74, SCO: 73, TUN: 73, GHA: 73, AUS: 72,
+  UZB: 71, PAN: 71, BIH: 71, CRC: 71, JOR: 70, KSA: 70, RSA: 70, IRQ: 69,
+  NZL: 68, QAT: 67, CPV: 67, CUW: 68, HON: 69, JAM: 70, HAI: 65
+};
+
+
 WC.TEAMS = {
   MEX: { code: 'MEX', name: 'Mexico',            short: 'Mexico',       strength: 78, color: '#0fa968', color2: '#e2485a', flag: 'linear-gradient(90deg,#006847 0 33%,#f5f5f0 33% 66%,#ce1126 66%)' },
   RSA: { code: 'RSA', name: 'South Africa',      short: 'South Africa', strength: 70, color: '#eab308', color2: '#16a34a', flag: 'linear-gradient(180deg,#de3831 0 30%,#f5f5f0 30% 38%,#007a4d 38% 62%,#f5f5f0 62% 70%,#002395 70%)' },

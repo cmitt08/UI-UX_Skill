@@ -301,6 +301,27 @@ a { color: inherit; }
 .day-chip:hover { border-color: rgba(34, 197, 94, 0.4); color: var(--text); }
 .day-chip.is-on { color: var(--green); background: var(--green-dim); border-color: rgba(34, 197, 94, 0.45); }
 
+/* full-tournament day strip */
+.dayscroll { margin-top: 14px; }
+.dayscroll__track {
+  display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px;
+  scrollbar-width: thin; scrollbar-color: var(--surface-2) transparent;
+}
+.dayscroll__track .day-chip { flex-shrink: 0; }
+
+.feed-pill { color: var(--green); }
+.hero-feed { color: var(--muted-2); font-size: 12px; letter-spacing: 0.08em; }
+
+.boot-splash {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 90px 0; color: var(--muted);
+  font-family: var(--font-display); font-size: 19px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.boot-splash svg { width: 28px; height: 28px; color: var(--green); animation: spin 1.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.chip--official svg { color: var(--green); width: 13px; height: 13px; }
+
 /* quick-jump strip */
 .jumpstrip { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0 6px; }
 .jump-card {
