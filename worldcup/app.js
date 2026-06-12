@@ -621,6 +621,7 @@
     demoMatches: {},
     dayId: null,
     tab: 'matches',
+    roadStage: null,
     demo: params.get('demo') === '1',
     nofeed: params.get('nofeed') === '1',
     timeOffset: params.get('simnow') ? new Date(params.get('simnow')).getTime() - Date.now() : 0,
@@ -647,7 +648,10 @@
     else if (ev.type === 'ht' || ev.type === 'ft') txt = `${ev.title}: ${ev.sub}`;
     else if (ev.type === 'big') txt = `${minTxt} ${ev.title}`;
     if (txt) { App.ticker.unshift(txt); App.ticker = App.ticker.slice(0, 12); renderTicker(); }
-    if (ev.type === 'goal' || ev.type === 'ft') { renderGroups(); renderBoot(); renderPicks(); }
+    if (ev.type === 'goal' || ev.type === 'ft') {
+      renderGroups(); renderBoot(); renderPicks();
+      if (App.tab === 'road') renderRoad();
+    }
     if (ev.type === 'goal') {
       goalFlash(m, ev);
       if (m.ui) {
@@ -1372,6 +1376,25 @@
     return 'The Final';
   }
 
+  /* bracket-stage key for a calendar day; 'final' covers third place + the final */
+  function stageKeyFor(dayId) {
+    if (dayId <= '2026-06-27') return 'group';
+    if (dayId <= '2026-07-03') return 'r32';
+    if (dayId <= '2026-07-07') return 'r16';
+    if (dayId <= '2026-07-11') return 'qf';
+    if (dayId <= '2026-07-15') return 'sf';
+    return 'final';
+  }
+
+  function stageFixtures(stageKey) {
+    const out = [];
+    for (const day of App.days) {
+      if (stageKeyFor(day.id) !== stageKey) continue;
+      for (const fx of day.fixtures) out.push({ fx, dayId: day.id });
+    }
+    return out;
+  }
+
   function renderMatchesView() {
     const view = $('#view-matches');
     view.innerHTML = '';
@@ -1645,20 +1668,95 @@
 
   /* ============================ road to the final ============================ */
 
+  const TBD_TEAM = { code: 'TBD', name: 'To be decided', short: 'TBD', flag: 'linear-gradient(135deg,#334155 0 50%,#475569 50%)' };
+
+  function bracketCard(item) {
+    const fx = item.fx;
+    const ne = App.feedOn && fx.espnId ? App.schedule.get(fx.espnId) : null;
+    const state = ne ? ne.state : 'pre';
+    const score = ne ? ne.score : [0, 0];
+    const card = h('button', 'bracket-match');
+    card.type = 'button';
+    const when = new Date(fx.kickoffUTC);
+    const dateTxt = isNaN(when) ? '' : when.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const badge = state === 'in'
+      ? '<span class="bracket-match__badge is-live"><span class="live-dot live-dot--sm"></span>LIVE</span>'
+      : state === 'post' ? '<span class="bracket-match__badge">FT</span>'
+      : `<span class="bracket-match__badge">${dateTxt}</span>`;
+    const row = (code, sc, winner) => {
+      const t = WC.TEAMS[code] || TBD_TEAM;
+      const tbd = !code || code === 'TBD';
+      return `<span class="bracket-team ${tbd ? 'is-tbd' : ''} ${winner ? 'is-winner' : ''}">
+        <span class="flag" style="background:${t.flag}"></span>
+        <span class="bracket-team__name">${tbd ? 'TBD' : t.short}</span>
+        ${state !== 'pre' ? `<b class="bracket-team__score">${sc}</b>` : ''}</span>`;
+    };
+    const done = state === 'post';
+    card.innerHTML = `
+      <span class="bracket-match__top">${badge}<small>${fx.venue || ''}${fx.city ? ' · ' + fx.city : ''}</small></span>
+      ${row(fx.home, score[0], done && score[0] > score[1])}
+      ${row(fx.away, score[1], done && score[1] > score[0])}`;
+    card.addEventListener('click', () => {
+      App.dayId = item.dayId;
+      if (App.demo) buildDemoDay();
+      setTab('matches');
+      if (App.feedOn && !App.demo) pollActiveDay();
+    });
+    return card;
+  }
+
   function renderRoad() {
     const view = $('#view-road');
-    view.innerHTML = `<div class="view-head reveal">${ICONS.zap}<h2>Road to the Final</h2><span class="panel__sub">104 matches · 48 teams · 3 nations</span></div>`;
+    view.innerHTML = `<div class="view-head reveal">${ICONS.zap}<h2>Road to the Final</h2><span class="panel__sub">104 matches · 48 teams · 3 nations · tap a stage to open its bracket</span></div>`;
     const strip = h('div', 'road');
     WC.STAGES.forEach((s, i) => {
-      const card = h('div', 'road-stage reveal' + (s.final ? ' road-stage--final' : ''));
+      const isGroup = s.key === 'group';
+      const open = App.roadStage === s.key;
+      const card = h('button', 'road-stage reveal' + (s.final ? ' road-stage--final' : '') + (open ? ' is-open' : ''));
+      card.type = 'button';
       card.style.transitionDelay = REDUCED ? '' : (i * 60) + 'ms';
+      card.setAttribute('aria-expanded', isGroup ? 'false' : String(open));
       card.innerHTML = `
         <span class="road-stage__num">${s.final ? ICONS.trophy : String(i + 1).padStart(2, '0')}</span>
         <b>${s.name}</b><span class="road-stage__dates">${s.dates}</span>
-        <small>${s.detail}</small><span class="road-stage__games">${s.games} ${s.games === 1 ? 'match' : 'matches'}</span>`;
+        <small>${s.detail}</small>
+        <span class="road-stage__games">${s.games} ${s.games === 1 ? 'match' : 'matches'}<span class="road-stage__cta">${isGroup ? 'VIEW GROUPS' : open ? 'CLOSE BRACKET' : 'VIEW BRACKET'} ${ICONS.chev}</span></span>`;
+      card.addEventListener('click', () => {
+        if (isGroup) { setTab('groups'); return; }
+        App.roadStage = open ? null : s.key;
+        renderRoad();
+        if (!open) {
+          const b = $('#bracketPanel');
+          if (b) b.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+        }
+      });
       strip.appendChild(card);
     });
     view.appendChild(strip);
+
+    /* bracket for the selected knockout stage */
+    if (App.roadStage) {
+      const stage = WC.STAGES.find(s => s.key === App.roadStage);
+      const items = stageFixtures(App.roadStage);
+      const panel = h('div', 'panel panel--accent reveal');
+      panel.id = 'bracketPanel';
+      const slots = items.length * 2;
+      const claimed = items.reduce((n, it) => n + (it.fx.home !== 'TBD' ? 1 : 0) + (it.fx.away !== 'TBD' ? 1 : 0), 0);
+      panel.innerHTML = `<div class="panel__head">${ICONS.trophy}<h3>${stage.name} — Bracket</h3>
+        <span class="panel__sub">${items.length ? `${claimed} of ${slots} spots claimed · updates as teams advance` : ''}</span></div>`;
+      if (!items.length) {
+        panel.appendChild(h('p', 'road-note', App.feedOn
+          ? 'Fixtures for this stage haven\'t been scheduled in the feed yet — check back soon.'
+          : 'Brackets need the live feed — they\'ll appear when it\'s reachable.'));
+      } else {
+        const grid = h('div', 'bracket');
+        items.forEach(it => grid.appendChild(bracketCard(it)));
+        panel.appendChild(grid);
+        panel.appendChild(h('p', 'fine-print', 'Tap any matchup to open its matchday. TBD slots fill in automatically as teams qualify.'));
+      }
+      view.appendChild(panel);
+    }
+
     const note = h('div', 'panel reveal');
     note.innerHTML = `<div class="panel__head">${ICONS.pin}<h3>The big one</h3></div>
       <p class="road-note">Sunday, <b>July 19, 2026</b> — the final at <b>MetLife Stadium</b>, New York / New Jersey.
