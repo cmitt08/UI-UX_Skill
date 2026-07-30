@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALEKS Math Placement — Score 61 Study Guide</title>
+<style>
+  :root {
+    --ink: #1a2332;
+    --muted: #5a6a7e;
+    --accent: #1d4ed8;
+    --accent-soft: #eff4ff;
+    --green: #0e7a4d;
+    --green-soft: #ecfdf3;
+    --red: #b42318;
+    --red-soft: #fef3f2;
+    --amber: #92400e;
+    --amber-soft: #fffbeb;
+    --line: #e4e9f0;
+    --card: #ffffff;
+    --bg: #f6f8fb;
+    --mono: "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.55; padding-bottom: 60px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+
+  header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #2563eb 100%);
+    color: #fff; padding: 40px 0 32px; margin-bottom: 28px;
+  }
+  header .wrap { max-width: 880px; }
+  .badge {
+    display: inline-block; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+    border-radius: 999px; padding: 4px 14px; font-size: 13px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  header h1 { font-size: 30px; line-height: 1.2; margin-bottom: 10px; }
+  header p { font-size: 16px; opacity: .92; max-width: 640px; }
+
+  h2 {
+    font-size: 21px; margin: 36px 0 6px; padding-top: 8px;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  h2 .num {
+    color: var(--accent); font-size: 15px; font-weight: 800; letter-spacing: .05em;
+  }
+  h3 { font-size: 16px; margin: 18px 0 6px; }
+  p.lede { color: var(--muted); margin-bottom: 14px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; margin: 14px 0;
+  }
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); }
+  .callout-green { border-left: 4px solid var(--green); background: var(--green-soft); }
+  .callout-red { border-left: 4px solid var(--red); background: var(--red-soft); }
+  .callout-amber { border-left: 4px solid var(--amber); background: var(--amber-soft); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .tbl-scroll { overflow-x: auto; }
+
+  ul, ol { padding-left: 22px; margin: 8px 0; }
+  li { margin: 5px 0; }
+  .formula {
+    font-family: var(--mono); font-size: 14px; background: #f0f3f8; border: 1px solid var(--line);
+    border-radius: 6px; padding: 2px 7px; white-space: nowrap;
+  }
+  .ex {
+    background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;
+    padding: 10px 14px; margin: 8px 0; font-size: 14.5px;
+  }
+  .ex b { color: var(--accent); }
+  .ans { color: var(--green); font-weight: 700; }
+  .pill {
+    display: inline-block; font-size: 12px; font-weight: 700; border-radius: 999px;
+    padding: 2px 10px; margin-right: 6px; vertical-align: middle;
+  }
+  .pill-must { background: var(--red-soft); color: var(--red); }
+  .pill-should { background: var(--amber-soft); color: var(--amber); }
+  .pill-bonus { background: var(--green-soft); color: var(--green); }
+
+  details { margin: 6px 0; }
+  summary { cursor: pointer; font-weight: 600; color: var(--accent); font-size: 14px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .checklist li { list-style: none; position: relative; padding-left: 26px; }
+  .checklist li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 800; }
+  .xlist li { list-style: none; position: relative; padding-left: 26px; }
+  .xlist li::before { content: "✗"; position: absolute; left: 0; color: var(--red); font-weight: 800; }
+
+  footer { margin-top: 40px; color: var(--muted); font-size: 13px; text-align: center; }
+  @media print {
+    header { background: #1d4ed8; -webkit-print-color-adjust: exact; }
+    .card { break-inside: avoid; }
+    details { display: block; } summary { display: none; }
+    details > * { display: block !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="badge">1-Hour Crash Guide</div>
+    <h1>ALEKS Math Placement — Hit 61+</h1>
+    <p>The smartest path to 61 isn't knowing hard math — it's being <strong>near-perfect on the easy-to-medium math</strong>. This guide shows you exactly why, what to review right now, and how to play the test itself.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ======================= STRATEGY ======================= -->
+  <h2><span class="num">01</span> The Strategy (read this first — 5 min)</h2>
+  <div class="card callout">
+    <h3>How ALEKS actually works</h3>
+    <ul>
+      <li><strong>Your score = the % of ~300 topics ALEKS believes you've mastered.</strong> A 61 means "mastered 61% of the topic pool" — it is <em>not</em> "61% of questions right."</li>
+      <li>It's <strong>adaptive</strong>: ~25–30 <strong>open-response</strong> questions (you type the answer — no multiple choice, no guessing your way through).</li>
+      <li>Every question is a probe. Get it right → ALEKS credits you with that topic <em>and the easier topics that lead up to it</em>. Get it wrong → ALEKS assumes you're missing that whole cluster and drops down.</li>
+      <li>There's generally <strong>no penalty for taking your time</strong> — most schools allow 2–3 hours. Nobody runs out of time; people lose points to careless errors.</li>
+    </ul>
+  </div>
+  <div class="card callout-green">
+    <h3>Why 61 is very reachable</h3>
+    <p>The topic pool is roughly: arithmetic &amp; percents, linear equations &amp; graphs, systems, exponents &amp; polynomials, factoring &amp; quadratics, rational and radical expressions, functions, geometry — and then a top layer of logs, exponentials, and trig.</p>
+    <p style="margin-top:8px"><strong>Everything below trig/logs is about two-thirds of the pool.</strong> So the winning move is:</p>
+    <ol>
+      <li><strong>Be flawless on arithmetic → intermediate algebra.</strong> These are "easy" topics, but a careless miss here is expensive — one wrong answer can wipe out credit for a whole cluster of topics you actually know.</li>
+      <li><strong>Fight for every algebra question.</strong> Factoring, quadratic formula, exponent rules, function evaluation — these are the swing votes that carry you from the 50s into the 60s.</li>
+      <li><strong>Don't sweat trig/logs.</strong> Attempt them if they look familiar, but a miss up there barely matters for a 61.</li>
+    </ol>
+  </div>
+  <div class="card callout-amber">
+    <h3>Safety net: you almost certainly get retakes</h3>
+    <p>Most schools give <strong>4–5 attempts</strong>, keep your <strong>highest</strong> score, and unlock a personalized <em>Prep and Learning Module</em> after the first try (studying ~3–6 hours in it raises placement by about one course level on average). So today's attempt is low-stakes: play it seriously, but know that a miss today is a diagnostic, not a disaster. Check your school's retake policy.</p>
+  </div>
+
+  <!-- ======================= HOUR PLAN ======================= -->
+  <h2><span class="num">02</span> Your next 60 minutes</h2>
+  <div class="card">
+    <div class="tbl-scroll">
+    <table>
+      <tr><th>Time</th><th>Do this</th></tr>
+      <tr><td><strong>0–5 min</strong></td><td>Read Section 01 (strategy) and Section 05 (test-day tactics).</td></tr>
+      <tr><td><strong>5–35 min</strong></td><td>Skim Section 03. Spend the most time on anything that makes you go "wait, how do I do that again?" — especially fractions, percents, solving equations, exponent rules, factoring, and the quadratic formula.</td></tr>
+      <tr><td><strong>35–50 min</strong></td><td>Do the 12 warm-up problems in Section 04 <em>on paper, showing work</em> — this is exactly how the test feels. Check answers.</td></tr>
+      <tr><td><strong>50–55 min</strong></td><td>Re-read the tactics checklist. Get pencil + plenty of scratch paper ready. Water, bathroom.</td></tr>
+      <tr><td><strong>55–60 min</strong></td><td>Stop studying. Breathe. Walk into it calm — accuracy beats cramming.</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <!-- ======================= TOPICS ======================= -->
+  <h2><span class="num">03</span> The must-know review</h2>
+  <p class="lede"><span class="pill pill-must">MUST</span> nail these cold &nbsp; <span class="pill pill-should">SHOULD</span> big score movers &nbsp; <span class="pill pill-bonus">BONUS</span> only if time allows</p>
+
+  <div class="card">
+    <h3><span class="pill pill-must">MUST</span> Fractions, decimals &amp; signed numbers</h3>
+    <ul>
+      <li>Add/subtract fractions: get a common denominator first. <span class="formula">a/b + c/d = (ad + bc)/bd</span></li>
+      <li>Multiply: straight across. Divide: flip the second and multiply. <span class="formula">(a/b) ÷ (c/d) = (a/b)·(d/c)</span></li>
+      <li><strong>Always reduce your final answer</strong> — ALEKS often requires simplest form.</li>
+      <li>Signs: negative × negative = positive; subtracting a negative = adding. <span class="formula">5 − (−3) = 8</span></li>
+      <li>Order of operations: Parentheses → Exponents → Multiply/Divide (left to right) → Add/Subtract (left to right).</li>
+    </ul>
+    <div class="ex"><b>Try:</b> 2/3 + 3/4 &nbsp;→&nbsp; 8/12 + 9/12 = <span class="ans">17/12</span> &nbsp;|&nbsp; −3² = <span class="ans">−9</span> but (−3)² = <span class="ans">9</span> (a classic ALEKS trap)</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill pill-must">MUST</span> Percents, ratios &amp; proportions</h3>
+    <ul>
+      <li>"x% of N" → <span class="formula">(x/100) · N</span>. &nbsp; Percent change: <span class="formula">(new − old)/old × 100</span></li>
+      <li>Proportions: cross-multiply. <span class="formula">a/b = c/d ⟹ ad = bc</span></li>
+      <li>Word-problem translation: "is" = equals, "of" = multiply, "what" = x.</li>
+    </ul>
+    <div class="ex"><b>Try:</b> A $80 jacket is discounted 35%. Price? → 80 × 0.65 = <span class="ans">$52</span><br>
+    <b>Try:</b> 18 is what percent of 45? → 18/45 = 0.40 = <span class="ans">40%</span></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill pill-must">MUST</span> Solving linear equations &amp; inequalities</h3>
+    <ul>
+      <li>Undo in reverse order; whatever you do to one side, do to the other. Distribute first, collect x's on one side.</li>
+      <li>Equations with fractions: multiply <em>every term</em> by the LCD to clear them immediately.</li>
+      <li>Inequalities: same rules, but <strong>flip the sign when multiplying/dividing by a negative</strong>.</li>
+      <li>Literal equations ("solve for w"): treat every other letter like a number.</li>
+    </ul>
+    <div class="ex"><b>Try:</b> 3(x − 4) = 2x + 5 → 3x − 12 = 2x + 5 → <span class="ans">x = 17</span><br>
+    <b>Try:</b> −2x &gt; 10 → <span class="ans">x &lt; −5</span> (sign flipped!)</div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill pill-must">MUST</span> Lines, slope &amp; graphing</h3>
+    <ul>
+      <li>Slope through two points: <span class="formula">m = (y₂ − y₁)/(x₂ − x₁)</span></li>
+      <li>Slope-intercept: <span class="formula">y = mx + b</span> (m = slope, b = y-intercept). Point-slope: <span class="formula">y − y₁ = m(x − x₁)</span></li>
+      <li>Parallel lines: same slope. Perpendicular: negative reciprocal (m and −1/m).</li>
+      <li>Intercepts: x-intercept → set y = 0; y-intercept → set x = 0.</li>
+    </ul>
+    <div class="ex"><b>Try:</b> Line through (1, 2) and (3, 8): m = (8−2)/(3−1) = 3 → y − 2 = 3(x − 1) → <span class="ans">y = 3x − 1</span></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill pill-should">SHOULD</span> Systems of equations</h3>
+    <ul>
+      <li><strong>Substitution:</strong> solve one equation for a variable, plug into the other.</li>
+      <li><strong>Elimination:</strong> scale one/both equations so a variable cancels when you add them.</li>
+    </ul>
+    <div class="ex"><b>Try:</b> x + y = 10, x − y = 4 → add: 2x = 14 → x = 7, <span class="ans">y = 3</span></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill pill-should">SHOULD</span> Exponent rules &amp; polynomials</h3>
+    <ul>
+      <li><span class="formula">xᵃ·xᵇ = xᵃ⁺ᵇ</span> &nbsp; <span class="formula">xᵃ/xᵇ = xᵃ⁻ᵇ</span> &nbsp; <span class="formula">(xᵃ)ᵇ = xᵃᵇ</span> &nbsp; <span class="formula">x⁰ = 1</span> &nbsp; <span class="formula">x⁻ⁿ = 1/xⁿ</span></li>
+      <li>FOIL: <span class="formula">(a + b)(c + d) = ac + ad + bc + bd</span>. Memorize <span class="formula">(a + b)² = a² + 2ab + b²</span> — it is <em>not</em> a² + b².</li>
+      <li>Combine like terms only (3x² + 5x can't be combined).</li>
+    </ul>
+    <div class="ex"><b>Try:</b> (2x³y)² · x = 4x⁶y² · x = <span class="ans">4x⁷y²</span> &nbsp;|&nbsp; (x + 5)(x − 3) = <span class="ans">x² + 2x − 15</span></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill pill-should">SHOULD</span> Factoring &amp; quadratic equations — <em>the biggest score movers</em></h3>
+    <ul>
+      <li>Always pull out the GCF first: <span class="formula">6x² + 9x = 3x(2x + 3)</span></li>
+      <li>Trinomials x² + bx + c: find two numbers that multiply to c and add to b.</li>
+      <li>Difference of squares: <span class="formula">a² − b² = (a + b)(a − b)</span></li>
+      <li>To solve: set = 0, factor, set each factor to 0. If it won't factor, quadratic formula:<br>
+        <span class="formula">x = (−b ± √(b² − 4ac)) / (2a)</span></li>
+      <li>Vertex of y = ax² + bx + c is at <span class="formula">x = −b/(2a)</span>.</li>
+    </ul>
+    <div class="ex"><b>Try:</b> x² − 5x − 14 = 0 → (x − 7)(x + 2) = 0 → <span class="ans">x = 7 or x = −2</span></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill pill-should">SHOULD</span> Radicals &amp; rational expressions</h3>
+    <ul>
+      <li>Simplify roots by pulling out perfect squares: <span class="formula">√72 = √36·√2 = 6√2</span></li>
+      <li><span class="formula">√a·√b = √(ab)</span>, but <span class="formula">√(a+b) ≠ √a + √b</span> (trap!)</li>
+      <li>Fractional exponents: <span class="formula">x^(1/2) = √x</span>, <span class="formula">x^(3/2) = (√x)³</span></li>
+      <li>Rational expressions: factor top and bottom, cancel <em>whole factors</em> only — never cancel terms across a + sign.</li>
+    </ul>
+    <div class="ex"><b>Try:</b> (x² − 9)/(x + 3) = (x+3)(x−3)/(x+3) = <span class="ans">x − 3</span></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill pill-should">SHOULD</span> Functions</h3>
+    <ul>
+      <li>f(x) is just "plug it in": if f(x) = x² − 3x, then f(−2) = 4 + 6 = 10. <strong>Use parentheses when substituting negatives.</strong></li>
+      <li>Domain: exclude values that make a denominator 0 or a square root negative.</li>
+      <li>Composition: <span class="formula">(f ∘ g)(x) = f(g(x))</span> — work inside-out.</li>
+    </ul>
+    <div class="ex"><b>Try:</b> f(x) = 2x + 1, g(x) = x². f(g(3)) = f(9) = <span class="ans">19</span></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill pill-should">SHOULD</span> Geometry quick sheet</h3>
+    <div class="tbl-scroll">
+    <table>
+      <tr><th>Shape</th><th>Area</th><th>Perimeter / other</th></tr>
+      <tr><td>Rectangle</td><td>l·w</td><td>2l + 2w</td></tr>
+      <tr><td>Triangle</td><td>½·b·h</td><td>angles sum to 180°</td></tr>
+      <tr><td>Circle</td><td>πr²</td><td>circumference 2πr</td></tr>
+      <tr><td>Right triangle</td><td colspan="2">Pythagorean theorem: a² + b² = c² (c = hypotenuse)</td></tr>
+      <tr><td>Box / cylinder volume</td><td colspan="2">l·w·h &nbsp;/&nbsp; πr²h</td></tr>
+    </table>
+    </div>
+    <div class="ex"><b>Try:</b> Legs 6 and 8 → hypotenuse = √(36+64) = √100 = <span class="ans">10</span></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill pill-bonus">BONUS</span> Only if you have spare time (not needed for 61)</h3>
+    <ul>
+      <li>Logs: <span class="formula">log_b(x) = y ⟺ bʸ = x</span>, so log₂ 8 = 3. &nbsp; log(ab) = log a + log b.</li>
+      <li>Right-triangle trig: SOH-CAH-TOA — sin = opp/hyp, cos = adj/hyp, tan = opp/adj.</li>
+      <li>Exponential growth: <span class="formula">A = P(1 + r)ᵗ</span></li>
+    </ul>
+    <p style="color:var(--muted); font-size:14px; margin-top:6px">If a trig/log question appears and looks alien, it means you're doing well — the test climbed above your target. Attempt it if you can; if it's truly foreign, "I haven't learned this yet" is acceptable <em>up here only</em>.</p>
+  </div>
+
+  <!-- ======================= PRACTICE ======================= -->
+  <h2><span class="num">04</span> 12-problem warm-up (do on paper)</h2>
+  <div class="card">
+    <ol>
+      <li>Compute: 5/6 − 3/8</li>
+      <li>Compute: 4 − 2(3 − 7)²  ÷ 8</li>
+      <li>A phone costs $120 after a 25% discount. What was the original price?</li>
+      <li>Solve: 2(3x − 1) = 4x + 10</li>
+      <li>Solve: (x/3) + (x/4) = 7</li>
+      <li>Solve for h: V = ⅓·B·h</li>
+      <li>Find the equation of the line through (−2, 5) with slope −3.</li>
+      <li>Solve the system: 2x + y = 7 and x − y = 2</li>
+      <li>Simplify: (3x²y⁻¹)² · y³</li>
+      <li>Factor completely: 2x² − 8x − 42</li>
+      <li>Solve: x² = 5x + 6</li>
+      <li>If f(x) = x² − 4x + 1, find f(−3).</li>
+    </ol>
+    <details>
+      <summary>Show answers</summary>
+      <ol style="margin-top:8px">
+        <li><span class="ans">11/24</span> (LCD 24: 20/24 − 9/24)</li>
+        <li><span class="ans">0</span> (4 − 2(16)÷8 = 4 − 32÷8 = 4 − 4)</li>
+        <li><span class="ans">$160</span> (120 = 0.75 × original)</li>
+        <li><span class="ans">x = 6</span> (6x − 2 = 4x + 10)</li>
+        <li><span class="ans">x = 12</span> (multiply by 12: 4x + 3x = 84)</li>
+        <li><span class="ans">h = 3V/B</span></li>
+        <li><span class="ans">y = −3x − 1</span> (y − 5 = −3(x + 2))</li>
+        <li><span class="ans">x = 3, y = 1</span> (add the equations: 3x = 9)</li>
+        <li><span class="ans">9x⁴y</span> (9x⁴y⁻² · y³)</li>
+        <li><span class="ans">2(x − 7)(x + 3)</span> (GCF 2 first)</li>
+        <li><span class="ans">x = 6 or x = −1</span> (x² − 5x − 6 = 0 → (x−6)(x+1))</li>
+        <li><span class="ans">22</span> (9 + 12 + 1 — parentheses around −3!)</li>
+      </ol>
+    </details>
+  </div>
+  <div class="card callout-amber">
+    <p><strong>Scoring yourself:</strong> 10+ right → you're in great shape for 61. 7–9 → re-skim the sections you missed; those are your money topics. Under 7 → focus your remaining minutes entirely on problems 1–7 (the MUST tier) — perfect fundamentals alone put you in the 50s–60s, and the retake with ALEKS's learning module will finish the job.</p>
+  </div>
+
+  <!-- ======================= TACTICS ======================= -->
+  <h2><span class="num">05</span> Test-day tactics</h2>
+  <div class="grid2">
+    <div class="card callout-green">
+      <h3>Do</h3>
+      <ul class="checklist">
+        <li><strong>Work every problem on paper first</strong>, then type the answer. Mental math is where 61s die.</li>
+        <li><strong>Go slow.</strong> You likely have 2–3 hours for ~30 questions — that's 4+ minutes each. Use them.</li>
+        <li><strong>Double-check before submitting</strong> — you cannot go back. Re-read the question: did it ask for x, or for x + 2? Simplified fraction? Units?</li>
+        <li>Take the <strong>ALEKS answer-input tutorial seriously</strong> — learn the palette for fractions, exponents, and roots so you never lose a point to formatting.</li>
+        <li>Use the <strong>on-screen ALEKS calculator when it appears</strong> — if the button shows up, the problem expects it. (No personal calculators.)</li>
+        <li>Plug your answer back in when solving equations — a 10-second check that catches most errors.</li>
+        <li>Attempt everything that looks even vaguely familiar. Partial knowledge often produces right answers, and right answers credit whole topic clusters.</li>
+      </ul>
+    </div>
+    <div class="card callout-red">
+      <h3>Don't</h3>
+      <ul class="xlist">
+        <li><strong>Don't click "I haven't learned this yet"</strong> on anything you might be able to do — it tells ALEKS to zero out that topic <em>and its neighbors</em>. Reserve it for genuinely never-seen material (weird trig/log stuff).</li>
+        <li>Don't rush the early questions. The first stretch calibrates the whole test — careless misses early cost the most.</li>
+        <li>Don't use outside help, phones, or websites. It's a placement tool — an inflated score puts you in a course you'll drown in (and proctored versions will catch it).</li>
+        <li>Don't panic when questions get hard. <strong>Hard questions mean you're winning</strong> — the test climbs until you miss. Everyone ends around 50% right; that's the design.</li>
+        <li>Don't leave an answer half-simplified: reduce fractions, simplify radicals, combine like terms.</li>
+        <li>Don't cram new material in the last 10 minutes. Accuracy on what you know beats a shaky grasp of what you don't.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card callout">
+    <h3>The one-sentence version</h3>
+    <p style="font-size:16px"><strong>Slow down, show work on paper, be perfect on the algebra you already know, never surrender a question you can attempt — and remember that hard questions mean it's going well.</strong> Good luck — you've got this. 🎯</p>
+  </div>
+
+  <footer>
+    ALEKS scoring &amp; retake details verified against university math-department guidance (URI, ASU, Indiana, South Carolina, Kennesaw State). Your school sets its own cutoffs and retake rules — check its ALEKS page after your attempt.
+  </footer>
+</div>
+</body>
+</html>
