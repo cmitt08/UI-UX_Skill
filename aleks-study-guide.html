@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ALEKS Math Placement — Score 61 Study Guide</title>
+<title>ALEKS Math Placement — Score 61 Interactive Study Guide</title>
 <style>
   :root {
     --ink: #1a2332;
@@ -30,9 +30,8 @@
 
   header {
     background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #2563eb 100%);
-    color: #fff; padding: 40px 0 32px; margin-bottom: 28px;
+    color: #fff; padding: 36px 0 28px;
   }
-  header .wrap { max-width: 880px; }
   .badge {
     display: inline-block; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
     border-radius: 999px; padding: 4px 14px; font-size: 13px; font-weight: 600; letter-spacing: .04em;
@@ -41,14 +40,24 @@
   header h1 { font-size: 30px; line-height: 1.2; margin-bottom: 10px; }
   header p { font-size: 16px; opacity: .92; max-width: 640px; }
 
+  /* sticky progress bar */
+  #progressbar {
+    position: sticky; top: 0; z-index: 50; background: #fff; border-bottom: 1px solid var(--line);
+    box-shadow: 0 2px 8px rgba(16,24,40,.06); margin-bottom: 24px;
+  }
+  #progressbar .wrap { display: flex; align-items: center; gap: 14px; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap; }
+  .ptrack { flex: 1 1 200px; height: 10px; background: #e9edf3; border-radius: 999px; overflow: hidden; min-width: 140px; }
+  .pfill { height: 100%; width: 0%; background: linear-gradient(90deg, #2563eb, #0e7a4d); border-radius: 999px; transition: width .4s ease; }
+  #plabel { font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+  #resetbtn { font-size: 12px; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+  #resetbtn:hover { color: var(--red); border-color: var(--red); }
+
   h2 {
     font-size: 21px; margin: 36px 0 6px; padding-top: 8px;
     display: flex; align-items: baseline; gap: 10px;
   }
-  h2 .num {
-    color: var(--accent); font-size: 15px; font-weight: 800; letter-spacing: .05em;
-  }
-  h3 { font-size: 16px; margin: 18px 0 6px; }
+  h2 .num { color: var(--accent); font-size: 15px; font-weight: 800; letter-spacing: .05em; }
+  h3 { font-size: 16px; margin: 0 0 8px; }
   p.lede { color: var(--muted); margin-bottom: 14px; }
 
   .card {
@@ -85,8 +94,79 @@
   .pill-should { background: var(--amber-soft); color: var(--amber); }
   .pill-bonus { background: var(--green-soft); color: var(--green); }
 
-  details { margin: 6px 0; }
-  summary { cursor: pointer; font-weight: 600; color: var(--accent); font-size: 14px; }
+  /* click-to-reveal answers */
+  .reveal-btn {
+    font-size: 12.5px; font-weight: 700; color: var(--accent); background: #fff;
+    border: 1px solid var(--accent); border-radius: 6px; padding: 2px 10px; cursor: pointer;
+    vertical-align: middle;
+  }
+  .reveal-btn:hover { background: var(--accent-soft); }
+  .reveal-target { display: none; }
+  .reveal-target.shown { display: inline; }
+
+  /* "mark reviewed" checkbox row */
+  .review-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .reviewed-toggle {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600;
+    color: var(--muted); cursor: pointer; user-select: none; white-space: nowrap;
+    border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; background: #fff; flex-shrink: 0;
+  }
+  .reviewed-toggle input { accent-color: var(--green); width: 15px; height: 15px; cursor: pointer; }
+  .reviewed-toggle.done { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+
+  /* flashcards */
+  .fc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+  .fc { perspective: 800px; cursor: pointer; min-height: 120px; }
+  .fc-inner {
+    position: relative; width: 100%; height: 100%; min-height: 120px;
+    transition: transform .45s; transform-style: preserve-3d;
+  }
+  .fc.flipped .fc-inner { transform: rotateY(180deg); }
+  .fc-face {
+    position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border-radius: 10px; padding: 14px; display: flex; align-items: center; justify-content: center;
+    text-align: center; font-size: 14px;
+  }
+  .fc-front { background: #fff; border: 1px solid var(--line); font-weight: 700; }
+  .fc-front::after { content: "tap to flip"; position: absolute; bottom: 6px; right: 10px; font-size: 10px; font-weight: 600; color: #b3bdcb; text-transform: uppercase; letter-spacing: .05em; }
+  .fc-back {
+    background: var(--accent); color: #fff; transform: rotateY(180deg);
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.5;
+  }
+  .fc.got .fc-front { border-color: var(--green); background: var(--green-soft); }
+  .fc-actions { display: flex; gap: 6px; justify-content: center; margin-top: 8px; }
+  .fc-wrap { display: flex; flex-direction: column; }
+  .fc-know {
+    font-size: 12px; font-weight: 700; border-radius: 6px; padding: 3px 10px; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--muted);
+  }
+  .fc-know.on { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+
+  /* quiz */
+  .q { border-top: 1px solid var(--line); padding: 14px 0; }
+  .q:first-of-type { border-top: none; }
+  .q-text { font-size: 15px; margin-bottom: 8px; }
+  .q-text .qnum { font-weight: 800; color: var(--accent); margin-right: 6px; }
+  .q-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .q input[type=text] {
+    font-family: var(--mono); font-size: 15px; padding: 7px 10px; border: 1.5px solid #cbd5e1;
+    border-radius: 8px; width: 180px; max-width: 100%;
+  }
+  .q input[type=text]:focus { outline: none; border-color: var(--accent); }
+  .q.correct input[type=text] { border-color: var(--green); background: var(--green-soft); }
+  .q.wrong input[type=text] { border-color: var(--red); background: var(--red-soft); }
+  .checkbtn {
+    font-size: 13.5px; font-weight: 700; color: #fff; background: var(--accent); border: none;
+    border-radius: 8px; padding: 8px 16px; cursor: pointer;
+  }
+  .checkbtn:hover { background: #1e40af; }
+  .q-feedback { font-size: 14px; font-weight: 700; }
+  .q-feedback.ok { color: var(--green); }
+  .q-feedback.no { color: var(--red); }
+  .q details { margin-top: 8px; }
+  summary { cursor: pointer; font-weight: 600; color: var(--accent); font-size: 13.5px; }
+  .sol { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px 14px; margin-top: 6px; font-size: 14px; }
+
+  #quizscore { font-size: 15px; font-weight: 700; margin-top: 14px; }
 
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
@@ -97,23 +177,25 @@
   .xlist li::before { content: "✗"; position: absolute; left: 0; color: var(--red); font-weight: 800; }
 
   footer { margin-top: 40px; color: var(--muted); font-size: 13px; text-align: center; }
-  @media print {
-    header { background: #1d4ed8; -webkit-print-color-adjust: exact; }
-    .card { break-inside: avoid; }
-    details { display: block; } summary { display: none; }
-    details > * { display: block !important; }
-  }
 </style>
 </head>
 <body>
 
 <header>
   <div class="wrap">
-    <div class="badge">1-Hour Crash Guide</div>
+    <div class="badge">Interactive 1-Hour Crash Guide</div>
     <h1>ALEKS Math Placement — Hit 61+</h1>
-    <p>The smartest path to 61 isn't knowing hard math — it's being <strong>near-perfect on the easy-to-medium math</strong>. This guide shows you exactly why, what to review right now, and how to play the test itself.</p>
+    <p>The smartest path to 61 isn't knowing hard math — it's being <strong>near-perfect on the easy-to-medium math</strong>. Work through this page top to bottom: reveal the examples, drill the flashcards, then type your answers into the 12-question warm-up. Your progress saves automatically.</p>
   </div>
 </header>
+
+<div id="progressbar">
+  <div class="wrap">
+    <span id="plabel">0% ready</span>
+    <div class="ptrack"><div class="pfill" id="pfill"></div></div>
+    <button id="resetbtn" title="Clear all saved progress">Reset progress</button>
+  </div>
+</div>
 
 <div class="wrap">
 
@@ -149,21 +231,26 @@
     <div class="tbl-scroll">
     <table>
       <tr><th>Time</th><th>Do this</th></tr>
-      <tr><td><strong>0–5 min</strong></td><td>Read Section 01 (strategy) and Section 05 (test-day tactics).</td></tr>
-      <tr><td><strong>5–35 min</strong></td><td>Skim Section 03. Spend the most time on anything that makes you go "wait, how do I do that again?" — especially fractions, percents, solving equations, exponent rules, factoring, and the quadratic formula.</td></tr>
-      <tr><td><strong>35–50 min</strong></td><td>Do the 12 warm-up problems in Section 04 <em>on paper, showing work</em> — this is exactly how the test feels. Check answers.</td></tr>
-      <tr><td><strong>50–55 min</strong></td><td>Re-read the tactics checklist. Get pencil + plenty of scratch paper ready. Water, bathroom.</td></tr>
-      <tr><td><strong>55–60 min</strong></td><td>Stop studying. Breathe. Walk into it calm — accuracy beats cramming.</td></tr>
+      <tr><td><strong>0–5 min</strong></td><td>Read Section 01 (strategy) and Section 06 (test-day tactics).</td></tr>
+      <tr><td><strong>5–30 min</strong></td><td>Work Section 03: for each topic, <em>try the example on paper before revealing the answer</em>, then mark the card reviewed. Linger on anything shaky.</td></tr>
+      <tr><td><strong>30–37 min</strong></td><td>Run the formula flashcards (Section 04) until every card is marked "I know this."</td></tr>
+      <tr><td><strong>37–52 min</strong></td><td>Do the 12-question warm-up (Section 05) <em>on paper, showing work</em>, typing each answer to check it — exactly how the real test feels.</td></tr>
+      <tr><td><strong>52–57 min</strong></td><td>Re-read the tactics checklist. Get pencil + plenty of scratch paper ready. Water, bathroom.</td></tr>
+      <tr><td><strong>57–60 min</strong></td><td>Stop studying. Breathe. Walk into it calm — accuracy beats cramming.</td></tr>
     </table>
     </div>
   </div>
 
   <!-- ======================= TOPICS ======================= -->
   <h2><span class="num">03</span> The must-know review</h2>
-  <p class="lede"><span class="pill pill-must">MUST</span> nail these cold &nbsp; <span class="pill pill-should">SHOULD</span> big score movers &nbsp; <span class="pill pill-bonus">BONUS</span> only if time allows</p>
+  <p class="lede"><span class="pill pill-must">MUST</span> nail these cold &nbsp; <span class="pill pill-should">SHOULD</span> big score movers &nbsp; <span class="pill pill-bonus">BONUS</span> only if time allows<br>
+  <strong>Active recall rule:</strong> solve each "Try it" on paper <em>before</em> you click reveal — that's what makes it stick.</p>
 
-  <div class="card">
-    <h3><span class="pill pill-must">MUST</span> Fractions, decimals &amp; signed numbers</h3>
+  <div class="card" data-topic="fractions">
+    <div class="review-row">
+      <h3><span class="pill pill-must">MUST</span> Fractions, decimals &amp; signed numbers</h3>
+      <label class="reviewed-toggle"><input type="checkbox" class="reviewed-cb"> Reviewed</label>
+    </div>
     <ul>
       <li>Add/subtract fractions: get a common denominator first. <span class="formula">a/b + c/d = (ad + bc)/bd</span></li>
       <li>Multiply: straight across. Divide: flip the second and multiply. <span class="formula">(a/b) ÷ (c/d) = (a/b)·(d/c)</span></li>
@@ -171,64 +258,98 @@
       <li>Signs: negative × negative = positive; subtracting a negative = adding. <span class="formula">5 − (−3) = 8</span></li>
       <li>Order of operations: Parentheses → Exponents → Multiply/Divide (left to right) → Add/Subtract (left to right).</li>
     </ul>
-    <div class="ex"><b>Try:</b> 2/3 + 3/4 &nbsp;→&nbsp; 8/12 + 9/12 = <span class="ans">17/12</span> &nbsp;|&nbsp; −3² = <span class="ans">−9</span> but (−3)² = <span class="ans">9</span> (a classic ALEKS trap)</div>
+    <div class="ex"><b>Try it:</b> 2/3 + 3/4 = ? &nbsp; and: is −3² the same as (−3)²?
+      <button class="reveal-btn">Reveal</button>
+      <span class="reveal-target">→ 8/12 + 9/12 = <span class="ans">17/12</span>; and no — −3² = <span class="ans">−9</span> but (−3)² = <span class="ans">9</span> (a classic ALEKS trap).</span>
+    </div>
   </div>
 
-  <div class="card">
-    <h3><span class="pill pill-must">MUST</span> Percents, ratios &amp; proportions</h3>
+  <div class="card" data-topic="percents">
+    <div class="review-row">
+      <h3><span class="pill pill-must">MUST</span> Percents, ratios &amp; proportions</h3>
+      <label class="reviewed-toggle"><input type="checkbox" class="reviewed-cb"> Reviewed</label>
+    </div>
     <ul>
       <li>"x% of N" → <span class="formula">(x/100) · N</span>. &nbsp; Percent change: <span class="formula">(new − old)/old × 100</span></li>
       <li>Proportions: cross-multiply. <span class="formula">a/b = c/d ⟹ ad = bc</span></li>
       <li>Word-problem translation: "is" = equals, "of" = multiply, "what" = x.</li>
     </ul>
-    <div class="ex"><b>Try:</b> A $80 jacket is discounted 35%. Price? → 80 × 0.65 = <span class="ans">$52</span><br>
-    <b>Try:</b> 18 is what percent of 45? → 18/45 = 0.40 = <span class="ans">40%</span></div>
+    <div class="ex"><b>Try it:</b> An $80 jacket is discounted 35%. New price? &nbsp; And: 18 is what percent of 45?
+      <button class="reveal-btn">Reveal</button>
+      <span class="reveal-target">→ 80 × 0.65 = <span class="ans">$52</span>; and 18/45 = 0.40 = <span class="ans">40%</span>.</span>
+    </div>
   </div>
 
-  <div class="card">
-    <h3><span class="pill pill-must">MUST</span> Solving linear equations &amp; inequalities</h3>
+  <div class="card" data-topic="linear">
+    <div class="review-row">
+      <h3><span class="pill pill-must">MUST</span> Solving linear equations &amp; inequalities</h3>
+      <label class="reviewed-toggle"><input type="checkbox" class="reviewed-cb"> Reviewed</label>
+    </div>
     <ul>
       <li>Undo in reverse order; whatever you do to one side, do to the other. Distribute first, collect x's on one side.</li>
       <li>Equations with fractions: multiply <em>every term</em> by the LCD to clear them immediately.</li>
       <li>Inequalities: same rules, but <strong>flip the sign when multiplying/dividing by a negative</strong>.</li>
       <li>Literal equations ("solve for w"): treat every other letter like a number.</li>
     </ul>
-    <div class="ex"><b>Try:</b> 3(x − 4) = 2x + 5 → 3x − 12 = 2x + 5 → <span class="ans">x = 17</span><br>
-    <b>Try:</b> −2x &gt; 10 → <span class="ans">x &lt; −5</span> (sign flipped!)</div>
+    <div class="ex"><b>Try it:</b> Solve 3(x − 4) = 2x + 5. &nbsp; Then solve −2x &gt; 10.
+      <button class="reveal-btn">Reveal</button>
+      <span class="reveal-target">→ 3x − 12 = 2x + 5 → <span class="ans">x = 17</span>; and <span class="ans">x &lt; −5</span> (sign flipped!).</span>
+    </div>
   </div>
 
-  <div class="card">
-    <h3><span class="pill pill-must">MUST</span> Lines, slope &amp; graphing</h3>
+  <div class="card" data-topic="lines">
+    <div class="review-row">
+      <h3><span class="pill pill-must">MUST</span> Lines, slope &amp; graphing</h3>
+      <label class="reviewed-toggle"><input type="checkbox" class="reviewed-cb"> Reviewed</label>
+    </div>
     <ul>
       <li>Slope through two points: <span class="formula">m = (y₂ − y₁)/(x₂ − x₁)</span></li>
       <li>Slope-intercept: <span class="formula">y = mx + b</span> (m = slope, b = y-intercept). Point-slope: <span class="formula">y − y₁ = m(x − x₁)</span></li>
       <li>Parallel lines: same slope. Perpendicular: negative reciprocal (m and −1/m).</li>
       <li>Intercepts: x-intercept → set y = 0; y-intercept → set x = 0.</li>
     </ul>
-    <div class="ex"><b>Try:</b> Line through (1, 2) and (3, 8): m = (8−2)/(3−1) = 3 → y − 2 = 3(x − 1) → <span class="ans">y = 3x − 1</span></div>
+    <div class="ex"><b>Try it:</b> Equation of the line through (1, 2) and (3, 8)?
+      <button class="reveal-btn">Reveal</button>
+      <span class="reveal-target">→ m = (8−2)/(3−1) = 3 → y − 2 = 3(x − 1) → <span class="ans">y = 3x − 1</span>.</span>
+    </div>
   </div>
 
-  <div class="card">
-    <h3><span class="pill pill-should">SHOULD</span> Systems of equations</h3>
+  <div class="card" data-topic="systems">
+    <div class="review-row">
+      <h3><span class="pill pill-should">SHOULD</span> Systems of equations</h3>
+      <label class="reviewed-toggle"><input type="checkbox" class="reviewed-cb"> Reviewed</label>
+    </div>
     <ul>
       <li><strong>Substitution:</strong> solve one equation for a variable, plug into the other.</li>
       <li><strong>Elimination:</strong> scale one/both equations so a variable cancels when you add them.</li>
     </ul>
-    <div class="ex"><b>Try:</b> x + y = 10, x − y = 4 → add: 2x = 14 → x = 7, <span class="ans">y = 3</span></div>
+    <div class="ex"><b>Try it:</b> x + y = 10 and x − y = 4. Find x and y.
+      <button class="reveal-btn">Reveal</button>
+      <span class="reveal-target">→ add them: 2x = 14 → x = 7, <span class="ans">y = 3</span>.</span>
+    </div>
   </div>
 
-  <div class="card">
-    <h3><span class="pill pill-should">SHOULD</span> Exponent rules &amp; polynomials</h3>
+  <div class="card" data-topic="exponents">
+    <div class="review-row">
+      <h3><span class="pill pill-should">SHOULD</span> Exponent rules &amp; polynomials</h3>
+      <label class="reviewed-toggle"><input type="checkbox" class="reviewed-cb"> Reviewed</label>
+    </div>
     <ul>
       <li><span class="formula">xᵃ·xᵇ = xᵃ⁺ᵇ</span> &nbsp; <span class="formula">xᵃ/xᵇ = xᵃ⁻ᵇ</span> &nbsp; <span class="formula">(xᵃ)ᵇ = xᵃᵇ</span> &nbsp; <span class="formula">x⁰ = 1</span> &nbsp; <span class="formula">x⁻ⁿ = 1/xⁿ</span></li>
       <li>FOIL: <span class="formula">(a + b)(c + d) = ac + ad + bc + bd</span>. Memorize <span class="formula">(a + b)² = a² + 2ab + b²</span> — it is <em>not</em> a² + b².</li>
       <li>Combine like terms only (3x² + 5x can't be combined).</li>
     </ul>
-    <div class="ex"><b>Try:</b> (2x³y)² · x = 4x⁶y² · x = <span class="ans">4x⁷y²</span> &nbsp;|&nbsp; (x + 5)(x − 3) = <span class="ans">x² + 2x − 15</span></div>
+    <div class="ex"><b>Try it:</b> Simplify (2x³y)² · x. &nbsp; Expand (x + 5)(x − 3).
+      <button class="reveal-btn">Reveal</button>
+      <span class="reveal-target">→ 4x⁶y² · x = <span class="ans">4x⁷y²</span>; and <span class="ans">x² + 2x − 15</span>.</span>
+    </div>
   </div>
 
-  <div class="card">
-    <h3><span class="pill pill-should">SHOULD</span> Factoring &amp; quadratic equations — <em>the biggest score movers</em></h3>
+  <div class="card" data-topic="quadratics">
+    <div class="review-row">
+      <h3><span class="pill pill-should">SHOULD</span> Factoring &amp; quadratics — <em>the biggest score movers</em></h3>
+      <label class="reviewed-toggle"><input type="checkbox" class="reviewed-cb"> Reviewed</label>
+    </div>
     <ul>
       <li>Always pull out the GCF first: <span class="formula">6x² + 9x = 3x(2x + 3)</span></li>
       <li>Trinomials x² + bx + c: find two numbers that multiply to c and add to b.</li>
@@ -237,32 +358,50 @@
         <span class="formula">x = (−b ± √(b² − 4ac)) / (2a)</span></li>
       <li>Vertex of y = ax² + bx + c is at <span class="formula">x = −b/(2a)</span>.</li>
     </ul>
-    <div class="ex"><b>Try:</b> x² − 5x − 14 = 0 → (x − 7)(x + 2) = 0 → <span class="ans">x = 7 or x = −2</span></div>
+    <div class="ex"><b>Try it:</b> Solve x² − 5x − 14 = 0.
+      <button class="reveal-btn">Reveal</button>
+      <span class="reveal-target">→ (x − 7)(x + 2) = 0 → <span class="ans">x = 7 or x = −2</span>.</span>
+    </div>
   </div>
 
-  <div class="card">
-    <h3><span class="pill pill-should">SHOULD</span> Radicals &amp; rational expressions</h3>
+  <div class="card" data-topic="radicals">
+    <div class="review-row">
+      <h3><span class="pill pill-should">SHOULD</span> Radicals &amp; rational expressions</h3>
+      <label class="reviewed-toggle"><input type="checkbox" class="reviewed-cb"> Reviewed</label>
+    </div>
     <ul>
       <li>Simplify roots by pulling out perfect squares: <span class="formula">√72 = √36·√2 = 6√2</span></li>
       <li><span class="formula">√a·√b = √(ab)</span>, but <span class="formula">√(a+b) ≠ √a + √b</span> (trap!)</li>
       <li>Fractional exponents: <span class="formula">x^(1/2) = √x</span>, <span class="formula">x^(3/2) = (√x)³</span></li>
       <li>Rational expressions: factor top and bottom, cancel <em>whole factors</em> only — never cancel terms across a + sign.</li>
     </ul>
-    <div class="ex"><b>Try:</b> (x² − 9)/(x + 3) = (x+3)(x−3)/(x+3) = <span class="ans">x − 3</span></div>
+    <div class="ex"><b>Try it:</b> Simplify (x² − 9)/(x + 3).
+      <button class="reveal-btn">Reveal</button>
+      <span class="reveal-target">→ (x+3)(x−3)/(x+3) = <span class="ans">x − 3</span>.</span>
+    </div>
   </div>
 
-  <div class="card">
-    <h3><span class="pill pill-should">SHOULD</span> Functions</h3>
+  <div class="card" data-topic="functions">
+    <div class="review-row">
+      <h3><span class="pill pill-should">SHOULD</span> Functions</h3>
+      <label class="reviewed-toggle"><input type="checkbox" class="reviewed-cb"> Reviewed</label>
+    </div>
     <ul>
       <li>f(x) is just "plug it in": if f(x) = x² − 3x, then f(−2) = 4 + 6 = 10. <strong>Use parentheses when substituting negatives.</strong></li>
       <li>Domain: exclude values that make a denominator 0 or a square root negative.</li>
       <li>Composition: <span class="formula">(f ∘ g)(x) = f(g(x))</span> — work inside-out.</li>
     </ul>
-    <div class="ex"><b>Try:</b> f(x) = 2x + 1, g(x) = x². f(g(3)) = f(9) = <span class="ans">19</span></div>
+    <div class="ex"><b>Try it:</b> f(x) = 2x + 1, g(x) = x². Find f(g(3)).
+      <button class="reveal-btn">Reveal</button>
+      <span class="reveal-target">→ g(3) = 9, then f(9) = <span class="ans">19</span>.</span>
+    </div>
   </div>
 
-  <div class="card">
-    <h3><span class="pill pill-should">SHOULD</span> Geometry quick sheet</h3>
+  <div class="card" data-topic="geometry">
+    <div class="review-row">
+      <h3><span class="pill pill-should">SHOULD</span> Geometry quick sheet</h3>
+      <label class="reviewed-toggle"><input type="checkbox" class="reviewed-cb"> Reviewed</label>
+    </div>
     <div class="tbl-scroll">
     <table>
       <tr><th>Shape</th><th>Area</th><th>Perimeter / other</th></tr>
@@ -273,11 +412,17 @@
       <tr><td>Box / cylinder volume</td><td colspan="2">l·w·h &nbsp;/&nbsp; πr²h</td></tr>
     </table>
     </div>
-    <div class="ex"><b>Try:</b> Legs 6 and 8 → hypotenuse = √(36+64) = √100 = <span class="ans">10</span></div>
+    <div class="ex"><b>Try it:</b> A right triangle has legs 6 and 8. Hypotenuse?
+      <button class="reveal-btn">Reveal</button>
+      <span class="reveal-target">→ √(36+64) = √100 = <span class="ans">10</span>.</span>
+    </div>
   </div>
 
-  <div class="card">
-    <h3><span class="pill pill-bonus">BONUS</span> Only if you have spare time (not needed for 61)</h3>
+  <div class="card" data-topic="bonus">
+    <div class="review-row">
+      <h3><span class="pill pill-bonus">BONUS</span> Only if you have spare time (not needed for 61)</h3>
+      <label class="reviewed-toggle"><input type="checkbox" class="reviewed-cb"> Reviewed</label>
+    </div>
     <ul>
       <li>Logs: <span class="formula">log_b(x) = y ⟺ bʸ = x</span>, so log₂ 8 = 3. &nbsp; log(ab) = log a + log b.</li>
       <li>Right-triangle trig: SOH-CAH-TOA — sin = opp/hyp, cos = adj/hyp, tan = opp/adj.</li>
@@ -286,47 +431,98 @@
     <p style="color:var(--muted); font-size:14px; margin-top:6px">If a trig/log question appears and looks alien, it means you're doing well — the test climbed above your target. Attempt it if you can; if it's truly foreign, "I haven't learned this yet" is acceptable <em>up here only</em>.</p>
   </div>
 
-  <!-- ======================= PRACTICE ======================= -->
-  <h2><span class="num">04</span> 12-problem warm-up (do on paper)</h2>
+  <!-- ======================= FLASHCARDS ======================= -->
+  <h2><span class="num">04</span> Formula flashcards</h2>
+  <p class="lede">Say the answer <em>out loud</em> before flipping. Tap a card to flip it; hit <strong>I know this ✓</strong> once it's automatic. Cycle back through any card you hesitated on.</p>
   <div class="card">
-    <ol>
-      <li>Compute: 5/6 − 3/8</li>
-      <li>Compute: 4 − 2(3 − 7)²  ÷ 8</li>
-      <li>A phone costs $120 after a 25% discount. What was the original price?</li>
-      <li>Solve: 2(3x − 1) = 4x + 10</li>
-      <li>Solve: (x/3) + (x/4) = 7</li>
-      <li>Solve for h: V = ⅓·B·h</li>
-      <li>Find the equation of the line through (−2, 5) with slope −3.</li>
-      <li>Solve the system: 2x + y = 7 and x − y = 2</li>
-      <li>Simplify: (3x²y⁻¹)² · y³</li>
-      <li>Factor completely: 2x² − 8x − 42</li>
-      <li>Solve: x² = 5x + 6</li>
-      <li>If f(x) = x² − 4x + 1, find f(−3).</li>
-    </ol>
-    <details>
-      <summary>Show answers</summary>
-      <ol style="margin-top:8px">
-        <li><span class="ans">11/24</span> (LCD 24: 20/24 − 9/24)</li>
-        <li><span class="ans">0</span> (4 − 2(16)÷8 = 4 − 32÷8 = 4 − 4)</li>
-        <li><span class="ans">$160</span> (120 = 0.75 × original)</li>
-        <li><span class="ans">x = 6</span> (6x − 2 = 4x + 10)</li>
-        <li><span class="ans">x = 12</span> (multiply by 12: 4x + 3x = 84)</li>
-        <li><span class="ans">h = 3V/B</span></li>
-        <li><span class="ans">y = −3x − 1</span> (y − 5 = −3(x + 2))</li>
-        <li><span class="ans">x = 3, y = 1</span> (add the equations: 3x = 9)</li>
-        <li><span class="ans">9x⁴y</span> (9x⁴y⁻² · y³)</li>
-        <li><span class="ans">2(x − 7)(x + 3)</span> (GCF 2 first)</li>
-        <li><span class="ans">x = 6 or x = −1</span> (x² − 5x − 6 = 0 → (x−6)(x+1))</li>
-        <li><span class="ans">22</span> (9 + 12 + 1 — parentheses around −3!)</li>
-      </ol>
-    </details>
+    <div class="fc-grid" id="fcgrid"></div>
+  </div>
+
+  <!-- ======================= QUIZ ======================= -->
+  <h2><span class="num">05</span> 12-question warm-up quiz</h2>
+  <p class="lede">Work each one <strong>on paper</strong>, then type your answer and hit Check (or press Enter) — instant feedback, just like the real thing. Formats like <code>17/12</code>, <code>x=6</code>, <code>y=3x-1</code>, or <code>2(x-7)(x+3)</code> all work.</p>
+  <div class="card" id="quizcard">
+
+    <div class="q" data-a="11/24">
+      <div class="q-text"><span class="qnum">1.</span> Compute: 5/6 − 3/8 &nbsp;<em style="color:var(--muted)">(answer as a fraction)</em></div>
+      <div class="q-row"><input type="text" placeholder="e.g. 3/4"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">LCD is 24: 5/6 = 20/24 and 3/8 = 9/24. So 20/24 − 9/24 = <span class="ans">11/24</span>.</div></details>
+    </div>
+
+    <div class="q" data-a="0">
+      <div class="q-text"><span class="qnum">2.</span> Compute: 4 − 2(3 − 7)² ÷ 8</div>
+      <div class="q-row"><input type="text" placeholder="number"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">Parentheses: (3−7) = −4. Exponent: (−4)² = 16. Then left to right: 2·16 = 32, 32 ÷ 8 = 4. Finally 4 − 4 = <span class="ans">0</span>.</div></details>
+    </div>
+
+    <div class="q" data-a="160|$160|160dollars">
+      <div class="q-text"><span class="qnum">3.</span> A phone costs $120 after a 25% discount. What was the original price?</div>
+      <div class="q-row"><input type="text" placeholder="e.g. 150"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">After 25% off you pay 75%: 0.75 × original = 120 → original = 120/0.75 = <span class="ans">$160</span>. (Common trap: 120 × 1.25 = 150 is wrong.)</div></details>
+    </div>
+
+    <div class="q" data-a="6|x=6">
+      <div class="q-text"><span class="qnum">4.</span> Solve: 2(3x − 1) = 4x + 10</div>
+      <div class="q-row"><input type="text" placeholder="e.g. x=5"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">Distribute: 6x − 2 = 4x + 10 → 2x = 12 → <span class="ans">x = 6</span>.</div></details>
+    </div>
+
+    <div class="q" data-a="12|x=12">
+      <div class="q-text"><span class="qnum">5.</span> Solve: (x/3) + (x/4) = 7</div>
+      <div class="q-row"><input type="text" placeholder="e.g. x=10"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">Multiply every term by the LCD 12: 4x + 3x = 84 → 7x = 84 → <span class="ans">x = 12</span>.</div></details>
+    </div>
+
+    <div class="q" data-a="3v/b|h=3v/b|(3v)/b">
+      <div class="q-text"><span class="qnum">6.</span> Solve for h: &nbsp; V = ⅓·B·h</div>
+      <div class="q-row"><input type="text" placeholder="e.g. h=2V/B"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">Multiply both sides by 3: 3V = Bh. Divide by B: <span class="ans">h = 3V/B</span>.</div></details>
+    </div>
+
+    <div class="q" data-a="y=-3x-1|-3x-1">
+      <div class="q-text"><span class="qnum">7.</span> Equation of the line through (−2, 5) with slope −3? &nbsp;<em style="color:var(--muted)">(y = mx + b form)</em></div>
+      <div class="q-row"><input type="text" placeholder="e.g. y=2x+3"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">Point-slope: y − 5 = −3(x + 2) → y = −3x − 6 + 5 → <span class="ans">y = −3x − 1</span>.</div></details>
+    </div>
+
+    <div class="q" data-a="x=3,y=1|3,1|(3,1)">
+      <div class="q-text"><span class="qnum">8.</span> Solve the system: 2x + y = 7 and x − y = 2 &nbsp;<em style="color:var(--muted)">(answer like x=…, y=…)</em></div>
+      <div class="q-row"><input type="text" placeholder="e.g. x=1, y=2"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">Add the equations: 3x = 9 → x = 3. Then 3 − y = 2 → <span class="ans">x = 3, y = 1</span>.</div></details>
+    </div>
+
+    <div class="q" data-a="9x4y|9x^4y|9yx4|9yx^4">
+      <div class="q-text"><span class="qnum">9.</span> Simplify: (3x²y⁻¹)² · y³ &nbsp;<em style="color:var(--muted)">(type ^ for powers, e.g. 5x^2y)</em></div>
+      <div class="q-row"><input type="text" placeholder="e.g. 5x^2y"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">Square everything inside: 9x⁴y⁻². Multiply by y³: y⁻²·y³ = y. Answer: <span class="ans">9x⁴y</span>.</div></details>
+    </div>
+
+    <div class="q" data-a="2(x-7)(x+3)|2(x+3)(x-7)">
+      <div class="q-text"><span class="qnum">10.</span> Factor completely: 2x² − 8x − 42</div>
+      <div class="q-row"><input type="text" placeholder="e.g. 2(x-1)(x+4)"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">GCF first: 2(x² − 4x − 21). Need two numbers → ×−21, +−4: that's −7 and 3. Answer: <span class="ans">2(x − 7)(x + 3)</span>.</div></details>
+    </div>
+
+    <div class="q" data-a="6,-1|-1,6|x=6,x=-1|x=-1,x=6|x=6orx=-1">
+      <div class="q-text"><span class="qnum">11.</span> Solve: x² = 5x + 6 &nbsp;<em style="color:var(--muted)">(two answers — separate with a comma)</em></div>
+      <div class="q-row"><input type="text" placeholder="e.g. 2, -3"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">Set to zero: x² − 5x − 6 = 0 → (x − 6)(x + 1) = 0 → <span class="ans">x = 6 or x = −1</span>.</div></details>
+    </div>
+
+    <div class="q" data-a="22">
+      <div class="q-text"><span class="qnum">12.</span> If f(x) = x² − 4x + 1, find f(−3).</div>
+      <div class="q-row"><input type="text" placeholder="number"><button class="checkbtn">Check</button><span class="q-feedback"></span></div>
+      <details><summary>Show solution</summary><div class="sol">Parentheses around the −3! (−3)² − 4(−3) + 1 = 9 + 12 + 1 = <span class="ans">22</span>.</div></details>
+    </div>
+
+    <div id="quizscore">Score: 0 / 12</div>
   </div>
   <div class="card callout-amber">
-    <p><strong>Scoring yourself:</strong> 10+ right → you're in great shape for 61. 7–9 → re-skim the sections you missed; those are your money topics. Under 7 → focus your remaining minutes entirely on problems 1–7 (the MUST tier) — perfect fundamentals alone put you in the 50s–60s, and the retake with ALEKS's learning module will finish the job.</p>
+    <p><strong>Scoring yourself:</strong> 10+ right → you're in great shape for 61. 7–9 → re-open the topic cards you missed; those are your money topics. Under 7 → focus your remaining minutes entirely on questions 1–7 (the MUST tier) — perfect fundamentals alone put you in the 50s–60s, and the retake with ALEKS's learning module will finish the job.</p>
   </div>
 
   <!-- ======================= TACTICS ======================= -->
-  <h2><span class="num">05</span> Test-day tactics</h2>
+  <h2><span class="num">06</span> Test-day tactics</h2>
   <div class="grid2">
     <div class="card callout-green">
       <h3>Do</h3>
@@ -362,5 +558,151 @@
     ALEKS scoring &amp; retake details verified against university math-department guidance (URI, ASU, Indiana, South Carolina, Kennesaw State). Your school sets its own cutoffs and retake rules — check its ALEKS page after your attempt.
   </footer>
 </div>
+
+<script>
+(function () {
+  var KEY = "aleks-guide-v2";
+  var state = { reviewed: {}, quiz: {}, cards: {} };
+  try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  /* ---------- flashcards ---------- */
+  var CARDS = [
+    ["Slope between two points", "m = (y₂ − y₁) / (x₂ − x₁)"],
+    ["Slope-intercept form", "y = mx + b\n(m = slope, b = y-intercept)"],
+    ["Quadratic formula", "x = (−b ± √(b² − 4ac)) / 2a"],
+    ["Difference of squares", "a² − b² = (a + b)(a − b)"],
+    ["(a + b)² = ?", "a² + 2ab + b²\n(NOT a² + b²!)"],
+    ["xᵃ · xᵇ = ?", "x^(a+b)  — add exponents"],
+    ["(xᵃ)ᵇ = ?", "x^(a·b)  — multiply exponents"],
+    ["x⁻ⁿ = ?  and  x⁰ = ?", "x⁻ⁿ = 1/xⁿ    x⁰ = 1"],
+    ["Pythagorean theorem", "a² + b² = c²\n(c = hypotenuse)"],
+    ["Circle: area & circumference", "A = πr²    C = 2πr"],
+    ["Percent change", "(new − old) / old × 100"],
+    ["Dividing fractions", "flip the second, multiply:\n(a/b) ÷ (c/d) = (a/b)·(d/c)"],
+    ["Perpendicular slopes", "negative reciprocals:\nm and −1/m"],
+    ["Vertex of y = ax² + bx + c", "at x = −b / (2a)"],
+    ["Inequality sign flips when…", "you multiply or divide\nboth sides by a NEGATIVE"],
+    ["√72 simplified", "√36 · √2 = 6√2"]
+  ];
+  var grid = document.getElementById("fcgrid");
+  CARDS.forEach(function (c, i) {
+    var wrap = document.createElement("div");
+    wrap.className = "fc-wrap";
+    var fc = document.createElement("div");
+    fc.className = "fc" + (state.cards[i] ? " got" : "");
+    fc.innerHTML = '<div class="fc-inner"><div class="fc-face fc-front">' + c[0] +
+      '</div><div class="fc-face fc-back">' + c[1].replace(/\n/g, "<br>") + "</div></div>";
+    fc.addEventListener("click", function () { fc.classList.toggle("flipped"); });
+    var btn = document.createElement("button");
+    btn.className = "fc-know" + (state.cards[i] ? " on" : "");
+    btn.textContent = state.cards[i] ? "Known ✓" : "I know this ✓";
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      state.cards[i] = !state.cards[i];
+      btn.classList.toggle("on", !!state.cards[i]);
+      btn.textContent = state.cards[i] ? "Known ✓" : "I know this ✓";
+      fc.classList.toggle("got", !!state.cards[i]);
+      save(); refresh();
+    });
+    var actions = document.createElement("div");
+    actions.className = "fc-actions";
+    actions.appendChild(btn);
+    wrap.appendChild(fc); wrap.appendChild(actions);
+    grid.appendChild(wrap);
+  });
+
+  /* ---------- reveal buttons ---------- */
+  document.querySelectorAll(".reveal-btn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var t = b.parentElement.querySelector(".reveal-target");
+      t.classList.toggle("shown");
+      b.textContent = t.classList.contains("shown") ? "Hide" : "Reveal";
+    });
+  });
+
+  /* ---------- reviewed checkboxes ---------- */
+  var topicCards = document.querySelectorAll(".card[data-topic]");
+  topicCards.forEach(function (card) {
+    var id = card.getAttribute("data-topic");
+    var cb = card.querySelector(".reviewed-cb");
+    var label = card.querySelector(".reviewed-toggle");
+    cb.checked = !!state.reviewed[id];
+    label.classList.toggle("done", cb.checked);
+    cb.addEventListener("change", function () {
+      state.reviewed[id] = cb.checked;
+      label.classList.toggle("done", cb.checked);
+      save(); refresh();
+    });
+  });
+
+  /* ---------- quiz ---------- */
+  var SUP = { "⁰":"0","¹":"1","²":"2","³":"3","⁴":"4","⁵":"5","⁶":"6","⁷":"7","⁸":"8","⁹":"9" };
+  function norm(s) {
+    s = String(s).toLowerCase();
+    s = s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, function (ch) { return SUP[ch]; });
+    s = s.replace(/−/g, "-").replace(/\s+/g, "").replace(/[$]/g, "");
+    s = s.replace(/\*\*/g, "^").replace(/\*/g, "").replace(/\^/g, "");
+    s = s.replace(/dollars?$/,"");
+    s = s.replace(/or|;/g, ",");
+    return s;
+  }
+  function sortedParts(s) {
+    return s.split(",").map(function (p) { return p.replace(/^[a-z]=/,""); }).sort().join(",");
+  }
+  function matches(input, accepted) {
+    var n = norm(input);
+    if (!n) return false;
+    return accepted.some(function (a) {
+      var an = norm(a);
+      if (n === an) return true;
+      if (n.indexOf(",") >= 0 || an.indexOf(",") >= 0) return sortedParts(n) === sortedParts(an);
+      return false;
+    });
+  }
+  var qs = document.querySelectorAll(".q");
+  qs.forEach(function (q, i) {
+    var accepted = q.getAttribute("data-a").split("|");
+    var input = q.querySelector("input[type=text]");
+    var btn = q.querySelector(".checkbtn");
+    var fb = q.querySelector(".q-feedback");
+    function apply(correct, quiet) {
+      q.classList.remove("correct", "wrong");
+      q.classList.add(correct ? "correct" : "wrong");
+      fb.className = "q-feedback " + (correct ? "ok" : "no");
+      fb.textContent = correct ? "✓ Correct!" : "✗ Not quite — check your work, then peek at the solution.";
+      if (!quiet) { state.quiz[i] = { v: input.value, ok: correct }; save(); refresh(); }
+    }
+    function check() { apply(matches(input.value, accepted)); }
+    btn.addEventListener("click", check);
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") check(); });
+    if (state.quiz[i]) { input.value = state.quiz[i].v; apply(state.quiz[i].ok, true); }
+  });
+
+  /* ---------- progress ---------- */
+  var pfill = document.getElementById("pfill");
+  var plabel = document.getElementById("plabel");
+  function refresh() {
+    var revDone = 0; topicCards.forEach(function (c) { if (state.reviewed[c.getAttribute("data-topic")]) revDone++; });
+    var cardsDone = Object.keys(state.cards).filter(function (k) { return state.cards[k]; }).length;
+    var quizDone = Object.keys(state.quiz).filter(function (k) { return state.quiz[k].ok; }).length;
+    var pct = Math.round(
+      (revDone / topicCards.length) * 40 +
+      (cardsDone / CARDS.length) * 20 +
+      (quizDone / qs.length) * 40
+    );
+    pfill.style.width = pct + "%";
+    plabel.textContent = pct + "% ready · quiz " + quizDone + "/" + qs.length;
+    var score = document.getElementById("quizscore");
+    score.textContent = "Score: " + quizDone + " / " + qs.length +
+      (quizDone >= 10 ? "  — you're ready for 61. 🎯" : quizDone >= 7 ? "  — close! Re-check the topics you missed." : "");
+  }
+  document.getElementById("resetbtn").addEventListener("click", function () {
+    if (!confirm("Clear all progress (reviewed cards, flashcards, quiz answers)?")) return;
+    state = { reviewed: {}, quiz: {}, cards: {} }; save(); location.reload();
+  });
+  refresh();
+})();
+</script>
 </body>
 </html>
