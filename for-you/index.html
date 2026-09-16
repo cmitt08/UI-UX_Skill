@@ -158,7 +158,40 @@
     box-shadow: var(--shadow);
     padding: 22px 24px;
   }
-  .intro-card { margin-top: 26px; }
+  .intro-card { position: relative; margin-top: 26px; }
+  .intro-dismiss {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: transform 200ms ease;
+  }
+  .intro-dismiss:hover { transform: scale(1.15); }
+  .intro-hint {
+    margin: 16px 0 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .intro-restore {
+    display: block;
+    margin-top: 26px;
+    background: none;
+    border: 0;
+    color: var(--muted);
+    font: inherit;
+    font-size: 14px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px 0;
+  }
   .intro-card h2 { font-size: 24px; margin-bottom: 6px; }
   .intro-card ul {
     margin: 12px 0 0;
@@ -585,7 +618,10 @@
       </button>
     </p>
 
-    <div class="card intro-card">
+    <div class="card intro-card" id="introCard">
+      <button class="intro-dismiss" id="introDismiss" aria-label="Got it — tuck this section away" title="Read it? Tap to tuck this away">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s-7.5-4.9-9.7-9C.6 8.9 2 5.3 5.2 4.4c2-.6 4.1.2 5.3 1.9L12 8l1.5-1.7c1.2-1.7 3.3-2.5 5.3-1.9 3.2.9 4.6 4.5 2.9 7.6-2.2 4.1-9.7 9-9.7 9z" stroke="var(--accent)" stroke-width="2"/><path d="M8.6 11.5l2.3 2.3 4.5-4.5" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
       <p class="eyebrow">Read this first</p>
       <h2>How this plan gets you toned</h2>
       <ul>
@@ -606,7 +642,9 @@
           <span><strong>Get in, lock in, get out.</strong> Every workout here is about 35–45 minutes. Rest 45–60 seconds between sets — long enough to catch your breath, short enough to keep your heart rate up.</span>
         </li>
       </ul>
+      <p class="intro-hint">Read it? Tap the heart in the corner and this card will tuck itself out of your way for good.</p>
     </div>
+    <button class="intro-restore" id="introRestore" hidden>Show the "read this first" card again</button>
   </section>
 
   <nav class="days" id="dayNav" role="tablist" aria-label="Workout days"></nav>
@@ -1145,6 +1183,36 @@
   document.getElementById("logoHeart").addEventListener("click", function () {
     showNote(drawNote());
     heartConfettiMini(this);
+  });
+
+  /* "read this first" tuck-away heart */
+  var introCard = document.getElementById("introCard");
+  var introRestore = document.getElementById("introRestore");
+  try {
+    if (localStorage.getItem("ps2-intro") === "done") {
+      introCard.hidden = true;
+      introRestore.hidden = false;
+    }
+  } catch (e) {}
+  document.getElementById("introDismiss").addEventListener("click", function () {
+    try { localStorage.setItem("ps2-intro", "done"); } catch (e) {}
+    heartConfettiMini(this);
+    introCard.style.transition = "opacity 300ms ease, transform 300ms ease";
+    introCard.style.opacity = "0";
+    introCard.style.transform = "scale(0.97)";
+    setTimeout(function () {
+      introCard.hidden = true;
+      introCard.style.opacity = "";
+      introCard.style.transform = "";
+      introCard.style.transition = "";
+      introRestore.hidden = false;
+    }, reducedMotion ? 0 : 300);
+    showNote("Tucked away. You've got the basics down.", 5000);
+  });
+  introRestore.addEventListener("click", function () {
+    try { localStorage.removeItem("ps2-intro"); } catch (e) {}
+    introRestore.hidden = true;
+    introCard.hidden = false;
   });
 
   /* secret: tap the big title 5 times */
