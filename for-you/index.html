@@ -1003,6 +1003,8 @@
     b.lastChild.textContent = d.label;
     b.addEventListener("click", function () {
       selectDay(i);
+      var top = panel.getBoundingClientRect().top + window.pageYOffset - nav.offsetHeight - 12;
+      window.scrollTo(0, Math.max(top, 0));
       if (Math.random() < 0.3) showNote(drawNote());
     });
     nav.appendChild(b);
