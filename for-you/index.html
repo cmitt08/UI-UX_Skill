@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<!-- ARTIFACT-HEAD -->
+<title>Pretty Strong</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Karla:wght@400;500;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #FBF6F4;
+    --surface: #FFFFFF;
+    --surface-2: #F6E7EA;
+    --ink: #33222B;
+    --muted: #7A6470;
+    --accent: #C2496B;
+    --accent-deep: #9C3557;
+    --accent-soft: #F2D7DE;
+    --good: #5F8A69;
+    --good-soft: #E3EEE5;
+    --line: #EBDCE0;
+    --fig: #9C3557;
+    --equip: #C4AAB3;
+    --note-paper: #FFF4CD;
+    --note-ink: #4A3A20;
+    --note-shadow: rgba(120, 80, 40, 0.25);
+    --shadow: 0 10px 30px rgba(156, 53, 87, 0.10);
+    --radius: 18px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #221822;
+      --surface: #2C1F2B;
+      --surface-2: #372637;
+      --ink: #F5E9EE;
+      --muted: #BCA2AF;
+      --accent: #E4738F;
+      --accent-deep: #EE9DB3;
+      --accent-soft: #4A2C3A;
+      --good: #8FB398;
+      --good-soft: #2E3B31;
+      --line: #4A3644;
+      --fig: #EE9DB3;
+      --equip: #7C6572;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #221822;
+    --surface: #2C1F2B;
+    --surface-2: #372637;
+    --ink: #F5E9EE;
+    --muted: #BCA2AF;
+    --accent: #E4738F;
+    --accent-deep: #EE9DB3;
+    --accent-soft: #4A2C3A;
+    --good: #8FB398;
+    --good-soft: #2E3B31;
+    --line: #4A3644;
+    --fig: #EE9DB3;
+    --equip: #7C6572;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Karla', 'Segoe UI', system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 0 64px;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    line-height: 1.15;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .hand { font-family: 'Caveat', 'Comic Sans MS', cursive; }
+
+  .eyebrow {
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  /* ---------- Header ---------- */
+  .top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-block: 22px 6px;
+  }
+  .logo-heart {
+    background: none;
+    border: 0;
+    padding: 6px;
+    margin: 0;
+    cursor: pointer;
+    line-height: 0;
+    border-radius: 50%;
+    transition: transform 200ms ease;
+  }
+  .logo-heart:hover { transform: scale(1.12); }
+  .logo-heart:focus-visible, button:focus-visible, .daybtn:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .brand {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: 21px;
+    letter-spacing: 0.01em;
+  }
+  .brand em { font-style: italic; color: var(--accent-deep); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding-block: 26px 8px; }
+  .hero h1 {
+    font-size: clamp(38px, 7vw, 56px);
+    letter-spacing: -0.01em;
+  }
+  .hero h1 .script {
+    font-family: 'Caveat', cursive;
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 1.12em;
+  }
+  .hero .sub {
+    margin-top: 14px;
+    max-width: 56ch;
+    color: var(--muted);
+    font-size: 18px;
+  }
+  .hero .sub strong { color: var(--ink); }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px 24px;
+  }
+  .intro-card { margin-top: 26px; }
+  .intro-card h2 { font-size: 24px; margin-bottom: 6px; }
+  .intro-card ul {
+    margin: 12px 0 0;
+    padding-left: 0;
+    list-style: none;
+    display: grid;
+    gap: 12px;
+  }
+  .intro-card li {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  .intro-card li svg { margin-top: 4px; }
+  .intro-card li strong { color: var(--accent-deep); }
+
+  /* ---------- Day nav ---------- */
+  .days {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 30;
+    background: var(--bg);
+    padding-block: 14px 12px;
+    margin-top: 30px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .days::-webkit-scrollbar { display: none; }
+  .daybtn {
+    flex: 1 0 auto;
+    font-family: 'Karla', sans-serif;
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: color 200ms ease, background 200ms ease, border-color 200ms ease;
+    white-space: nowrap;
+  }
+  .daybtn small { display: block; font-weight: 500; font-size: 11.5px; letter-spacing: 0.02em; }
+  .daybtn:hover { border-color: var(--accent); color: var(--accent-deep); }
+  .daybtn[aria-selected="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .daybtn[aria-selected="true"] small { color: rgba(255,255,255,0.85); }
+  .weekend-note {
+    margin: 6px 2px 0;
+    font-size: 14.5px;
+    color: var(--muted);
+  }
+
+  /* ---------- Day panel ---------- */
+  .dayhead { margin: 22px 0 6px; }
+  .dayhead h2 { font-size: clamp(28px, 5vw, 36px); }
+  .dayhead .why {
+    margin-top: 8px;
+    color: var(--muted);
+    max-width: 60ch;
+  }
+  .day-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .chip {
+    font-size: 13.5px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip.calm { background: var(--surface-2); color: var(--muted); font-weight: 500; }
+
+  .progress-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 4px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 8px;
+    border-radius: 99px;
+    background: var(--accent-soft);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 99px;
+    background: var(--accent);
+    transition: width 400ms ease;
+  }
+  .progress-label {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--accent-deep);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .warmup {
+    margin-top: 16px;
+    background: var(--surface-2);
+    border-radius: 14px;
+    padding: 13px 18px;
+    font-size: 15.5px;
+    color: var(--ink);
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  .warmup svg { margin-top: 3px; }
+
+  .exlist {
+    list-style: none;
+    margin: 20px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+  }
+
+  .ex {
+    position: relative;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 18px;
+    align-items: start;
+    transition: border-color 250ms ease;
+  }
+  .ex.done { border-color: var(--good); }
+  .exi {
+    width: 96px;
+    height: 96px;
+    border-radius: 20px;
+    background: var(--accent-soft);
+    display: grid;
+    place-items: center;
+    transition: background 250ms ease;
+  }
+  .ex.done .exi { background: var(--good-soft); }
+  .exi svg { width: 84px; height: 84px; display: block; }
+  .exi .f { stroke: var(--fig); }
+  .exi .hd { fill: var(--fig); stroke: none; }
+  .exi .e { stroke: var(--equip); }
+  .exi .a { stroke: var(--accent); }
+  .exi .ah { fill: var(--accent); stroke: none; }
+  .ex.done .exi .f { stroke: var(--good); }
+  .ex.done .exi .hd { fill: var(--good); }
+
+  .ex h3 { font-size: 21px; padding-right: 44px; }
+  .ex .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .ex .feel {
+    margin-top: 10px;
+    font-size: 14.5px;
+    color: var(--muted);
+  }
+  .ex .feel strong { color: var(--ink); font-weight: 700; }
+  .steps {
+    margin: 12px 0 0;
+    padding-left: 22px;
+    font-size: 15.5px;
+    display: grid;
+    gap: 6px;
+  }
+  .steps li::marker { color: var(--accent); font-weight: 700; }
+
+  /* heart checkbox */
+  .donebox {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .donebox input {
+    position: absolute;
+    opacity: 0;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    cursor: pointer;
+  }
+  .donebox .h-off, .donebox .h-on { grid-area: 1 / 1; transition: opacity 200ms ease, transform 200ms ease; }
+  .donebox .h-on { opacity: 0; transform: scale(0.6); }
+  .donebox input:checked ~ .h-on { opacity: 1; transform: scale(1); }
+  .donebox input:checked ~ .h-off { opacity: 0; }
+  .donebox:hover .h-off { transform: scale(1.1); }
+  .donebox input:focus-visible ~ .h-off { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 50%; }
+
+  .finisher {
+    margin-top: 18px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1.5px dashed var(--accent);
+    font-size: 15.5px;
+    color: var(--ink);
+    background: transparent;
+  }
+  .finisher strong { color: var(--accent-deep); }
+
+  /* ---------- Cardio special ---------- */
+  .cardio-main { position: relative; margin-top: 20px; }
+  .cardio-main h3 { font-size: 22px; }
+  .cardio-main .big-line {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(26px, 5vw, 34px);
+    color: var(--accent-deep);
+    margin: 10px 0 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .cardio-main p { margin: 8px 0 0; font-size: 15.5px; }
+  .cardio-main .or {
+    margin-top: 12px;
+    font-size: 14.5px;
+    color: var(--muted);
+  }
+
+  /* ---------- Truth section ---------- */
+  .truth { margin-top: 44px; }
+  .truth h2 { font-size: clamp(26px, 5vw, 32px); }
+  .truth-grid {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+  }
+  .truth-grid .card { padding: 18px 20px; }
+  .truth-grid h3 { font-size: 17.5px; color: var(--accent-deep); margin-bottom: 6px; }
+  .truth-grid p { margin: 0; font-size: 15px; color: var(--muted); }
+  .truth-grid p strong { color: var(--ink); }
+
+  /* ---------- Footer ---------- */
+  .foot {
+    margin-top: 56px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .foot .hand { font-size: 27px; color: var(--accent-deep); display: block; margin-bottom: 6px; }
+  .foot .tiny { font-size: 12.5px; margin-top: 18px; }
+  .foot button.linky {
+    background: none;
+    border: 0;
+    color: var(--muted);
+    font: inherit;
+    font-size: 12.5px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  /* ---------- Sticky notes (the easter eggs) ---------- */
+  .note-stack {
+    position: fixed;
+    right: 18px;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+    pointer-events: none;
+  }
+  .note {
+    pointer-events: auto;
+    width: min(300px, calc(100vw - 48px));
+    background: var(--note-paper);
+    color: var(--note-ink);
+    padding: 18px 20px 14px;
+    border-radius: 4px;
+    box-shadow: 0 12px 26px var(--note-shadow);
+    transform: rotate(-2deg);
+    font-family: 'Caveat', cursive;
+    font-size: 21px;
+    line-height: 1.3;
+    font-weight: 600;
+    cursor: pointer;
+    border: 0;
+    text-align: left;
+    animation: note-in 450ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+    position: relative;
+  }
+  .note:nth-child(even) { transform: rotate(1.6deg); }
+  .note::before {
+    content: "";
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    width: 74px;
+    height: 20px;
+    transform: translateX(-50%) rotate(-1deg);
+    background: rgba(226, 132, 158, 0.5);
+    border-radius: 2px;
+  }
+  .note .sig {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 18px;
+    color: #8A5A2B;
+  }
+  .note.leaving { animation: note-out 300ms ease both; }
+  @keyframes note-in {
+    from { opacity: 0; transform: translateY(24px) rotate(-6deg); }
+  }
+  @keyframes note-out {
+    to { opacity: 0; transform: translateY(14px) scale(0.95); }
+  }
+
+  /* ---------- Day-complete overlay ---------- */
+  .celebrate {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(4px);
+    padding: 24px;
+  }
+  .celebrate[hidden] { display: none; }
+  .celebrate .card {
+    max-width: 430px;
+    text-align: center;
+    padding: 34px 30px;
+    animation: note-in 500ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  }
+  .celebrate .hand { font-size: 30px; line-height: 1.25; color: var(--ink); }
+  .celebrate .eyebrow { display: block; margin-bottom: 12px; }
+  .celebrate button.cta {
+    margin-top: 22px;
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    border-radius: 999px;
+    padding: 12px 26px;
+    font-family: 'Karla', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 200ms ease;
+  }
+  .celebrate button.cta:hover { background: var(--accent-deep); }
+
+  /* falling hearts */
+  .confetti-heart {
+    position: fixed;
+    top: -30px;
+    z-index: 110;
+    pointer-events: none;
+    animation: fall linear both;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(300deg); opacity: 0.7; }
+  }
+
+  /* hidden clickable hearts */
+  .hidden-heart {
+    background: none;
+    border: 0;
+    padding: 8px;
+    cursor: pointer;
+    line-height: 0;
+    display: inline-block;
+    vertical-align: middle;
+    animation: bob 3.2s ease-in-out infinite;
+    border-radius: 50%;
+  }
+  .hidden-heart:hover { animation-play-state: paused; transform: scale(1.25); }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  @media (max-width: 520px) {
+    .ex { grid-template-columns: 1fr; }
+    .exi { width: 84px; height: 84px; }
+    .exi svg { width: 74px; height: 74px; }
+    .note-stack { right: 50%; transform: translateX(50%); align-items: center; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .note, .celebrate .card { animation-duration: 1ms; }
+    .hidden-heart { animation: none; }
+    .confetti-heart { display: none; }
+  }
+</style>
+<!-- /ARTIFACT-HEAD -->
+</head>
+<body>
+<!-- ARTIFACT-BODY -->
+<div class="wrap">
+
+  <header class="top">
+    <button class="logo-heart" id="logoHeart" aria-label="A heart. Click it and see." title="Click me">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="var(--accent)" aria-hidden="true"><path d="M12 21s-7.5-4.9-9.7-9C.6 8.9 2 5.3 5.2 4.4c2-.6 4.1.2 5.3 1.9L12 8l1.5-1.7c1.2-1.7 3.3-2.5 5.3-1.9 3.2.9 4.6 4.5 2.9 7.6-2.2 4.1-9.7 9-9.7 9z"/></svg>
+    </button>
+    <span class="brand" id="brandName">Pretty <em>Strong</em></span>
+  </header>
+
+  <section class="hero">
+    <p class="eyebrow">Your plan · five days · made just for you</p>
+    <h1 id="heroTitle">Hi <span class="script" id="heroName">gorgeous</span>.<br />This is your week.</h1>
+    <p class="sub">I built this for you — your exact split, every exercise explained in plain English, nothing to figure out. Just show up, follow the steps, and check things off. <strong>I'll be cheering the whole way through.</strong>
+      <button class="hidden-heart" data-egg aria-label="A hidden heart from me">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)" aria-hidden="true"><path d="M12 21s-7.5-4.9-9.7-9C.6 8.9 2 5.3 5.2 4.4c2-.6 4.1.2 5.3 1.9L12 8l1.5-1.7c1.2-1.7 3.3-2.5 5.3-1.9 3.2.9 4.6 4.5 2.9 7.6-2.2 4.1-9.7 9-9.7 9z"/></svg>
+      </button>
+    </p>
+
+    <div class="card intro-card">
+      <p class="eyebrow">Read this first</p>
+      <h2>How this plan gets you toned</h2>
+      <ul>
+        <li>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+          <span><strong>"Toned" = a little muscle + a little less fluff.</strong> The weights do the shaping. The cardio and eating well do the leaning. You need both, and this plan has both.</span>
+        </li>
+        <li>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+          <span><strong>You will not get bulky. Promise.</strong> Building big muscle takes years of heavy lifting and eating for it. This plan uses lighter weights and higher reps — it firms and shapes, it doesn't bulk.</span>
+        </li>
+        <li>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+          <span><strong>How heavy?</strong> Pick a weight where the last 3 reps of each set feel like real work but your form stays pretty (like you). If you could chat through all 15 reps, go a little heavier next set.</span>
+        </li>
+        <li>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+          <span><strong>Rest 45–60 seconds between sets.</strong> Long enough to breathe, short enough to keep your heart rate up. Sip water. Text me.</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <nav class="days" id="dayNav" role="tablist" aria-label="Workout days"></nav>
+  <p class="weekend-note">Saturday + Sunday are rest days — stretch, go for a walk, live your beautiful life.
+    <button class="hidden-heart" data-egg aria-label="A hidden heart from me">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)" aria-hidden="true"><path d="M12 21s-7.5-4.9-9.7-9C.6 8.9 2 5.3 5.2 4.4c2-.6 4.1.2 5.3 1.9L12 8l1.5-1.7c1.2-1.7 3.3-2.5 5.3-1.9 3.2.9 4.6 4.5 2.9 7.6-2.2 4.1-9.7 9-9.7 9z"/></svg>
+    </button>
+  </p>
+
+  <section id="dayPanel" role="tabpanel" aria-live="polite"></section>
+
+  <section class="truth">
+    <p class="eyebrow">The honest stuff</p>
+    <h2>Three things I need you to know
+      <button class="hidden-heart" data-egg aria-label="A hidden heart from me">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)" aria-hidden="true"><path d="M12 21s-7.5-4.9-9.7-9C.6 8.9 2 5.3 5.2 4.4c2-.6 4.1.2 5.3 1.9L12 8l1.5-1.7c1.2-1.7 3.3-2.5 5.3-1.9 3.2.9 4.6 4.5 2.9 7.6-2.2 4.1-9.7 9-9.7 9z"/></svg>
+      </button>
+    </h2>
+    <div class="truth-grid">
+      <div class="card">
+        <h3>Consistency beats perfection</h3>
+        <p>A "meh" workout you actually did beats a perfect one you skipped. Show up 4 out of 5 days and <strong>you're winning</strong>. Miss a day? Just pick up where you left off. No guilt allowed on this website.</p>
+      </div>
+      <div class="card">
+        <h3>Protein is your best friend</h3>
+        <p>Toned needs protein to work with. Aim for some at every meal — eggs, chicken, greek yogurt, a shake, whatever you like. It also keeps you full, which makes the "lose a little" part <strong>way easier</strong>.</p>
+      </div>
+      <div class="card">
+        <h3>The scale is a liar</h3>
+        <p>Muscle is compact, so you can get visibly more toned while the scale barely moves. Judge by how clothes fit, how you feel, and photos — <strong>not that number</strong>. (For the record: I think you're perfect at every number.)</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span class="hand" id="footNote">Made for you, with all my love.</span>
+    <span>Every note on this site is from me. I mean all of them.</span>
+    <p class="tiny">Weights are suggestions — start lighter than you think and add slowly. Form first, always.<br />
+    <button class="linky" id="resetWeek">Start a fresh week (un-check everything)</button></p>
+  </footer>
+
+</div>
+
+<div class="note-stack" id="noteStack" aria-live="polite"></div>
+
+<div class="celebrate" id="celebrate" hidden>
+  <div class="card">
+    <span class="eyebrow" id="celebrateEyebrow">Day complete</span>
+    <p class="hand" id="celebrateMsg"></p>
+    <button class="cta" id="celebrateClose">Okay, I love you too</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+     Hey — it's easy to personalize this. Put her name here and
+     the site will greet her with it. Leave "" to keep "gorgeous".
+     ============================================================ */
+  var HER_NAME = "";
+
+  var reducedMotion = false;
+  try { reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+
+  if (HER_NAME) {
+    var hn = document.getElementById("heroName");
+    if (hn) hn.textContent = HER_NAME;
+  }
+
+  /* ---------- tiny svg helpers ---------- */
+  var HEART_PATH = "M12 21s-7.5-4.9-9.7-9C.6 8.9 2 5.3 5.2 4.4c2-.6 4.1.2 5.3 1.9L12 8l1.5-1.7c1.2-1.7 3.3-2.5 5.3-1.9 3.2.9 4.6 4.5 2.9 7.6-2.2 4.1-9.7 9-9.7 9z";
+  function heartSVG(size, fill) {
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="' + fill + '" aria-hidden="true"><path d="' + HEART_PATH + '"/></svg>';
+  }
+
+  /* ---------- exercise figure drawings ----------
+     Simple line figures. Classes: f = figure stroke, hd = head fill,
+     e = equipment stroke, a/ah = movement arrow. */
+  function fig(inner) {
+    return '<svg viewBox="0 0 120 120" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<line class="e" x1="8" y1="106" x2="112" y2="106" stroke-width="3" opacity="0.55"/>' + inner + "</svg>";
+  }
+  var ART = {
+    hipthrust: fig('<rect class="e" x="8" y="60" width="26" height="8" rx="2"/><line class="e" x1="12" y1="68" x2="12" y2="106"/><line class="e" x1="30" y1="68" x2="30" y2="106"/><circle class="hd" cx="20" cy="48" r="7"/><path class="f" d="M27 60 L60 54"/><path class="f" d="M60 54 L82 72 L82 106"/><circle class="e" cx="60" cy="46" r="8"/><path class="a" d="M102 66 L102 44"/><path class="ah" d="M102 38 L97 48 L107 48 Z"/>'),
+    rdl: fig('<circle class="hd" cx="24" cy="42" r="7"/><path class="f" d="M60 62 L33 47"/><path class="f" d="M60 62 L57 84 L58 106"/><path class="f" d="M60 62 L66 84 L68 106"/><path class="f" d="M36 50 L40 80"/><line class="e" x1="30" y1="83" x2="50" y2="83" stroke-width="7"/><path class="a" d="M88 82 Q96 62 84 48"/><path class="ah" d="M82 42 L80 53 L90 50 Z"/>'),
+    bulgarian: fig('<rect class="e" x="82" y="72" width="30" height="7" rx="2"/><line class="e" x1="87" y1="79" x2="87" y2="106"/><line class="e" x1="107" y1="79" x2="107" y2="106"/><circle class="hd" cx="55" cy="26" r="7"/><path class="f" d="M53 36 L50 62"/><path class="f" d="M50 62 L70 80 L92 70"/><path class="f" d="M50 62 L38 84 L36 106"/><path class="f" d="M52 42 L46 62"/><line class="e" x1="38" y1="64" x2="54" y2="64" stroke-width="7"/>'),
+    kickback: fig('<line class="e" x1="20" y1="26" x2="20" y2="106"/><circle class="hd" cx="38" cy="38" r="7"/><path class="f" d="M44 48 L62 64"/><path class="f" d="M44 48 L26 50"/><path class="f" d="M62 64 L60 106"/><path class="f" d="M62 64 L90 48"/><path class="a" d="M76 74 Q92 68 96 54"/><path class="ah" d="M98 48 L90 55 L100 60 Z"/>'),
+    sumo: fig('<circle class="hd" cx="60" cy="32" r="7"/><path class="f" d="M60 42 L60 68"/><path class="f" d="M60 68 L34 82 L30 106"/><path class="f" d="M60 68 L86 82 L90 106"/><path class="f" d="M60 48 L60 76"/><line class="e" x1="52" y1="80" x2="68" y2="80" stroke-width="7"/>'),
+    crunch: fig('<circle class="hd" cx="28" cy="76" r="7"/><path class="f" d="M36 82 Q46 92 56 98"/><path class="f" d="M56 98 L74 76 L86 98"/><path class="f" d="M36 84 L44 76"/><path class="a" d="M18 64 Q26 54 38 56"/><path class="ah" d="M44 58 L34 52 L34 62 Z"/>'),
+    legraise: fig('<circle class="hd" cx="14" cy="92" r="7"/><path class="f" d="M22 98 L56 98"/><path class="f" d="M56 98 L84 62"/><path class="f" d="M28 98 L44 98"/><path class="a" d="M96 92 Q98 76 90 66"/><path class="ah" d="M86 60 L86 71 L96 67 Z"/>'),
+    plank: fig('<circle class="hd" cx="24" cy="70" r="7"/><path class="f" d="M32 78 L66 84 L98 100"/><path class="f" d="M34 80 L30 96 L14 96"/><path class="f" d="M40 81 L36 96 L20 96"/>'),
+    benchpress: fig('<rect class="e" x="26" y="84" width="66" height="7" rx="2"/><line class="e" x1="34" y1="91" x2="34" y2="106"/><line class="e" x1="84" y1="91" x2="84" y2="106"/><circle class="hd" cx="34" cy="76" r="7"/><path class="f" d="M44 80 L72 80"/><path class="f" d="M72 80 L84 92 L88 106"/><path class="f" d="M48 80 L48 52"/><line class="e" x1="38" y1="50" x2="58" y2="50" stroke-width="7"/><path class="a" d="M70 62 L70 44"/><path class="ah" d="M70 38 L65 48 L75 48 Z"/>'),
+    inclinepress: fig('<path class="e" d="M26 94 L52 62"/><line class="e" x1="30" y1="90" x2="30" y2="106"/><line class="e" x1="52" y1="92" x2="70" y2="92"/><circle class="hd" cx="34" cy="56" r="7"/><path class="f" d="M40 64 L58 86"/><path class="f" d="M58 86 L76 92 L82 106"/><path class="f" d="M44 68 L54 42"/><line class="e" x1="46" y1="38" x2="64" y2="42" stroke-width="7"/><path class="a" d="M74 54 L80 34"/><path class="ah" d="M82 28 L74 36 L84 40 Z"/>'),
+    fly: fig('<rect class="e" x="30" y="86" width="60" height="7" rx="2"/><circle class="hd" cx="38" cy="78" r="7"/><path class="f" d="M48 82 L74 82"/><path class="f" d="M74 82 L84 94 L88 106"/><path class="f" d="M58 82 L34 56"/><path class="f" d="M58 82 L84 56"/><circle class="e" cx="31" cy="52" r="5"/><circle class="e" cx="87" cy="52" r="5"/><path class="a" d="M40 40 Q59 28 78 40"/><path class="ah" d="M84 44 L76 36 L72 46 Z"/>'),
+    pushdown: fig('<line class="e" x1="76" y1="14" x2="76" y2="42"/><circle class="hd" cx="52" cy="38" r="7"/><path class="f" d="M52 48 L50 76"/><path class="f" d="M50 76 L44 106"/><path class="f" d="M50 76 L58 106"/><path class="f" d="M53 52 L64 62 L74 76"/><path class="e" d="M76 42 L74 76" stroke-width="3"/><path class="a" d="M94 58 L94 80"/><path class="ah" d="M94 86 L89 76 L99 76 Z"/>'),
+    overhead: fig('<circle class="hd" cx="56" cy="42" r="7"/><path class="f" d="M56 52 L56 78"/><path class="f" d="M56 78 L50 106"/><path class="f" d="M56 78 L64 106"/><path class="f" d="M56 54 L68 36 L52 24"/><line class="e" x1="44" y1="20" x2="58" y2="26" stroke-width="7"/><path class="a" d="M84 40 L84 20"/><path class="ah" d="M84 14 L79 24 L89 24 Z"/>'),
+    dips: fig('<rect class="e" x="8" y="64" width="30" height="7" rx="2"/><line class="e" x1="13" y1="71" x2="13" y2="106"/><line class="e" x1="33" y1="71" x2="33" y2="106"/><circle class="hd" cx="48" cy="58" r="7"/><path class="f" d="M50 68 L54 86"/><path class="f" d="M54 86 L76 82 L86 106"/><path class="f" d="M49 70 L40 84 L38 68"/><path class="a" d="M102 84 L102 64"/><path class="ah" d="M102 58 L97 68 L107 68 Z"/>'),
+    incline: fig('<path class="e" d="M14 98 L98 70"/><path class="e" d="M14 98 L14 106 M98 70 L98 106" stroke-width="3"/><circle class="hd" cx="56" cy="38" r="7"/><path class="f" d="M56 48 L58 68"/><path class="f" d="M58 68 L46 84 L44 92"/><path class="f" d="M58 68 L70 80 L74 76"/><path class="f" d="M56 52 L46 62"/><path class="f" d="M57 52 L68 58"/><path class="a" d="M84 44 L98 38"/><path class="ah" d="M104 36 L93 34 L96 44 Z"/>'),
+    bicycle: fig('<circle class="hd" cx="26" cy="74" r="7"/><path class="f" d="M34 80 Q46 90 58 96"/><path class="f" d="M58 96 L74 74 L64 60"/><path class="f" d="M58 96 L92 84"/><path class="f" d="M36 82 L62 72"/><path class="a" d="M76 50 Q88 44 98 50"/><path class="ah" d="M102 54 L94 46 L90 56 Z"/>'),
+    twist: fig('<circle class="hd" cx="42" cy="52" r="7"/><path class="f" d="M46 62 L56 88"/><path class="f" d="M56 88 L78 72 L92 60"/><path class="f" d="M48 66 L28 74"/><circle class="e" cx="22" cy="76" r="6"/><path class="a" d="M20 92 Q34 100 48 96"/><path class="ah" d="M54 94 L43 92 L46 102 Z"/>'),
+    climber: fig('<circle class="hd" cx="22" cy="62" r="7"/><path class="f" d="M28 70 L62 68 L98 98"/><path class="f" d="M30 72 L26 90 L24 104"/><path class="f" d="M62 68 L46 84 L42 80"/><path class="a" d="M52 96 L36 96"/><path class="ah" d="M30 96 L40 91 L40 101 Z"/>'),
+    deadbug: fig('<circle class="hd" cx="30" cy="92" r="7"/><path class="f" d="M40 96 L68 96"/><path class="f" d="M44 96 L44 64"/><path class="f" d="M68 96 L98 82"/><path class="f" d="M64 96 L76 74 L88 66"/><path class="a" d="M32 58 L44 52"/><path class="ah" d="M50 50 L39 48 L42 58 Z"/>'),
+    pulldown: fig('<path class="e" d="M32 22 L88 22"/><line class="e" x1="60" y1="10" x2="60" y2="22" stroke-width="3"/><rect class="e" x="44" y="88" width="32" height="6" rx="2"/><circle class="hd" cx="60" cy="44" r="7"/><path class="f" d="M60 54 L60 84"/><path class="f" d="M60 84 L46 92 L44 106"/><path class="f" d="M60 84 L74 92 L76 106"/><path class="f" d="M58 56 L38 26"/><path class="f" d="M62 56 L82 26"/><path class="a" d="M100 44 L100 64"/><path class="ah" d="M100 70 L95 60 L105 60 Z"/>'),
+    row: fig('<line class="e" x1="102" y1="46" x2="102" y2="106"/><circle class="hd" cx="41" cy="46" r="7"/><path class="f" d="M45 56 L50 86"/><path class="f" d="M50 86 L74 82 L90 90"/><path class="f" d="M47 62 L64 70"/><path class="e" d="M64 70 L100 70" stroke-width="3"/><path class="a" d="M78 56 L58 52"/><path class="ah" d="M52 51 L62 47 L62 57 Z"/>'),
+    onearmrow: fig('<rect class="e" x="14" y="78" width="42" height="7" rx="2"/><line class="e" x1="20" y1="85" x2="20" y2="106"/><line class="e" x1="50" y1="85" x2="50" y2="106"/><circle class="hd" cx="86" cy="48" r="7"/><path class="f" d="M32 60 L76 54"/><path class="f" d="M34 60 L30 76"/><path class="f" d="M36 60 L42 76"/><path class="f" d="M66 56 L70 74"/><line class="e" x1="62" y1="78" x2="78" y2="78" stroke-width="7"/><path class="a" d="M96 76 L96 60"/><path class="ah" d="M96 54 L91 64 L101 64 Z"/>'),
+    facepull: fig('<line class="e" x1="102" y1="26" x2="102" y2="106"/><circle class="hd" cx="42" cy="40" r="7"/><path class="f" d="M46 50 L48 80"/><path class="f" d="M48 80 L40 106"/><path class="f" d="M48 80 L58 106"/><path class="f" d="M48 52 L62 44 L70 48"/><path class="e" d="M70 48 L100 46" stroke-width="3"/><path class="a" d="M84 60 L64 60"/><path class="ah" d="M58 60 L68 55 L68 65 Z"/>'),
+    curl: fig('<circle class="hd" cx="54" cy="34" r="7"/><path class="f" d="M54 44 L54 76"/><path class="f" d="M54 76 L46 106"/><path class="f" d="M54 76 L62 106"/><path class="f" d="M54 48 L58 68 L74 56"/><line class="e" x1="70" y1="50" x2="82" y2="60" stroke-width="7"/><path class="a" d="M88 74 Q92 62 84 52"/><path class="ah" d="M80 46 L81 57 L90 52 Z"/>'),
+    hammer: fig('<circle class="hd" cx="54" cy="34" r="7"/><path class="f" d="M54 44 L54 76"/><path class="f" d="M54 76 L46 106"/><path class="f" d="M54 76 L62 106"/><path class="f" d="M54 48 L58 68 L74 62"/><line class="e" x1="76" y1="54" x2="76" y2="68" stroke-width="7"/><path class="a" d="M90 76 Q94 64 86 54"/><path class="ah" d="M82 48 L83 59 L92 54 Z"/>'),
+    goblet: fig('<circle class="hd" cx="58" cy="34" r="7"/><path class="f" d="M58 44 L58 72"/><path class="f" d="M58 72 L38 82 L36 106"/><path class="f" d="M58 72 L78 82 L80 106"/><path class="f" d="M58 48 L58 58"/><line class="e" x1="52" y1="56" x2="64" y2="56" stroke-width="7"/>'),
+    legpress: fig('<path class="e" d="M16 94 L42 66"/><line class="e" x1="20" y1="90" x2="20" y2="106"/><path class="e" d="M84 38 L102 72" stroke-width="6"/><circle class="hd" cx="24" cy="58" r="7"/><path class="f" d="M30 64 L46 84"/><path class="f" d="M46 84 L66 60 L86 52"/><path class="a" d="M72 30 L88 24"/><path class="ah" d="M94 22 L83 20 L86 30 Z"/>'),
+    lunge: fig('<circle class="hd" cx="58" cy="30" r="7"/><path class="f" d="M58 40 L54 70"/><path class="f" d="M54 70 L74 82 L78 106"/><path class="f" d="M54 70 L40 94 L28 102"/><path class="f" d="M57 46 L50 64"/><line class="e" x1="44" y1="66" x2="58" y2="68" stroke-width="7"/><path class="a" d="M92 60 L106 60"/><path class="ah" d="M112 60 L102 55 L102 65 Z"/>'),
+    legcurl: fig('<rect class="e" x="16" y="80" width="64" height="7" rx="2"/><line class="e" x1="24" y1="87" x2="24" y2="106"/><line class="e" x1="70" y1="87" x2="70" y2="106"/><circle class="hd" cx="24" cy="72" r="7"/><path class="f" d="M34 78 L72 78"/><path class="f" d="M72 78 L86 80 L80 58"/><path class="a" d="M100 74 Q100 58 88 52"/><path class="ah" d="M82 48 L88 58 L94 50 Z"/>'),
+    abduction: fig('<rect class="e" x="44" y="84" width="32" height="6" rx="2"/><circle class="hd" cx="60" cy="34" r="7"/><path class="f" d="M60 44 L60 80"/><path class="f" d="M60 80 L40 88 L38 106"/><path class="f" d="M60 80 L80 88 L82 106"/><path class="a" d="M30 82 L16 76"/><path class="ah" d="M10 74 L18 82 L22 72 Z"/><path class="a" d="M90 82 L104 76"/><path class="ah" d="M110 74 L98 72 L102 82 Z"/>'),
+    calf: fig('<rect class="e" x="36" y="94" width="48" height="12" rx="2"/><circle class="hd" cx="56" cy="26" r="7"/><path class="f" d="M56 36 L56 64"/><path class="f" d="M56 64 L52 88 L50 93"/><path class="f" d="M56 64 L62 88 L60 93"/><path class="a" d="M82 52 L82 34"/><path class="ah" d="M82 28 L77 38 L87 38 Z"/>')
+  };
+
+  /* ---------- the plan ---------- */
+  var DAYS = [
+    {
+      id: "mon", short: "Mon", label: "Legs + Abs",
+      title: "Monday — Legs & Abs",
+      why: "The butt-heavy one, exactly like you asked. Higher reps and moderate weight to lift and shape, plus a little ab work to finish. This is the day that builds the peach.",
+      time: "≈ 50 min",
+      warmup: "Warm up: 5 easy minutes walking on the treadmill, then do your first exercise once with a very light weight before your real sets.",
+      finisher: "Finisher: 10 minutes of incline walking, easy pace. Shake your legs out — you earned it.",
+      exercises: [
+        { name: "Hip Thrusts", art: "hipthrust", sets: "3 sets × 12 reps", feel: "your butt (this is THE one)",
+          steps: ["Sit on the floor with your upper back against a bench, feet flat, knees bent.", "Rest a barbell or dumbbell across your hips (use a pad — comfort matters).", "Push through your heels and lift your hips until your body is flat like a table. Squeeze your butt hard at the top for 1 second.", "Lower slowly and repeat. If your hamstrings take over, move your feet a little closer."] },
+        { name: "Romanian Deadlifts", art: "rdl", sets: "3 sets × 12 reps", feel: "the back of your thighs + butt",
+          steps: ["Stand tall holding dumbbells in front of your thighs, feet hip-width.", "Keep a tiny bend in your knees and your back flat, then push your hips backwards — like closing a car door with your butt.", "Slide the weights down your legs until you feel a stretch behind your thighs (usually just below the knee).", "Squeeze your butt to stand back up. The move is hips back, not bending down."] },
+        { name: "Bulgarian Split Squats", art: "bulgarian", sets: "3 sets × 10 each leg", feel: "butt + thighs (the wobbly one — that's normal)",
+          steps: ["Stand a big step in front of a bench and put the top of one foot behind you on it.", "Hold a dumbbell in each hand (or none the first week — these are hard).", "Drop your back knee straight down toward the floor, keeping your chest up.", "Push through your front heel to stand. Do all reps, then switch legs. Wobbling is part of it, I promise."] },
+        { name: "Cable Kickbacks", art: "kickback", sets: "3 sets × 15 each leg", feel: "the top of your butt",
+          steps: ["Strap the ankle cuff on at the cable machine (or loop a band around your ankle at home).", "Hold the frame, lean slightly forward, soft bend in your standing knee.", "Kick your leg straight back and a little up, squeezing your butt at the top.", "Come back with control — don't let the cable yank you. All reps, then switch."] },
+        { name: "Sumo Squats", art: "sumo", sets: "3 sets × 12 reps", feel: "inner thighs + butt",
+          steps: ["Stand with feet wider than your shoulders, toes pointed out like a duck (a cute duck).", "Hold one dumbbell with both hands, hanging in front of you.", "Sit straight down between your legs, chest tall, until thighs are about parallel.", "Drive through your heels to stand and squeeze at the top."] },
+        { name: "Crunches", art: "crunch", sets: "3 sets × 15 reps", feel: "the front of your abs",
+          steps: ["Lie on your back, knees bent, feet flat, fingertips lightly behind your ears.", "Curl your shoulders up toward the ceiling — small move, you're not sitting all the way up.", "Exhale and squeeze your abs at the top, then lower slowly.", "Don't pull on your neck. Your abs do the work, not your hands."] },
+        { name: "Lying Leg Raises", art: "legraise", sets: "3 sets × 12 reps", feel: "your lower abs",
+          steps: ["Lie flat on your back, hands tucked under your hips for support.", "Keep your legs straight (small knee bend is fine) and lift them up to point at the ceiling.", "Lower them slowly until they hover just above the floor — don't let them touch.", "If your lower back arches up, don't lower as far. That's the rule."] },
+        { name: "Plank", art: "plank", sets: "3 holds × 30 sec", feel: "everything, in the best way",
+          steps: ["Forearms on the floor, elbows under shoulders, legs stretched out behind you.", "Make one straight line from your head to your heels — no hips sagging, no butt in the air.", "Squeeze your abs and your butt, and breathe. Don't hold your breath.", "Shaking at 20 seconds means it's working, not that you're failing."] }
+      ]
+    },
+    {
+      id: "tue", short: "Tue", label: "Chest + Tri",
+      title: "Tuesday — Chest & Triceps",
+      why: "This day firms up your chest and the back of your arms — the exact spots that make tank tops and sundresses look even better on you (a high bar, honestly).",
+      time: "≈ 45 min",
+      warmup: "Warm up: 5 easy minutes of cardio, then your first exercise with the lightest dumbbells on the rack.",
+      finisher: "Finisher: give me 10 slow push-ups from your knees. Full stop at the bottom. You'll hate me for 60 seconds and thank me in 6 weeks.",
+      exercises: [
+        { name: "Dumbbell Bench Press", art: "benchpress", sets: "3 sets × 12 reps", feel: "your chest + the back of your arms",
+          steps: ["Lie on a flat bench with a dumbbell in each hand at chest level, palms facing forward.", "Press both weights straight up until your arms are almost locked out.", "Lower slowly for 2 seconds until your elbows drop just below the bench.", "Keep your feet planted and your lower back gently arched — you're stable, not stiff."] },
+        { name: "Incline Dumbbell Press", art: "inclinepress", sets: "3 sets × 12 reps", feel: "the upper part of your chest",
+          steps: ["Set the bench to a low incline (about 30° — two or three notches up).", "Start with dumbbells at your shoulders, palms forward.", "Press up and slightly back so the weights finish above your face — not your belly.", "Lower with control. Go lighter than flat bench; incline is always harder."] },
+        { name: "Chest Flys", art: "fly", sets: "3 sets × 15 reps", feel: "a stretch across your whole chest",
+          steps: ["Lie on a flat bench with light dumbbells pressed up over your chest, palms facing each other.", "With a slight bend in your elbows, open your arms wide like you're giving someone a big hug in reverse.", "Stop when you feel a nice stretch across your chest — no deeper.", "Bring the weights back together like you're hugging a tree. (Or me. Preferably me.)"] },
+        { name: "Triceps Rope Pushdowns", art: "pushdown", sets: "3 sets × 15 reps", feel: "the back of your upper arms",
+          steps: ["Stand at the cable machine with the rope attachment set high.", "Grab the rope, pin your elbows to your sides — they're glued there the whole set.", "Push your hands down until your arms are straight, and pull the rope ends apart at the bottom.", "Let it come back up slowly. If your elbows drift forward, the weight's too heavy."] },
+        { name: "Overhead Triceps Extensions", art: "overhead", sets: "3 sets × 12 reps", feel: "a deep stretch in the back of your arms",
+          steps: ["Hold one dumbbell with both hands and press it above your head.", "Keeping your elbows close to your ears, lower the weight slowly behind your head.", "Stop when you feel the stretch, then press back up until your arms are straight.", "Keep your ribs down and abs on — no leaning back like a banana."] },
+        { name: "Bench Dips", art: "dips", sets: "3 sets × 10 reps", feel: "back of the arms + a little chest",
+          steps: ["Sit on the edge of a bench, hands next to your hips gripping the edge.", "Walk your feet out and slide your butt off the bench.", "Bend your elbows straight back and lower yourself a few inches.", "Push back up. Bend your knees more to make it easier — that's not cheating, that's smart."] }
+      ]
+    },
+    {
+      id: "wed", short: "Wed", label: "Cardio + Abs",
+      title: "Wednesday — Cardio & Abs",
+      why: "The middle of the week is for burning, not lifting. Steady incline walking is the secret weapon for the 'lose a little' part of your goal — low effort feel, high payoff. Then a quick ab circuit.",
+      time: "≈ 45 min",
+      warmup: "Warm up: the first 3 minutes of your walk ARE the warm-up. Start flat and slow, then bring the incline up.",
+      finisher: "Finisher: 5 minutes of stretching. Touch your toes, stretch your hips, be dramatic about it. You've earned dramatics.",
+      cardio: {
+        headline: "12 · 3 · 30",
+        name: "Incline Treadmill Walk",
+        desc: "Set the treadmill to 12% incline, 3.0 mph speed, and walk for 30 minutes. That's the whole assignment. No running, no misery — just a podcast or a playlist, and walk. Hold the rails only if you truly need to (hovering hands are allowed and encouraged).",
+        or: "Swap it anytime for: 25 min on the stair machine (level 5–7), or a 35 min brisk outside walk if it's pretty out. Same result, your choice."
+      },
+      circuitNote: "Then the ab circuit: do the 4 moves below back-to-back with no rest, then rest 60 seconds. Repeat the whole loop 3 times.",
+      exercises: [
+        { name: "Bicycle Crunches", art: "bicycle", sets: "20 total (10 each side)", feel: "abs + the sides of your waist",
+          steps: ["Lie on your back, hands lightly behind your ears, legs lifted with knees bent.", "Bring your right elbow toward your left knee while straightening your right leg.", "Switch sides in a slow pedaling motion — slow is the whole point.", "Twist from your ribs, not your neck. Quality over speed, always."] },
+        { name: "Russian Twists", art: "twist", sets: "20 total (10 each side)", feel: "the sides of your waist",
+          steps: ["Sit on the floor, knees bent, and lean your upper body back until your abs switch on.", "Hold a light dumbbell (or nothing) with both hands at your chest.", "Rotate your shoulders to tap the weight to the floor beside your hip. Then the other side.", "Feet down = easier. Feet floating = spicier. Pick your fighter."] },
+        { name: "Mountain Climbers", art: "climber", sets: "30 seconds", feel: "abs + heart rate going up",
+          steps: ["Start in a push-up position, hands under shoulders, body in a straight line.", "Drive one knee in toward your chest, then quickly swap legs.", "Keep your hips level and low — no bouncing your butt up.", "Steady rhythm beats frantic speed. You're a metronome, not a blender."] },
+        { name: "Dead Bugs", art: "deadbug", sets: "10 each side", feel: "deep abs (the corset ones)",
+          steps: ["Lie on your back, arms pointing at the ceiling, knees bent at 90° over your hips.", "Slowly lower your right arm behind your head and stretch your left leg out — at the same time.", "Stop before your lower back peels off the floor, then come back and switch sides.", "It looks easy. It is not. It's named after a dead bug and it humbles everyone."] }
+      ]
+    },
+    {
+      id: "thu", short: "Thu", label: "Back + Bi",
+      title: "Thursday — Back & Biceps",
+      why: "A strong back is what makes you stand taller, look leaner, and feel powerful — posture is instant toning. Plus a little biceps work so your arms match the rest of the masterpiece.",
+      time: "≈ 45 min",
+      warmup: "Warm up: 5 easy minutes of cardio, then one light set of lat pulldowns before your real sets.",
+      finisher: "Finisher: hang from the pull-up bar for as long as you can, 2 tries. It stretches everything and secretly builds grip strength. Also it looks cool.",
+      exercises: [
+        { name: "Lat Pulldowns", art: "pulldown", sets: "3 sets × 12 reps", feel: "the sides of your back (your wings)",
+          steps: ["Sit at the machine and tuck your thighs snugly under the pads.", "Grab the bar wider than your shoulders, palms facing away.", "Pull the bar down to your collarbone while your chest lifts up to meet it.", "Let it rise back up slowly — the slow part up is half the exercise."] },
+        { name: "Seated Cable Rows", art: "row", sets: "3 sets × 12 reps", feel: "the middle of your back",
+          steps: ["Sit at the row machine, feet on the plates, knees slightly bent.", "Grab the handle and sit tall — proud chest, shoulders down.", "Pull the handle to your belly button, squeezing your shoulder blades together like they're holding a pencil.", "Stretch forward slowly to return. Don't rock back and forth — the weight moves, you don't."] },
+        { name: "One-Arm Dumbbell Rows", art: "onearmrow", sets: "3 sets × 10 each arm", feel: "one side of your back at a time",
+          steps: ["Put your left knee and left hand on a bench, right foot on the floor. Back flat like a coffee table.", "Hold a dumbbell in your right hand, arm hanging straight down.", "Pull the weight up to your hip — elbow sliding along your side, not flaring out.", "Lower slowly. All reps, then switch sides. No twisting to heave it up."] },
+        { name: "Face Pulls", art: "facepull", sets: "3 sets × 15 reps", feel: "the back of your shoulders",
+          steps: ["Set a rope attachment at face height on the cable machine.", "Grab the ends with your thumbs pointing back toward you.", "Pull the rope toward your face, elbows high and wide, like you're double-flexing.", "Squeeze your shoulder blades, then return slowly. This one is posture magic — do not skip it."] },
+        { name: "Dumbbell Bicep Curls", art: "curl", sets: "3 sets × 12 reps", feel: "the front of your arms",
+          steps: ["Stand tall with a dumbbell in each hand, palms facing forward.", "Pin your elbows to your sides and curl the weights up to your shoulders.", "Squeeze at the top for one second.", "Lower slowly — take 2 full seconds on the way down. No swinging; if you're swinging, go lighter."] },
+        { name: "Hammer Curls", art: "hammer", sets: "3 sets × 12 reps", feel: "arms + forearms",
+          steps: ["Same as regular curls, but hold the dumbbells like hammers — palms facing each other the whole time.", "Elbows stay pinned to your sides.", "Curl up, squeeze, lower slow.", "These finish what regular curls started. Your future sleeveless self says thanks."] }
+      ]
+    },
+    {
+      id: "fri", short: "Fri", label: "Legs, again",
+      title: "Friday — Leg Day 2",
+      why: "Round two for your lower half — Monday was butt-first, today is thighs-first, so everything gets shaped evenly. Finish this and your whole week is complete. Then it's the weekend, and you're all mine.",
+      time: "≈ 50 min",
+      warmup: "Warm up: 5 easy minutes on the bike or treadmill, then goblet squats with just your bodyweight before adding the dumbbell.",
+      finisher: "Finisher: 10 minutes easy incline walk, then stretch your quads. Week = done. Go be proud of yourself, because I am.",
+      exercises: [
+        { name: "Goblet Squats", art: "goblet", sets: "3 sets × 12 reps", feel: "thighs + butt",
+          steps: ["Hold one dumbbell vertically against your chest like you're cradling a (heavy) baby bird.", "Feet shoulder-width, toes slightly out.", "Sit down and back until your thighs are about parallel with the floor, chest staying tall.", "Drive through your heels to stand up. The dumbbell hug keeps you upright — that's its whole job."] },
+        { name: "Leg Press", art: "legpress", sets: "3 sets × 12 reps", feel: "your whole thighs",
+          steps: ["Sit in the machine with your feet shoulder-width on the platform.", "Release the handles and lower the platform until your knees are near your chest.", "Press through your heels until your legs are almost straight — never slam them locked.", "Feet higher on the platform = more butt. Feet lower = more thigh. Today, go middle."] },
+        { name: "Walking Lunges", art: "lunge", sets: "3 sets × 10 each leg", feel: "thighs + butt (and your balance)",
+          steps: ["Hold a dumbbell in each hand at your sides (or none — lunges don't need help being hard).", "Take a big step forward and lower your back knee toward the floor.", "Both knees should hit about 90° — front knee over your ankle, not your toes.", "Push off your front heel and step straight into the next lunge. Runway walk, but make it burn."] },
+        { name: "Lying Leg Curls", art: "legcurl", sets: "3 sets × 12 reps", feel: "the back of your thighs",
+          steps: ["Lie face down on the machine with the pad against your lower calves.", "Hold the handles and keep your hips pressed into the bench.", "Curl your heels up toward your butt, squeeze for a second at the top.", "Lower slowly all the way. If your hips pop up, lower the weight."] },
+        { name: "Hip Abductions", art: "abduction", sets: "3 sets × 15 reps", feel: "the sides of your butt",
+          steps: ["Sit in the abduction machine (the push-out one) with the pads outside your knees.", "Sit tall, hold the handles.", "Press your knees apart as far as the machine lets you, and pause out there for a second.", "Come back with control. Lean slightly forward to feel it even more. Yes, everyone feels awkward on this machine. Do it anyway — it's a top-tier butt builder."] },
+        { name: "Standing Calf Raises", art: "calf", sets: "3 sets × 15 reps", feel: "your calves",
+          steps: ["Stand with the balls of your feet on the edge of a step or plate, heels hanging off.", "Hold something for balance with one hand.", "Push up onto your tiptoes as high as you can — pause one second at the top.", "Lower your heels below the step until you feel the stretch. Slow and springy-free."] }
+      ]
+    }
+  ];
+
+  /* ---------- notes from him ---------- */
+  var NOTES = [
+    "Hi. It's me. I built this entire website mostly as an excuse to tell you how pretty you are. Worth it.",
+    "Quick announcement: you're the best-looking person in that gym. It's not close.",
+    "You're somehow even prettier when you're focused. It's very distracting. Keep doing it.",
+    "Reminder from your boyfriend: you light up every room you walk into. Including this one. And it's a website.",
+    "You're doing so good. I'm genuinely, ridiculously proud of you.",
+    "Not to be dramatic, but your smile is my favorite thing on this planet.",
+    "Whatever you're lifting right now — lucky weights.",
+    "You could rest today and I'd still think you're the most impressive person I know.",
+    "Hey gorgeous. Yes, you. Keep going.",
+    "I like you so much it's honestly a little embarrassing for me.",
+    "Someone in that gym is wondering how you make it look that easy. It's everyone. Everyone is wondering.",
+    "You're strong, you're beautiful, and you're mine. I win.",
+    "Just checking in to say your eyes are unfair.",
+    "Every note on this site is different, but they all mean the same thing: I'm crazy about you.",
+    "You didn't need a single one of these workouts. This is all bonus. You were already perfect.",
+    "Drink some water. Beautiful people need water too, and you're extremely beautiful.",
+    "If confidence were a person, it would look like you mid-set.",
+    "I'd cheer out loud right now but I'm a website. Pretend you can hear me. I'm loud.",
+    "You make gym clothes look like a red carpet.",
+    "Your laugh is better than every rest day combined.",
+    "Being your boyfriend is my favorite thing about me.",
+    "That focus face you make? Devastating. In the best possible way.",
+    "You're the kind of pretty that makes people lose their rep count.",
+    "I love watching you take care of yourself. It's my favorite kind of beautiful.",
+    "You're tougher than this workout. You're tougher than most things, honestly.",
+    "Fun fact: I smile every time I think about you. So basically I'm always smiling.",
+    "You have main-character energy and I'm just glad to be in the story.",
+    "Nobody does 'effortlessly stunning' like you do.",
+    "Hey. You. Amazing. That's it, that's the note.",
+    "When you finish today, come tell me everything. I want the full recap.",
+    "The gym gets you for an hour. I get you for everything else. Best deal I've ever made.",
+    "You're proof that pretty and powerful are the same word.",
+    "If they gave out medals for being your kind of wonderful, you'd need a bigger shelf.",
+    "Your future self is already thanking you. So am I. Mostly me.",
+    "I'd pick you first. Every team, every time, everything.",
+    "You're not just my girlfriend, you're my favorite person. It's not even a competition.",
+    "One more set, then remember: someone out here adores you completely. It's me. I'm someone.",
+    "You're beautiful when you're winning and beautiful when you're wiped out. Rigged game, honestly.",
+    "I could write a thousand of these and run out of website before I ran out of reasons.",
+    "Posture check! Not for the exercise — I just know you look elegant when you stand tall. Carry on."
+  ];
+
+  var PRAISE = [
+    "That's my girl.",
+    "Look at you go.",
+    "So strong. So pretty. Unfair.",
+    "One down. You make it look easy.",
+    "Proud of you. Always.",
+    "Smooth. Strong. Gorgeous.",
+    "You're actually crushing this.",
+    "Okay, show-off. I love it.",
+    "Beautiful work, beautiful girl.",
+    "You make this look good.",
+    "My favorite athlete.",
+    "Another one done. You're unreal."
+  ];
+
+  var DAY_DONE = [
+    "You finished the WHOLE workout. I'm so proud of you I could burst. Come here so I can say it in person.",
+    "All done! You're incredible. Genuinely, deeply, ridiculously incredible. And also very, very pretty.",
+    "Every box checked. Strong, gorgeous, disciplined — I really out-punted my coverage with you.",
+    "Look at that — complete. Go drink some water, pretty girl. You were amazing today.",
+    "Workout complete. Final note of the day: you are the whole package and I adore you."
+  ];
+
+  var HEART_FOUND = [
+    "You found a heart. I hid it there for you. There are more.",
+    "Another one! Each hidden heart is one reason I like you. I ran out of website for the rest.",
+    "Caught it. That one means 'you're beautiful.' They all mean that.",
+    "This little heart waited all day for you to notice it. Relatable.",
+    "A heart, for the girl who has all of mine."
+  ];
+
+  var SECRET = "You found the secret. Here it is: I loved you before this website existed, and I'll love you long after. Okay — back to your workout, gorgeous.";
+  var WEEKEND_NOTE = "It's the weekend, my love. No workout today. Stretch, walk, nap — Monday will wait for you. I, however, would like to see you immediately.";
+
+  /* ---------- note toasts ---------- */
+  var noteStack = document.getElementById("noteStack");
+  var deck = [];
+  function drawNote() {
+    if (deck.length === 0) {
+      deck = NOTES.slice();
+      for (var i = deck.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = deck[i]; deck[i] = deck[j]; deck[j] = t;
+      }
+    }
+    return deck.pop();
+  }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function showNote(text, ms) {
+    while (noteStack.children.length >= 2) noteStack.removeChild(noteStack.firstChild);
+    var n = document.createElement("button");
+    n.className = "note";
+    n.type = "button";
+    n.setAttribute("aria-label", "A note from your boyfriend. Tap to close.");
+    n.innerHTML = '<span></span><span class="sig">— me ' + heartSVG(15, "#C2496B") + "</span>";
+    n.firstChild.textContent = text;
+    noteStack.appendChild(n);
+    var gone = false;
+    function dismiss() {
+      if (gone) return; gone = true;
+      n.classList.add("leaving");
+      setTimeout(function () { if (n.parentNode) n.parentNode.removeChild(n); }, 320);
+    }
+    n.addEventListener("click", dismiss);
+    setTimeout(dismiss, ms || 7000);
+  }
+
+  /* ---------- storage helpers ---------- */
+  function loadDone(dayId) {
+    try {
+      var raw = localStorage.getItem("ps-" + dayId);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+  function saveDone(dayId, obj) {
+    try { localStorage.setItem("ps-" + dayId, JSON.stringify(obj)); } catch (e) {}
+  }
+
+  /* ---------- render day nav ---------- */
+  var nav = document.getElementById("dayNav");
+  var panel = document.getElementById("dayPanel");
+  var currentDay = 0;
+
+  DAYS.forEach(function (d, i) {
+    var b = document.createElement("button");
+    b.className = "daybtn";
+    b.id = "tab-" + d.id;
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", "false");
+    b.setAttribute("aria-controls", "dayPanel");
+    b.innerHTML = "<span></span><small></small>";
+    b.firstChild.textContent = d.short;
+    b.lastChild.textContent = d.label;
+    b.addEventListener("click", function () {
+      selectDay(i);
+      if (Math.random() < 0.3) showNote(drawNote());
+    });
+    nav.appendChild(b);
+  });
+
+  function selectDay(i) {
+    currentDay = i;
+    var btns = nav.children;
+    for (var k = 0; k < btns.length; k++) btns[k].setAttribute("aria-selected", k === i ? "true" : "false");
+    renderDay(DAYS[i]);
+  }
+
+  /* ---------- render a day ---------- */
+  function renderDay(d) {
+    var done = loadDone(d.id);
+    var total = d.exercises.length + (d.cardio ? 1 : 0);
+
+    var html = "";
+    html += '<div class="dayhead">';
+    html += '<h2></h2>';
+    html += '<p class="why"></p>';
+    html += '<div class="day-meta"><span class="chip">' + esc(d.time) + '</span><span class="chip calm">45–60 sec rest between sets</span></div>';
+    html += '<div class="progress-line"><div class="progress-track"><div class="progress-fill" id="pfill"></div></div><span class="progress-label" id="plabel"></span></div>';
+    html += '</div>';
+    html += '<div class="warmup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg><span></span></div>';
+
+    if (d.cardio) {
+      html += '<div class="card cardio-main"><p class="eyebrow">The main event</p><h3></h3><p class="big-line"></p><p class="cdesc"></p><p class="or"></p>' + doneBoxHTML("cardio") + '</div>';
+      html += '<p class="why" style="margin-top:18px">' + esc(d.circuitNote) + '</p>';
+    }
+
+    html += '<ol class="exlist">';
+    d.exercises.forEach(function (ex, idx) {
+      html += '<li class="card ex" data-idx="' + idx + '">';
+      html += '<div class="exi">' + (ART[ex.art] || "") + '</div>';
+      html += '<div><h3></h3>';
+      html += '<div class="meta"><span class="chip">' + esc(ex.sets) + '</span></div>';
+      html += '<p class="feel"><strong>You’ll feel it in:</strong> <span></span></p>';
+      html += '<ol class="steps">' + ex.steps.map(function () { return "<li></li>"; }).join("") + '</ol>';
+      html += '</div>' + doneBoxHTML("ex" + idx) + '</li>';
+    });
+    html += '</ol>';
+    html += '<p class="finisher"><strong>Before you leave:</strong> <span></span></p>';
+
+    panel.innerHTML = html;
+
+    /* fill text safely */
+    panel.querySelector(".dayhead h2").textContent = d.title;
+    panel.querySelector(".dayhead .why").textContent = d.why;
+    panel.querySelector(".warmup span").textContent = d.warmup;
+    panel.querySelector(".finisher span").textContent = d.finisher;
+    if (d.cardio) {
+      panel.querySelector(".cardio-main h3").textContent = d.cardio.name;
+      panel.querySelector(".cardio-main .big-line").textContent = d.cardio.headline;
+      panel.querySelector(".cardio-main .cdesc").textContent = d.cardio.desc;
+      panel.querySelector(".cardio-main .or").textContent = d.cardio.or;
+    }
+    var cards = panel.querySelectorAll(".ex");
+    d.exercises.forEach(function (ex, idx) {
+      var c = cards[idx];
+      c.querySelector("h3").textContent = ex.name;
+      c.querySelector(".feel span").textContent = ex.feel;
+      var lis = c.querySelectorAll(".steps li");
+      ex.steps.forEach(function (s, si) { lis[si].textContent = s; });
+    });
+
+    /* wire checkboxes */
+    var boxes = panel.querySelectorAll(".donebox input");
+    boxes.forEach ? null : null;
+    Array.prototype.forEach.call(boxes, function (input) {
+      var key = input.getAttribute("data-key");
+      if (done[key]) {
+        input.checked = true;
+        markCard(input, true);
+      }
+      input.addEventListener("change", function () {
+        done[key] = input.checked;
+        saveDone(d.id, done);
+        markCard(input, input.checked);
+        updateProgress();
+        if (input.checked) {
+          if (countDone() === total) {
+            celebrateDay();
+          } else {
+            showNote(pick(PRAISE), 4500);
+          }
+        }
+      });
+    });
+
+    function markCard(input, isDone) {
+      var card = input.closest(".card");
+      if (card) card.classList.toggle("done", isDone);
+    }
+    function countDone() {
+      var n = 0;
+      for (var k in done) { if (done[k]) n++; }
+      return n;
+    }
+    function updateProgress() {
+      var n = countDone();
+      var f = panel.querySelector("#pfill");
+      var l = panel.querySelector("#plabel");
+      if (f) f.style.width = Math.round((n / total) * 100) + "%";
+      if (l) l.textContent = n + " of " + total + " done";
+    }
+    updateProgress();
+  }
+
+  function doneBoxHTML(key) {
+    return '<label class="donebox" title="Done? Check it off">' +
+      '<input type="checkbox" data-key="' + key + '" aria-label="Mark as done" />' +
+      '<svg class="h-off" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" aria-hidden="true"><path d="' + HEART_PATH + '"/></svg>' +
+      '<svg class="h-on" width="30" height="30" viewBox="0 0 24 24" fill="var(--good)" aria-hidden="true"><path d="' + HEART_PATH + '"/></svg>' +
+      '</label>';
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------- day-complete celebration ---------- */
+  var celebrateEl = document.getElementById("celebrate");
+  var celebrateMsg = document.getElementById("celebrateMsg");
+  document.getElementById("celebrateClose").addEventListener("click", function () {
+    celebrateEl.hidden = true;
+  });
+  celebrateEl.addEventListener("click", function (e) {
+    if (e.target === celebrateEl) celebrateEl.hidden = true;
+  });
+
+  function celebrateDay() {
+    celebrateMsg.textContent = pick(DAY_DONE);
+    celebrateEl.hidden = false;
+    heartConfetti();
+  }
+
+  function heartConfetti() {
+    if (reducedMotion) return;
+    var colors = ["#C2496B", "#E4738F", "#F2B8C6", "#9C3557"];
+    for (var i = 0; i < 26; i++) {
+      var h = document.createElement("span");
+      h.className = "confetti-heart";
+      var size = 12 + Math.random() * 16;
+      h.innerHTML = heartSVG(size, colors[i % colors.length]);
+      h.style.left = Math.random() * 100 + "vw";
+      h.style.animationDuration = 2.4 + Math.random() * 2.2 + "s";
+      h.style.animationDelay = Math.random() * 0.8 + "s";
+      document.body.appendChild(h);
+      (function (el) { setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 6000); })(h);
+    }
+  }
+
+  /* ---------- easter egg wiring ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-egg]"), function (b) {
+    b.addEventListener("click", function () {
+      showNote(pick(HEART_FOUND), 6000);
+      heartConfettiMini(b);
+    });
+  });
+  function heartConfettiMini(origin) {
+    if (reducedMotion) return;
+    var r = origin.getBoundingClientRect();
+    for (var i = 0; i < 6; i++) {
+      var h = document.createElement("span");
+      h.className = "confetti-heart";
+      h.innerHTML = heartSVG(10 + Math.random() * 8, "#E4738F");
+      h.style.left = r.left + r.width / 2 + (Math.random() * 40 - 20) + "px";
+      h.style.top = r.top + "px";
+      h.style.animationDuration = 1.6 + Math.random() * 1 + "s";
+      document.body.appendChild(h);
+      (function (el) { setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 3000); })(h);
+    }
+  }
+
+  document.getElementById("logoHeart").addEventListener("click", function () {
+    showNote(drawNote());
+    heartConfettiMini(this);
+  });
+
+  /* secret: tap the big title 5 times */
+  var titleTaps = 0;
+  document.getElementById("heroTitle").addEventListener("click", function () {
+    titleTaps++;
+    if (titleTaps === 5) {
+      titleTaps = 0;
+      showNote(SECRET, 11000);
+      heartConfetti();
+    }
+  });
+
+  /* reset week */
+  document.getElementById("resetWeek").addEventListener("click", function () {
+    try {
+      DAYS.forEach(function (d) { localStorage.removeItem("ps-" + d.id); });
+    } catch (e) {}
+    renderDay(DAYS[currentDay]);
+    showNote("Fresh week, same incredible you. Let's go.", 6000);
+  });
+
+  /* ---------- start on today's workout ---------- */
+  var dow = new Date().getDay(); /* 0 Sun .. 6 Sat */
+  var isWeekend = dow === 0 || dow === 6;
+  selectDay(isWeekend ? 0 : dow - 1);
+
+  /* ---------- ambient notes ---------- */
+  setTimeout(function () {
+    showNote(isWeekend ? WEEKEND_NOTE : "Hi beautiful. Yes, this whole site is for you. Yes, every note is from me. There are a lot of them.", 9000);
+  }, 2200);
+
+  function ambient() {
+    var wait = 45000 + Math.random() * 30000;
+    setTimeout(function () {
+      if (!document.hidden) showNote(drawNote());
+      ambient();
+    }, wait);
+  }
+  ambient();
+})();
+</script>
+<!-- /ARTIFACT-BODY -->
+</body>
+</html>
