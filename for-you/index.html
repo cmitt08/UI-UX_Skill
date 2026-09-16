@@ -477,15 +477,6 @@
     background: rgba(226, 132, 158, 0.5);
     border-radius: 2px;
   }
-  .note .sig {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-    margin-top: 6px;
-    font-size: 18px;
-    color: #8A5A2B;
-  }
   .note.leaving { animation: note-out 300ms ease both; }
   @keyframes note-in {
     from { opacity: 0; transform: translateY(24px) rotate(-6deg); }
@@ -608,11 +599,11 @@
         </li>
         <li>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-          <span><strong>How heavy?</strong> Pick a weight where the last 3 reps of each set feel like real work but your form stays pretty (like you). If you could chat through all 15 reps, go a little heavier next set.</span>
+          <span><strong>How heavy?</strong> Pick a weight where the last 3 reps of each set feel like real work but your form stays solid. If you could chat through all 15 reps, go a little heavier next set.</span>
         </li>
         <li>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-          <span><strong>Rest 45–60 seconds between sets.</strong> Long enough to breathe, short enough to keep your heart rate up. Sip water. Text me.</span>
+          <span><strong>Get in, lock in, get out.</strong> Every workout here is about 35–45 minutes. Rest 45–60 seconds between sets — long enough to catch your breath, short enough to keep your heart rate up.</span>
         </li>
       </ul>
     </div>
@@ -651,8 +642,8 @@
   </section>
 
   <footer class="foot">
-    <span class="hand" id="footNote">Made for you, with all my love.</span>
-    <span>Every note on this site is from me. I mean all of them.</span>
+    <span class="hand" id="footNote">Made for you.</span>
+    <span>Every note in here is true.</span>
     <p class="tiny">Weights are suggestions — start lighter than you think and add slowly. Form first, always.<br />
     <button class="linky" id="resetWeek">Start a fresh week (un-check everything)</button></p>
   </footer>
@@ -702,35 +693,25 @@
   }
   var ART = {
     hipthrust: fig('<rect class="e" x="8" y="60" width="26" height="8" rx="2"/><line class="e" x1="12" y1="68" x2="12" y2="106"/><line class="e" x1="30" y1="68" x2="30" y2="106"/><circle class="hd" cx="20" cy="48" r="7"/><path class="f" d="M27 60 L60 54"/><path class="f" d="M60 54 L82 72 L82 106"/><circle class="e" cx="60" cy="46" r="8"/><path class="a" d="M102 66 L102 44"/><path class="ah" d="M102 38 L97 48 L107 48 Z"/>'),
-    rdl: fig('<circle class="hd" cx="24" cy="42" r="7"/><path class="f" d="M60 62 L33 47"/><path class="f" d="M60 62 L57 84 L58 106"/><path class="f" d="M60 62 L66 84 L68 106"/><path class="f" d="M36 50 L40 80"/><line class="e" x1="30" y1="83" x2="50" y2="83" stroke-width="7"/><path class="a" d="M88 82 Q96 62 84 48"/><path class="ah" d="M82 42 L80 53 L90 50 Z"/>'),
-    bulgarian: fig('<rect class="e" x="82" y="72" width="30" height="7" rx="2"/><line class="e" x1="87" y1="79" x2="87" y2="106"/><line class="e" x1="107" y1="79" x2="107" y2="106"/><circle class="hd" cx="55" cy="26" r="7"/><path class="f" d="M53 36 L50 62"/><path class="f" d="M50 62 L70 80 L92 70"/><path class="f" d="M50 62 L38 84 L36 106"/><path class="f" d="M52 42 L46 62"/><line class="e" x1="38" y1="64" x2="54" y2="64" stroke-width="7"/>'),
     kickback: fig('<line class="e" x1="20" y1="26" x2="20" y2="106"/><circle class="hd" cx="38" cy="38" r="7"/><path class="f" d="M44 48 L62 64"/><path class="f" d="M44 48 L26 50"/><path class="f" d="M62 64 L60 106"/><path class="f" d="M62 64 L90 48"/><path class="a" d="M76 74 Q92 68 96 54"/><path class="ah" d="M98 48 L90 55 L100 60 Z"/>'),
-    sumo: fig('<circle class="hd" cx="60" cy="32" r="7"/><path class="f" d="M60 42 L60 68"/><path class="f" d="M60 68 L34 82 L30 106"/><path class="f" d="M60 68 L86 82 L90 106"/><path class="f" d="M60 48 L60 76"/><line class="e" x1="52" y1="80" x2="68" y2="80" stroke-width="7"/>'),
-    crunch: fig('<circle class="hd" cx="28" cy="76" r="7"/><path class="f" d="M36 82 Q46 92 56 98"/><path class="f" d="M56 98 L74 76 L86 98"/><path class="f" d="M36 84 L44 76"/><path class="a" d="M18 64 Q26 54 38 56"/><path class="ah" d="M44 58 L34 52 L34 62 Z"/>'),
-    legraise: fig('<circle class="hd" cx="14" cy="92" r="7"/><path class="f" d="M22 98 L56 98"/><path class="f" d="M56 98 L84 62"/><path class="f" d="M28 98 L44 98"/><path class="a" d="M96 92 Q98 76 90 66"/><path class="ah" d="M86 60 L86 71 L96 67 Z"/>'),
-    plank: fig('<circle class="hd" cx="24" cy="70" r="7"/><path class="f" d="M32 78 L66 84 L98 100"/><path class="f" d="M34 80 L30 96 L14 96"/><path class="f" d="M40 81 L36 96 L20 96"/>'),
-    benchpress: fig('<rect class="e" x="26" y="84" width="66" height="7" rx="2"/><line class="e" x1="34" y1="91" x2="34" y2="106"/><line class="e" x1="84" y1="91" x2="84" y2="106"/><circle class="hd" cx="34" cy="76" r="7"/><path class="f" d="M44 80 L72 80"/><path class="f" d="M72 80 L84 92 L88 106"/><path class="f" d="M48 80 L48 52"/><line class="e" x1="38" y1="50" x2="58" y2="50" stroke-width="7"/><path class="a" d="M70 62 L70 44"/><path class="ah" d="M70 38 L65 48 L75 48 Z"/>'),
-    inclinepress: fig('<path class="e" d="M26 94 L52 62"/><line class="e" x1="30" y1="90" x2="30" y2="106"/><line class="e" x1="52" y1="92" x2="70" y2="92"/><circle class="hd" cx="34" cy="56" r="7"/><path class="f" d="M40 64 L58 86"/><path class="f" d="M58 86 L76 92 L82 106"/><path class="f" d="M44 68 L54 42"/><line class="e" x1="46" y1="38" x2="64" y2="42" stroke-width="7"/><path class="a" d="M74 54 L80 34"/><path class="ah" d="M82 28 L74 36 L84 40 Z"/>'),
-    fly: fig('<rect class="e" x="30" y="86" width="60" height="7" rx="2"/><circle class="hd" cx="38" cy="78" r="7"/><path class="f" d="M48 82 L74 82"/><path class="f" d="M74 82 L84 94 L88 106"/><path class="f" d="M58 82 L34 56"/><path class="f" d="M58 82 L84 56"/><circle class="e" cx="31" cy="52" r="5"/><circle class="e" cx="87" cy="52" r="5"/><path class="a" d="M40 40 Q59 28 78 40"/><path class="ah" d="M84 44 L76 36 L72 46 Z"/>'),
+    legpress: fig('<path class="e" d="M16 94 L42 66"/><line class="e" x1="20" y1="90" x2="20" y2="106"/><path class="e" d="M84 38 L102 72" stroke-width="6"/><circle class="hd" cx="24" cy="58" r="7"/><path class="f" d="M30 64 L46 84"/><path class="f" d="M46 84 L66 60 L86 52"/><path class="a" d="M72 30 L88 24"/><path class="ah" d="M94 22 L83 20 L86 30 Z"/>'),
+    abduction: fig('<rect class="e" x="44" y="84" width="32" height="6" rx="2"/><circle class="hd" cx="60" cy="34" r="7"/><path class="f" d="M60 44 L60 80"/><path class="f" d="M60 80 L40 88 L38 106"/><path class="f" d="M60 80 L80 88 L82 106"/><path class="a" d="M30 82 L16 76"/><path class="ah" d="M10 74 L18 82 L22 72 Z"/><path class="a" d="M90 82 L104 76"/><path class="ah" d="M110 74 L98 72 L102 82 Z"/>'),
+    adductor: fig('<rect class="e" x="44" y="84" width="32" height="6" rx="2"/><circle class="hd" cx="60" cy="34" r="7"/><path class="f" d="M60 44 L60 80"/><path class="f" d="M60 80 L40 88 L38 106"/><path class="f" d="M60 80 L80 88 L82 106"/><path class="a" d="M16 76 L28 82"/><path class="ah" d="M34 85 L25 88 L27 78 Z"/><path class="a" d="M104 76 L92 82"/><path class="ah" d="M86 85 L93 78 L95 88 Z"/>'),
+    abmachine: fig('<path class="e" d="M70 52 L70 88 L44 88"/><circle class="hd" cx="42" cy="52" r="7"/><path class="f" d="M62 84 Q58 66 48 58"/><path class="f" d="M50 60 L44 44"/><line class="e" x1="38" y1="40" x2="50" y2="38" stroke-width="4"/><path class="f" d="M62 84 L46 92 L44 106"/><path class="a" d="M28 50 Q22 62 30 72"/><path class="ah" d="M34 78 L24 74 L32 66 Z"/>'),
+    captains: fig('<line class="e" x1="86" y1="24" x2="86" y2="106"/><path class="e" d="M60 46 L86 46"/><circle class="hd" cx="52" cy="32" r="7"/><path class="f" d="M56 42 L58 70"/><path class="f" d="M57 46 L68 48"/><path class="f" d="M58 70 L38 62"/><path class="f" d="M38 62 L40 80"/><path class="a" d="M24 84 Q18 68 26 56"/><path class="ah" d="M30 50 L20 54 L28 62 Z"/>'),
+    woodchop: fig('<line class="e" x1="100" y1="20" x2="100" y2="106"/><circle class="hd" cx="46" cy="30" r="7"/><path class="f" d="M50 40 L52 72"/><path class="f" d="M52 72 L42 106"/><path class="f" d="M52 72 L62 106"/><path class="f" d="M52 46 L74 42"/><path class="e" d="M76 42 L100 34" stroke-width="3"/><path class="a" d="M72 54 Q54 66 40 82"/><path class="ah" d="M36 88 L40 77 L48 84 Z"/>'),
+    chestpress: fig('<path class="e" d="M30 46 L30 92 L52 92"/><circle class="hd" cx="40" cy="36" r="7"/><path class="f" d="M42 46 L44 78"/><path class="f" d="M44 78 L62 82 L64 106"/><path class="f" d="M43 52 L72 54"/><line class="e" x1="74" y1="46" x2="74" y2="62"/><path class="a" d="M86 54 L102 54"/><path class="ah" d="M108 54 L98 49 L98 59 Z"/>'),
+    pecdeck: fig('<circle class="hd" cx="60" cy="30" r="7"/><path class="f" d="M60 40 L60 78"/><path class="f" d="M60 78 L46 106"/><path class="f" d="M60 78 L74 106"/><path class="f" d="M60 46 L40 50 L36 30"/><path class="f" d="M60 46 L80 50 L84 30"/><line class="e" x1="30" y1="26" x2="30" y2="52"/><line class="e" x1="90" y1="26" x2="90" y2="52"/><path class="a" d="M38 20 Q48 12 54 18"/><path class="ah" d="M58 22 L50 14 L46 24 Z"/>'),
     pushdown: fig('<line class="e" x1="76" y1="14" x2="76" y2="42"/><circle class="hd" cx="52" cy="38" r="7"/><path class="f" d="M52 48 L50 76"/><path class="f" d="M50 76 L44 106"/><path class="f" d="M50 76 L58 106"/><path class="f" d="M53 52 L64 62 L74 76"/><path class="e" d="M76 42 L74 76" stroke-width="3"/><path class="a" d="M94 58 L94 80"/><path class="ah" d="M94 86 L89 76 L99 76 Z"/>'),
-    overhead: fig('<circle class="hd" cx="56" cy="42" r="7"/><path class="f" d="M56 52 L56 78"/><path class="f" d="M56 78 L50 106"/><path class="f" d="M56 78 L64 106"/><path class="f" d="M56 54 L68 36 L52 24"/><line class="e" x1="44" y1="20" x2="58" y2="26" stroke-width="7"/><path class="a" d="M84 40 L84 20"/><path class="ah" d="M84 14 L79 24 L89 24 Z"/>'),
-    dips: fig('<rect class="e" x="8" y="64" width="30" height="7" rx="2"/><line class="e" x1="13" y1="71" x2="13" y2="106"/><line class="e" x1="33" y1="71" x2="33" y2="106"/><circle class="hd" cx="48" cy="58" r="7"/><path class="f" d="M50 68 L54 86"/><path class="f" d="M54 86 L76 82 L86 106"/><path class="f" d="M49 70 L40 84 L38 68"/><path class="a" d="M102 84 L102 64"/><path class="ah" d="M102 58 L97 68 L107 68 Z"/>'),
-    incline: fig('<path class="e" d="M14 98 L98 70"/><path class="e" d="M14 98 L14 106 M98 70 L98 106" stroke-width="3"/><circle class="hd" cx="56" cy="38" r="7"/><path class="f" d="M56 48 L58 68"/><path class="f" d="M58 68 L46 84 L44 92"/><path class="f" d="M58 68 L70 80 L74 76"/><path class="f" d="M56 52 L46 62"/><path class="f" d="M57 52 L68 58"/><path class="a" d="M84 44 L98 38"/><path class="ah" d="M104 36 L93 34 L96 44 Z"/>'),
-    bicycle: fig('<circle class="hd" cx="26" cy="74" r="7"/><path class="f" d="M34 80 Q46 90 58 96"/><path class="f" d="M58 96 L74 74 L64 60"/><path class="f" d="M58 96 L92 84"/><path class="f" d="M36 82 L62 72"/><path class="a" d="M76 50 Q88 44 98 50"/><path class="ah" d="M102 54 L94 46 L90 56 Z"/>'),
-    twist: fig('<circle class="hd" cx="42" cy="52" r="7"/><path class="f" d="M46 62 L56 88"/><path class="f" d="M56 88 L78 72 L92 60"/><path class="f" d="M48 66 L28 74"/><circle class="e" cx="22" cy="76" r="6"/><path class="a" d="M20 92 Q34 100 48 96"/><path class="ah" d="M54 94 L43 92 L46 102 Z"/>'),
-    climber: fig('<circle class="hd" cx="22" cy="62" r="7"/><path class="f" d="M28 70 L62 68 L98 98"/><path class="f" d="M30 72 L26 90 L24 104"/><path class="f" d="M62 68 L46 84 L42 80"/><path class="a" d="M52 96 L36 96"/><path class="ah" d="M30 96 L40 91 L40 101 Z"/>'),
-    deadbug: fig('<circle class="hd" cx="30" cy="92" r="7"/><path class="f" d="M40 96 L68 96"/><path class="f" d="M44 96 L44 64"/><path class="f" d="M68 96 L98 82"/><path class="f" d="M64 96 L76 74 L88 66"/><path class="a" d="M32 58 L44 52"/><path class="ah" d="M50 50 L39 48 L42 58 Z"/>'),
+    machinedip: fig('<line class="e" x1="28" y1="28" x2="28" y2="106"/><path class="e" d="M28 56 L48 56"/><rect class="e" x="50" y="90" width="28" height="6" rx="2"/><circle class="hd" cx="60" cy="28" r="7"/><path class="f" d="M60 38 L60 70"/><path class="f" d="M60 44 L46 56"/><path class="f" d="M60 70 L70 86 L70 92"/><path class="a" d="M94 66 L94 46"/><path class="ah" d="M94 40 L89 50 L99 50 Z"/>'),
     pulldown: fig('<path class="e" d="M32 22 L88 22"/><line class="e" x1="60" y1="10" x2="60" y2="22" stroke-width="3"/><rect class="e" x="44" y="88" width="32" height="6" rx="2"/><circle class="hd" cx="60" cy="44" r="7"/><path class="f" d="M60 54 L60 84"/><path class="f" d="M60 84 L46 92 L44 106"/><path class="f" d="M60 84 L74 92 L76 106"/><path class="f" d="M58 56 L38 26"/><path class="f" d="M62 56 L82 26"/><path class="a" d="M100 44 L100 64"/><path class="ah" d="M100 70 L95 60 L105 60 Z"/>'),
     row: fig('<line class="e" x1="102" y1="46" x2="102" y2="106"/><circle class="hd" cx="41" cy="46" r="7"/><path class="f" d="M45 56 L50 86"/><path class="f" d="M50 86 L74 82 L90 90"/><path class="f" d="M47 62 L64 70"/><path class="e" d="M64 70 L100 70" stroke-width="3"/><path class="a" d="M78 56 L58 52"/><path class="ah" d="M52 51 L62 47 L62 57 Z"/>'),
-    onearmrow: fig('<rect class="e" x="14" y="78" width="42" height="7" rx="2"/><line class="e" x1="20" y1="85" x2="20" y2="106"/><line class="e" x1="50" y1="85" x2="50" y2="106"/><circle class="hd" cx="86" cy="48" r="7"/><path class="f" d="M32 60 L76 54"/><path class="f" d="M34 60 L30 76"/><path class="f" d="M36 60 L42 76"/><path class="f" d="M66 56 L70 74"/><line class="e" x1="62" y1="78" x2="78" y2="78" stroke-width="7"/><path class="a" d="M96 76 L96 60"/><path class="ah" d="M96 54 L91 64 L101 64 Z"/>'),
     facepull: fig('<line class="e" x1="102" y1="26" x2="102" y2="106"/><circle class="hd" cx="42" cy="40" r="7"/><path class="f" d="M46 50 L48 80"/><path class="f" d="M48 80 L40 106"/><path class="f" d="M48 80 L58 106"/><path class="f" d="M48 52 L62 44 L70 48"/><path class="e" d="M70 48 L100 46" stroke-width="3"/><path class="a" d="M84 60 L64 60"/><path class="ah" d="M58 60 L68 55 L68 65 Z"/>'),
-    curl: fig('<circle class="hd" cx="54" cy="34" r="7"/><path class="f" d="M54 44 L54 76"/><path class="f" d="M54 76 L46 106"/><path class="f" d="M54 76 L62 106"/><path class="f" d="M54 48 L58 68 L74 56"/><line class="e" x1="70" y1="50" x2="82" y2="60" stroke-width="7"/><path class="a" d="M88 74 Q92 62 84 52"/><path class="ah" d="M80 46 L81 57 L90 52 Z"/>'),
-    hammer: fig('<circle class="hd" cx="54" cy="34" r="7"/><path class="f" d="M54 44 L54 76"/><path class="f" d="M54 76 L46 106"/><path class="f" d="M54 76 L62 106"/><path class="f" d="M54 48 L58 68 L74 62"/><line class="e" x1="76" y1="54" x2="76" y2="68" stroke-width="7"/><path class="a" d="M90 76 Q94 64 86 54"/><path class="ah" d="M82 48 L83 59 L92 54 Z"/>'),
-    goblet: fig('<circle class="hd" cx="58" cy="34" r="7"/><path class="f" d="M58 44 L58 72"/><path class="f" d="M58 72 L38 82 L36 106"/><path class="f" d="M58 72 L78 82 L80 106"/><path class="f" d="M58 48 L58 58"/><line class="e" x1="52" y1="56" x2="64" y2="56" stroke-width="7"/>'),
-    legpress: fig('<path class="e" d="M16 94 L42 66"/><line class="e" x1="20" y1="90" x2="20" y2="106"/><path class="e" d="M84 38 L102 72" stroke-width="6"/><circle class="hd" cx="24" cy="58" r="7"/><path class="f" d="M30 64 L46 84"/><path class="f" d="M46 84 L66 60 L86 52"/><path class="a" d="M72 30 L88 24"/><path class="ah" d="M94 22 L83 20 L86 30 Z"/>'),
-    lunge: fig('<circle class="hd" cx="58" cy="30" r="7"/><path class="f" d="M58 40 L54 70"/><path class="f" d="M54 70 L74 82 L78 106"/><path class="f" d="M54 70 L40 94 L28 102"/><path class="f" d="M57 46 L50 64"/><line class="e" x1="44" y1="66" x2="58" y2="68" stroke-width="7"/><path class="a" d="M92 60 L106 60"/><path class="ah" d="M112 60 L102 55 L102 65 Z"/>'),
+    preacher: fig('<path class="e" d="M34 78 L62 58"/><line class="e" x1="48" y1="70" x2="48" y2="106"/><circle class="hd" cx="30" cy="38" r="7"/><path class="f" d="M32 48 L34 76"/><path class="f" d="M34 76 L30 106"/><path class="f" d="M34 52 L52 64"/><path class="f" d="M52 64 L62 44"/><line class="e" x1="58" y1="40" x2="68" y2="46" stroke-width="7"/><path class="a" d="M78 60 Q80 46 70 38"/><path class="ah" d="M64 34 L68 44 L75 38 Z"/>'),
+    cablecurl: fig('<line class="e" x1="98" y1="60" x2="98" y2="106"/><circle class="e" cx="98" cy="98" r="4"/><circle class="hd" cx="50" cy="32" r="7"/><path class="f" d="M52 42 L52 76"/><path class="f" d="M52 76 L44 106"/><path class="f" d="M52 76 L60 106"/><path class="f" d="M52 48 L56 66 L70 58"/><path class="e" d="M72 58 L96 96" stroke-width="3"/><path class="a" d="M84 70 Q88 56 78 46"/><path class="ah" d="M74 42 L76 52 L84 48 Z"/>'),
+    hacksquat: fig('<path class="e" d="M56 24 L92 78"/><path class="e" d="M92 78 L100 76" stroke-width="3"/><rect class="e" x="30" y="96" width="44" height="6" rx="2"/><circle class="hd" cx="52" cy="34" r="7"/><path class="f" d="M60 42 L76 66"/><path class="f" d="M76 66 L54 74 L50 94"/><path class="f" d="M62 46 L56 56"/><path class="a" d="M34 62 L46 42"/><path class="ah" d="M50 36 L40 40 L48 48 Z"/>'),
+    legext: fig('<path class="e" d="M34 48 L34 86 L58 86"/><circle class="hd" cx="42" cy="38" r="7"/><path class="f" d="M44 48 L46 82"/><path class="f" d="M46 82 L64 84"/><path class="f" d="M64 84 L86 64"/><circle class="e" cx="82" cy="70" r="5"/><path class="a" d="M96 86 Q100 72 90 60"/><path class="ah" d="M86 54 L88 65 L97 60 Z"/>'),
     legcurl: fig('<rect class="e" x="16" y="80" width="64" height="7" rx="2"/><line class="e" x1="24" y1="87" x2="24" y2="106"/><line class="e" x1="70" y1="87" x2="70" y2="106"/><circle class="hd" cx="24" cy="72" r="7"/><path class="f" d="M34 78 L72 78"/><path class="f" d="M72 78 L86 80 L80 58"/><path class="a" d="M100 74 Q100 58 88 52"/><path class="ah" d="M82 48 L88 58 L94 50 Z"/>'),
-    abduction: fig('<rect class="e" x="44" y="84" width="32" height="6" rx="2"/><circle class="hd" cx="60" cy="34" r="7"/><path class="f" d="M60 44 L60 80"/><path class="f" d="M60 80 L40 88 L38 106"/><path class="f" d="M60 80 L80 88 L82 106"/><path class="a" d="M30 82 L16 76"/><path class="ah" d="M10 74 L18 82 L22 72 Z"/><path class="a" d="M90 82 L104 76"/><path class="ah" d="M110 74 L98 72 L102 82 Z"/>'),
     calf: fig('<rect class="e" x="36" y="94" width="48" height="12" rx="2"/><circle class="hd" cx="56" cy="26" r="7"/><path class="f" d="M56 36 L56 64"/><path class="f" d="M56 64 L52 88 L50 93"/><path class="f" d="M56 64 L62 88 L60 93"/><path class="a" d="M82 52 L82 34"/><path class="ah" d="M82 28 L77 38 L87 38 Z"/>')
   };
 
@@ -739,199 +720,174 @@
     {
       id: "mon", short: "Mon", label: "Legs + Abs",
       title: "Monday — Legs & Abs",
-      why: "The butt-heavy one, exactly like you asked. Higher reps and moderate weight to lift and shape, plus a little ab work to finish. This is the day that builds the peach.",
-      time: "≈ 50 min",
-      warmup: "Warm up: 5 easy minutes walking on the treadmill, then do your first exercise once with a very light weight before your real sets.",
-      finisher: "Finisher: 10 minutes of incline walking, easy pace. Shake your legs out — you earned it.",
+      why: "The butt-heavy one, exactly like you asked. Four machines for your lower half — biggest one first — then two quick ab stations and you're out the door.",
+      time: "≈ 40 min",
+      warmup: "Warm up: 5 easy minutes on the treadmill, then do your first machine once on a light setting before your real sets.",
+      finisher: "Optional: 5 minutes of easy incline walking if you have the time. If not, you're done — head home proud.",
       exercises: [
-        { name: "Hip Thrusts", art: "hipthrust", sets: "3 sets × 12 reps", feel: "your butt (this is THE one)",
-          steps: ["Sit on the floor with your upper back against a bench, feet flat, knees bent.", "Rest a barbell or dumbbell across your hips (use a pad — comfort matters).", "Push through your heels and lift your hips until your body is flat like a table. Squeeze your butt hard at the top for 1 second.", "Lower slowly and repeat. If your hamstrings take over, move your feet a little closer."] },
-        { name: "Romanian Deadlifts", art: "rdl", sets: "3 sets × 12 reps", feel: "the back of your thighs + butt",
-          steps: ["Stand tall holding dumbbells in front of your thighs, feet hip-width.", "Keep a tiny bend in your knees and your back flat, then push your hips backwards — like closing a car door with your butt.", "Slide the weights down your legs until you feel a stretch behind your thighs (usually just below the knee).", "Squeeze your butt to stand back up. The move is hips back, not bending down."] },
-        { name: "Bulgarian Split Squats", art: "bulgarian", sets: "3 sets × 10 each leg", feel: "butt + thighs (the wobbly one — that's normal)",
-          steps: ["Stand a big step in front of a bench and put the top of one foot behind you on it.", "Hold a dumbbell in each hand (or none the first week — these are hard).", "Drop your back knee straight down toward the floor, keeping your chest up.", "Push through your front heel to stand. Do all reps, then switch legs. Wobbling is part of it, I promise."] },
-        { name: "Cable Kickbacks", art: "kickback", sets: "3 sets × 15 each leg", feel: "the top of your butt",
-          steps: ["Strap the ankle cuff on at the cable machine (or loop a band around your ankle at home).", "Hold the frame, lean slightly forward, soft bend in your standing knee.", "Kick your leg straight back and a little up, squeezing your butt at the top.", "Come back with control — don't let the cable yank you. All reps, then switch."] },
-        { name: "Sumo Squats", art: "sumo", sets: "3 sets × 12 reps", feel: "inner thighs + butt",
-          steps: ["Stand with feet wider than your shoulders, toes pointed out like a duck (a cute duck).", "Hold one dumbbell with both hands, hanging in front of you.", "Sit straight down between your legs, chest tall, until thighs are about parallel.", "Drive through your heels to stand and squeeze at the top."] },
-        { name: "Crunches", art: "crunch", sets: "3 sets × 15 reps", feel: "the front of your abs",
-          steps: ["Lie on your back, knees bent, feet flat, fingertips lightly behind your ears.", "Curl your shoulders up toward the ceiling — small move, you're not sitting all the way up.", "Exhale and squeeze your abs at the top, then lower slowly.", "Don't pull on your neck. Your abs do the work, not your hands."] },
-        { name: "Lying Leg Raises", art: "legraise", sets: "3 sets × 12 reps", feel: "your lower abs",
-          steps: ["Lie flat on your back, hands tucked under your hips for support.", "Keep your legs straight (small knee bend is fine) and lift them up to point at the ceiling.", "Lower them slowly until they hover just above the floor — don't let them touch.", "If your lower back arches up, don't lower as far. That's the rule."] },
-        { name: "Plank", art: "plank", sets: "3 holds × 30 sec", feel: "everything, in the best way",
-          steps: ["Forearms on the floor, elbows under shoulders, legs stretched out behind you.", "Make one straight line from your head to your heels — no hips sagging, no butt in the air.", "Squeeze your abs and your butt, and breathe. Don't hold your breath.", "Shaking at 20 seconds means it's working, not that you're failing."] }
+        { name: "Hip Thrust Machine", art: "hipthrust", sets: "3 sets × 12 reps", feel: "your butt (this is THE one)",
+          steps: ["Sit in the hip thrust machine (sometimes called the glute drive) with your upper back on the pad, and pull the belt snug across your hips.", "Plant your feet flat, about hip-width apart, knees bent.", "Push through your heels and drive your hips up until your body is flat like a table. Squeeze your butt hard for a full second at the top.", "Lower slowly and repeat. If your gym doesn't have this machine, the same move works with your upper back on a bench."] },
+        { name: "Leg Press — Feet High", art: "legpress", sets: "3 sets × 12 reps", feel: "your butt + the back of your thighs",
+          steps: ["Sit in the leg press and put your feet HIGH on the platform, shoulder-width apart. Feet high is what makes this a butt exercise instead of a thigh exercise.", "Release the handles and lower the platform slowly until your knees come toward your chest.", "Press through your heels until your legs are almost straight — never snap them fully locked.", "Slow on the way down, strong on the way up."] },
+        { name: "Cable Kickbacks", art: "kickback", sets: "3 sets × 12 each leg", feel: "the top of your butt",
+          steps: ["Strap the ankle cuff on at the cable machine, set low.", "Hold the frame, lean slightly forward, soft bend in your standing knee.", "Kick your leg straight back and a little up, squeezing your butt at the top.", "Come back with control — don't let the cable yank you. All reps, then switch legs."] },
+        { name: "Hip Abduction Machine", art: "abduction", sets: "3 sets × 15 reps", feel: "the sides of your butt",
+          steps: ["Sit in the abduction machine (the push-apart one) with the pads on the outside of your knees.", "Sit tall and hold the handles.", "Press your knees apart as far as the machine lets you, and pause out there for a second.", "Come back with control. Lean slightly forward to feel it even more."] },
+        { name: "Ab Crunch Machine", art: "abmachine", sets: "3 sets × 15 reps", feel: "the front of your abs",
+          steps: ["Sit in the ab crunch machine and set the seat so the pads sit at your chest (or hold the handles above your shoulders, depending on the machine).", "Exhale and curl your chest down toward your hips.", "Pause for a second at the bottom with your abs squeezed.", "Come back up slowly. Pick a weight where 15 reps burns — your abs should do all the work, not your arms."] },
+        { name: "Captain's Chair Knee Raises", art: "captains", sets: "3 sets × 12 reps", feel: "your lower abs",
+          steps: ["Find the captain's chair — the tall frame with armrests and no seat. Forearms on the pads, back flat against the backrest.", "Let your legs hang straight down.", "Lift your knees up toward your chest without swinging.", "Lower slowly until your legs hang straight again. Slower is better."] }
       ]
     },
     {
       id: "tue", short: "Tue", label: "Chest + Tri",
       title: "Tuesday — Chest & Triceps",
-      why: "This day firms up your chest and the back of your arms — the exact spots that make tank tops and sundresses look even better on you (a high bar, honestly).",
-      time: "≈ 45 min",
-      warmup: "Warm up: 5 easy minutes of cardio, then your first exercise with the lightest dumbbells on the rack.",
-      finisher: "Finisher: give me 10 slow push-ups from your knees. Full stop at the bottom. You'll hate me for 60 seconds and thank me in 6 weeks.",
+      why: "Chest and the back of your arms, all on machines — two presses, two triceps stations, done. This is the quickest day of the week.",
+      time: "≈ 35 min",
+      warmup: "Warm up: 5 easy minutes of cardio, then one light set on the chest press before the real ones.",
+      finisher: "Before you leave: a 30-second chest stretch in a doorway, each side. That's it — quick day.",
       exercises: [
-        { name: "Dumbbell Bench Press", art: "benchpress", sets: "3 sets × 12 reps", feel: "your chest + the back of your arms",
-          steps: ["Lie on a flat bench with a dumbbell in each hand at chest level, palms facing forward.", "Press both weights straight up until your arms are almost locked out.", "Lower slowly for 2 seconds until your elbows drop just below the bench.", "Keep your feet planted and your lower back gently arched — you're stable, not stiff."] },
-        { name: "Incline Dumbbell Press", art: "inclinepress", sets: "3 sets × 12 reps", feel: "the upper part of your chest",
-          steps: ["Set the bench to a low incline (about 30° — two or three notches up).", "Start with dumbbells at your shoulders, palms forward.", "Press up and slightly back so the weights finish above your face — not your belly.", "Lower with control. Go lighter than flat bench; incline is always harder."] },
-        { name: "Chest Flys", art: "fly", sets: "3 sets × 15 reps", feel: "a stretch across your whole chest",
-          steps: ["Lie on a flat bench with light dumbbells pressed up over your chest, palms facing each other.", "With a slight bend in your elbows, open your arms wide like you're giving someone a big hug in reverse.", "Stop when you feel a nice stretch across your chest — no deeper.", "Bring the weights back together like you're hugging a tree. (Or me. Preferably me.)"] },
+        { name: "Chest Press Machine", art: "chestpress", sets: "3 sets × 12 reps", feel: "your chest + the back of your arms",
+          steps: ["Set the seat so the handles line up with the middle of your chest.", "Grab the handles and press them forward until your arms are almost straight.", "Bring them back slowly until you feel a light stretch across your chest.", "Keep your back against the pad the whole time — no arching off it."] },
+        { name: "Pec Deck (Chest Fly Machine)", art: "pecdeck", sets: "3 sets × 15 reps", feel: "a stretch across your whole chest",
+          steps: ["Sit tall with your back flat on the pad and grab the two arms of the machine.", "With a slight bend in your elbows, bring the arms together in front of your chest.", "Squeeze for a second when they meet in the middle.", "Open back up slowly until you feel the stretch — no further than that."] },
         { name: "Triceps Rope Pushdowns", art: "pushdown", sets: "3 sets × 15 reps", feel: "the back of your upper arms",
-          steps: ["Stand at the cable machine with the rope attachment set high.", "Grab the rope, pin your elbows to your sides — they're glued there the whole set.", "Push your hands down until your arms are straight, and pull the rope ends apart at the bottom.", "Let it come back up slowly. If your elbows drift forward, the weight's too heavy."] },
-        { name: "Overhead Triceps Extensions", art: "overhead", sets: "3 sets × 12 reps", feel: "a deep stretch in the back of your arms",
-          steps: ["Hold one dumbbell with both hands and press it above your head.", "Keeping your elbows close to your ears, lower the weight slowly behind your head.", "Stop when you feel the stretch, then press back up until your arms are straight.", "Keep your ribs down and abs on — no leaning back like a banana."] },
-        { name: "Bench Dips", art: "dips", sets: "3 sets × 10 reps", feel: "back of the arms + a little chest",
-          steps: ["Sit on the edge of a bench, hands next to your hips gripping the edge.", "Walk your feet out and slide your butt off the bench.", "Bend your elbows straight back and lower yourself a few inches.", "Push back up. Bend your knees more to make it easier — that's not cheating, that's smart."] }
+          steps: ["Stand at the cable machine with the rope attachment set high.", "Grab the rope and pin your elbows to your sides — they stay glued there the whole set.", "Push your hands down until your arms are straight, and pull the rope ends apart at the bottom.", "Let it come back up slowly. If your elbows drift forward, the weight is too heavy."] },
+        { name: "Assisted Dip Machine", art: "machinedip", sets: "3 sets × 10 reps", feel: "back of the arms + a little chest",
+          steps: ["At the assisted dip machine, set the counterweight — heavier counterweight means easier dips. Start around half your body weight and adjust.", "Kneel or stand on the pad, grab the dip handles, arms straight.", "Bend your elbows and lower yourself until your upper arms are about level with the floor.", "Press back up. No machine at your gym? Bench dips do the same job: hands on a bench behind you, bend and press."] }
       ]
     },
     {
       id: "wed", short: "Wed", label: "Cardio + Abs",
       title: "Wednesday — Cardio & Abs",
-      why: "The middle of the week is for burning, not lifting. Steady incline walking is the secret weapon for the 'lose a little' part of your goal — low effort feel, high payoff. Then a quick ab circuit.",
-      time: "≈ 45 min",
+      why: "The middle of the week is for the machines that burn, not the ones that lift. One steady cardio machine — your pick — then three quick ab stations and you're out.",
+      time: "≈ 40 min",
       warmup: "Warm up: the first 3 minutes of your walk ARE the warm-up. Start flat and slow, then bring the incline up.",
-      finisher: "Finisher: 5 minutes of stretching. Touch your toes, stretch your hips, be dramatic about it. You've earned dramatics.",
+      finisher: "Before you leave: 3 minutes of stretching. Touch your toes, stretch your hips, head home.",
       cardio: {
         headline: "12 · 3 · 30",
         name: "Incline Treadmill Walk",
-        desc: "Set the treadmill to 12% incline, 3.0 mph speed, and walk for 30 minutes. That's the whole assignment. No running, no misery — just a podcast or a playlist, and walk. Hold the rails only if you truly need to (hovering hands are allowed and encouraged).",
-        or: "Swap it anytime for: 25 min on the stair machine (level 5–7), or a 35 min brisk outside walk if it's pretty out. Same result, your choice."
+        desc: "Set the treadmill to 12% incline, 3.0 mph speed, and walk for 30 minutes. That's the whole assignment. No running, no misery — just a podcast or a playlist, and walk. Hold the rails only if you truly need to.",
+        or: "Swap it anytime for 20–25 minutes on the stairmaster (level 5–7). Pick whichever machine you're in the mood for — same result."
       },
-      circuitNote: "Then the ab circuit: do the 4 moves below back-to-back with no rest, then rest 60 seconds. Repeat the whole loop 3 times.",
+      circuitNote: "Then abs: three stations, back to back, resting about 45 seconds between sets.",
       exercises: [
-        { name: "Bicycle Crunches", art: "bicycle", sets: "20 total (10 each side)", feel: "abs + the sides of your waist",
-          steps: ["Lie on your back, hands lightly behind your ears, legs lifted with knees bent.", "Bring your right elbow toward your left knee while straightening your right leg.", "Switch sides in a slow pedaling motion — slow is the whole point.", "Twist from your ribs, not your neck. Quality over speed, always."] },
-        { name: "Russian Twists", art: "twist", sets: "20 total (10 each side)", feel: "the sides of your waist",
-          steps: ["Sit on the floor, knees bent, and lean your upper body back until your abs switch on.", "Hold a light dumbbell (or nothing) with both hands at your chest.", "Rotate your shoulders to tap the weight to the floor beside your hip. Then the other side.", "Feet down = easier. Feet floating = spicier. Pick your fighter."] },
-        { name: "Mountain Climbers", art: "climber", sets: "30 seconds", feel: "abs + heart rate going up",
-          steps: ["Start in a push-up position, hands under shoulders, body in a straight line.", "Drive one knee in toward your chest, then quickly swap legs.", "Keep your hips level and low — no bouncing your butt up.", "Steady rhythm beats frantic speed. You're a metronome, not a blender."] },
-        { name: "Dead Bugs", art: "deadbug", sets: "10 each side", feel: "deep abs (the corset ones)",
-          steps: ["Lie on your back, arms pointing at the ceiling, knees bent at 90° over your hips.", "Slowly lower your right arm behind your head and stretch your left leg out — at the same time.", "Stop before your lower back peels off the floor, then come back and switch sides.", "It looks easy. It is not. It's named after a dead bug and it humbles everyone."] }
+        { name: "Ab Crunch Machine", art: "abmachine", sets: "3 sets × 15 reps", feel: "the front of your abs",
+          steps: ["Same machine as Monday: seat set so the pads sit at your chest.", "Exhale and curl your chest down toward your hips.", "Pause for a second at the bottom, abs squeezed.", "Come back up slowly and controlled."] },
+        { name: "Cable Wood Chops", art: "woodchop", sets: "3 sets × 10 each side", feel: "the sides of your waist",
+          steps: ["Set a single handle on the cable machine to shoulder height.", "Stand side-on to the machine, feet shoulder-width, and grab the handle with both hands, arms long.", "Pull the handle down and across your body to your opposite hip, turning your hips as you go — like chopping wood.", "Control it back up. All reps one way, then face the other direction and repeat."] },
+        { name: "Captain's Chair Knee Raises", art: "captains", sets: "3 sets × 12 reps", feel: "your lower abs",
+          steps: ["Forearms on the pads, back flat against the backrest, legs hanging straight down.", "Lift your knees up toward your chest without swinging.", "Lower slowly until your legs hang straight again.", "If 12 gets easy, slow every rep down instead of adding more."] }
       ]
     },
     {
       id: "thu", short: "Thu", label: "Back + Bi",
       title: "Thursday — Back & Biceps",
-      why: "A strong back is what makes you stand taller, look leaner, and feel powerful — posture is instant toning. Plus a little biceps work so your arms match the rest of the masterpiece.",
-      time: "≈ 45 min",
+      why: "A strong back is instant toning — it's what makes you stand taller and look leaner. Three back machines, two quick curl stations, out.",
+      time: "≈ 40 min",
       warmup: "Warm up: 5 easy minutes of cardio, then one light set of lat pulldowns before your real sets.",
-      finisher: "Finisher: hang from the pull-up bar for as long as you can, 2 tries. It stretches everything and secretly builds grip strength. Also it looks cool.",
+      finisher: "Before you leave: hang from the pull-up bar for one long hold. It stretches everything out.",
       exercises: [
         { name: "Lat Pulldowns", art: "pulldown", sets: "3 sets × 12 reps", feel: "the sides of your back (your wings)",
           steps: ["Sit at the machine and tuck your thighs snugly under the pads.", "Grab the bar wider than your shoulders, palms facing away.", "Pull the bar down to your collarbone while your chest lifts up to meet it.", "Let it rise back up slowly — the slow part up is half the exercise."] },
         { name: "Seated Cable Rows", art: "row", sets: "3 sets × 12 reps", feel: "the middle of your back",
           steps: ["Sit at the row machine, feet on the plates, knees slightly bent.", "Grab the handle and sit tall — proud chest, shoulders down.", "Pull the handle to your belly button, squeezing your shoulder blades together like they're holding a pencil.", "Stretch forward slowly to return. Don't rock back and forth — the weight moves, you don't."] },
-        { name: "One-Arm Dumbbell Rows", art: "onearmrow", sets: "3 sets × 10 each arm", feel: "one side of your back at a time",
-          steps: ["Put your left knee and left hand on a bench, right foot on the floor. Back flat like a coffee table.", "Hold a dumbbell in your right hand, arm hanging straight down.", "Pull the weight up to your hip — elbow sliding along your side, not flaring out.", "Lower slowly. All reps, then switch sides. No twisting to heave it up."] },
         { name: "Face Pulls", art: "facepull", sets: "3 sets × 15 reps", feel: "the back of your shoulders",
-          steps: ["Set a rope attachment at face height on the cable machine.", "Grab the ends with your thumbs pointing back toward you.", "Pull the rope toward your face, elbows high and wide, like you're double-flexing.", "Squeeze your shoulder blades, then return slowly. This one is posture magic — do not skip it."] },
-        { name: "Dumbbell Bicep Curls", art: "curl", sets: "3 sets × 12 reps", feel: "the front of your arms",
-          steps: ["Stand tall with a dumbbell in each hand, palms facing forward.", "Pin your elbows to your sides and curl the weights up to your shoulders.", "Squeeze at the top for one second.", "Lower slowly — take 2 full seconds on the way down. No swinging; if you're swinging, go lighter."] },
-        { name: "Hammer Curls", art: "hammer", sets: "3 sets × 12 reps", feel: "arms + forearms",
-          steps: ["Same as regular curls, but hold the dumbbells like hammers — palms facing each other the whole time.", "Elbows stay pinned to your sides.", "Curl up, squeeze, lower slow.", "These finish what regular curls started. Your future sleeveless self says thanks."] }
+          steps: ["Set a rope attachment at face height on the cable machine.", "Grab the ends with your thumbs pointing back toward you.", "Pull the rope toward your face, elbows high and wide.", "Squeeze your shoulder blades, then return slowly. This one is posture magic — don't skip it."] },
+        { name: "Preacher Curl Machine", art: "preacher", sets: "3 sets × 12 reps", feel: "the front of your arms",
+          steps: ["Sit at the preacher curl machine with your upper arms resting on the slanted pad.", "Set the seat so your armpits sit right at the top of the pad.", "Curl the handles up toward your shoulders and squeeze.", "Lower slowly all the way down — the slow part is what tones."] },
+        { name: "Cable Rope Curls", art: "cablecurl", sets: "3 sets × 12 reps", feel: "arms + forearms",
+          steps: ["Clip the rope attachment to the lowest setting on the cable machine.", "Hold the rope ends with your palms facing each other, elbows pinned to your sides.", "Curl up to your shoulders, squeeze, lower slow.", "If you're leaning back to lift it, drop the weight one notch."] }
       ]
     },
     {
       id: "fri", short: "Fri", label: "Legs, again",
       title: "Friday — Leg Day 2",
-      why: "Round two for your lower half — Monday was butt-first, today is thighs-first, so everything gets shaped evenly. Finish this and your whole week is complete. Then it's the weekend, and you're all mine.",
-      time: "≈ 50 min",
-      warmup: "Warm up: 5 easy minutes on the bike or treadmill, then goblet squats with just your bodyweight before adding the dumbbell.",
-      finisher: "Finisher: 10 minutes easy incline walk, then stretch your quads. Week = done. Go be proud of yourself, because I am.",
+      why: "Round two for your lower half — Monday was butt-first, today is thighs-first, so everything gets shaped evenly. Five machines and your week is done.",
+      time: "≈ 40 min",
+      warmup: "Warm up: 5 easy minutes on the bike or treadmill, then one ride down on the hack squat with no added weight.",
+      finisher: "Before you leave: stretch your quads for a minute each side. Week complete — go be proud of yourself.",
       exercises: [
-        { name: "Goblet Squats", art: "goblet", sets: "3 sets × 12 reps", feel: "thighs + butt",
-          steps: ["Hold one dumbbell vertically against your chest like you're cradling a (heavy) baby bird.", "Feet shoulder-width, toes slightly out.", "Sit down and back until your thighs are about parallel with the floor, chest staying tall.", "Drive through your heels to stand up. The dumbbell hug keeps you upright — that's its whole job."] },
-        { name: "Leg Press", art: "legpress", sets: "3 sets × 12 reps", feel: "your whole thighs",
-          steps: ["Sit in the machine with your feet shoulder-width on the platform.", "Release the handles and lower the platform until your knees are near your chest.", "Press through your heels until your legs are almost straight — never slam them locked.", "Feet higher on the platform = more butt. Feet lower = more thigh. Today, go middle."] },
-        { name: "Walking Lunges", art: "lunge", sets: "3 sets × 10 each leg", feel: "thighs + butt (and your balance)",
-          steps: ["Hold a dumbbell in each hand at your sides (or none — lunges don't need help being hard).", "Take a big step forward and lower your back knee toward the floor.", "Both knees should hit about 90° — front knee over your ankle, not your toes.", "Push off your front heel and step straight into the next lunge. Runway walk, but make it burn."] },
+        { name: "Hack Squat Machine", art: "hacksquat", sets: "3 sets × 10 reps", feel: "your whole thighs + butt",
+          steps: ["Step into the hack squat: back flat on the pad, shoulders under the shoulder pads, feet shoulder-width on the platform.", "Stand up to take the weight, then release the safety handles.", "Bend your knees and ride down until your thighs are about parallel with the platform.", "Push through your whole foot to come back up. Start with just the machine's own weight — it's heavier than it looks."] },
+        { name: "Leg Extensions", art: "legext", sets: "3 sets × 12 reps", feel: "the front of your thighs",
+          steps: ["Sit with your back against the pad and hook your shins behind the ankle pad — it should sit just above your ankles.", "Grip the side handles.", "Kick up until your legs are straight, and pause for a second at the top.", "Lower slowly — don't let the weight stack slam down."] },
         { name: "Lying Leg Curls", art: "legcurl", sets: "3 sets × 12 reps", feel: "the back of your thighs",
-          steps: ["Lie face down on the machine with the pad against your lower calves.", "Hold the handles and keep your hips pressed into the bench.", "Curl your heels up toward your butt, squeeze for a second at the top.", "Lower slowly all the way. If your hips pop up, lower the weight."] },
-        { name: "Hip Abductions", art: "abduction", sets: "3 sets × 15 reps", feel: "the sides of your butt",
-          steps: ["Sit in the abduction machine (the push-out one) with the pads outside your knees.", "Sit tall, hold the handles.", "Press your knees apart as far as the machine lets you, and pause out there for a second.", "Come back with control. Lean slightly forward to feel it even more. Yes, everyone feels awkward on this machine. Do it anyway — it's a top-tier butt builder."] },
-        { name: "Standing Calf Raises", art: "calf", sets: "3 sets × 15 reps", feel: "your calves",
-          steps: ["Stand with the balls of your feet on the edge of a step or plate, heels hanging off.", "Hold something for balance with one hand.", "Push up onto your tiptoes as high as you can — pause one second at the top.", "Lower your heels below the step until you feel the stretch. Slow and springy-free."] }
+          steps: ["Lie face down on the machine with the pad against your lower calves.", "Hold the handles and keep your hips pressed into the bench.", "Curl your heels up toward your butt, and squeeze for a second at the top.", "Lower slowly all the way. If your hips pop up, lower the weight."] },
+        { name: "Hip Adduction Machine", art: "adductor", sets: "3 sets × 15 reps", feel: "your inner thighs",
+          steps: ["This is the squeeze-together machine — pads go on the inside of your knees. It's usually right next to Monday's push-apart one.", "Start with your legs apart, sitting tall.", "Squeeze your knees together and pause for a second.", "Open back up with control. This one pairs with Monday's machine — between them, everything gets covered."] },
+        { name: "Standing Calf Raise Machine", art: "calf", sets: "3 sets × 15 reps", feel: "your calves",
+          steps: ["Step under the shoulder pads with the balls of your feet on the edge of the platform, heels hanging off.", "Stand up straight to lift the weight.", "Push up onto your tiptoes as high as you can and pause a second at the top.", "Lower your heels below the platform until you feel the stretch. Slow both ways — no bouncing."] }
       ]
     }
   ];
 
   /* ---------- notes from him ---------- */
   var NOTES = [
-    "Hi. It's me. I built this entire website mostly as an excuse to tell you how pretty you are. Worth it.",
-    "Quick announcement: you're the best-looking person in that gym. It's not close.",
-    "You're somehow even prettier when you're focused. It's very distracting. Keep doing it.",
-    "Reminder from your boyfriend: you light up every room you walk into. Including this one. And it's a website.",
-    "You're doing so good. I'm genuinely, ridiculously proud of you.",
-    "Not to be dramatic, but your smile is my favorite thing on this planet.",
-    "Whatever you're lifting right now — lucky weights.",
-    "You could rest today and I'd still think you're the most impressive person I know.",
-    "Hey gorgeous. Yes, you. Keep going.",
-    "I like you so much it's honestly a little embarrassing for me.",
-    "Someone in that gym is wondering how you make it look that easy. It's everyone. Everyone is wondering.",
-    "You're strong, you're beautiful, and you're mine. I win.",
-    "Just checking in to say your eyes are unfair.",
-    "Every note on this site is different, but they all mean the same thing: I'm crazy about you.",
-    "You didn't need a single one of these workouts. This is all bonus. You were already perfect.",
-    "Drink some water. Beautiful people need water too, and you're extremely beautiful.",
-    "If confidence were a person, it would look like you mid-set.",
-    "I'd cheer out loud right now but I'm a website. Pretend you can hear me. I'm loud.",
-    "You make gym clothes look like a red carpet.",
-    "Your laugh is better than every rest day combined.",
-    "Being your boyfriend is my favorite thing about me.",
-    "That focus face you make? Devastating. In the best possible way.",
-    "You're the kind of pretty that makes people lose their rep count.",
-    "I love watching you take care of yourself. It's my favorite kind of beautiful.",
-    "You're tougher than this workout. You're tougher than most things, honestly.",
-    "Fun fact: I smile every time I think about you. So basically I'm always smiling.",
-    "You have main-character energy and I'm just glad to be in the story.",
-    "Nobody does 'effortlessly stunning' like you do.",
-    "Hey. You. Amazing. That's it, that's the note.",
-    "When you finish today, come tell me everything. I want the full recap.",
-    "The gym gets you for an hour. I get you for everything else. Best deal I've ever made.",
-    "You're proof that pretty and powerful are the same word.",
-    "If they gave out medals for being your kind of wonderful, you'd need a bigger shelf.",
-    "Your future self is already thanking you. So am I. Mostly me.",
-    "I'd pick you first. Every team, every time, everything.",
-    "You're not just my girlfriend, you're my favorite person. It's not even a competition.",
-    "One more set, then remember: someone out here adores you completely. It's me. I'm someone.",
-    "You're beautiful when you're winning and beautiful when you're wiped out. Rigged game, honestly.",
-    "I could write a thousand of these and run out of website before I ran out of reasons.",
-    "Posture check! Not for the exercise — I just know you look elegant when you stand tall. Carry on."
+    "Hi. Just a reminder that you're beautiful.",
+    "You're doing great. Seriously.",
+    "You're the prettiest person in that gym. It's not close.",
+    "Strong looks good on you.",
+    "Proud of you for showing up. Again.",
+    "You make this look easy.",
+    "Thinking about you. As usual.",
+    "You're kind of amazing, you know that?",
+    "Drink some water. Take care of my favorite person.",
+    "Your smile is unfair.",
+    "You didn't need any of this. You were already perfect.",
+    "Keep going. You've got this.",
+    "I like you a lot.",
+    "You're my favorite person.",
+    "That focus face? A very good face.",
+    "You're stronger than you think. Prettier than you know.",
+    "Rest between sets. You've earned the breather.",
+    "You light up rooms. Gyms count.",
+    "Somehow you're even prettier when you're focused.",
+    "I'd pick you first. Every time.",
+    "You're doing better than you think you are.",
+    "Every one of these notes is true.",
+    "Stand tall. It suits you.",
+    "You're the best part of my day.",
+    "Finish strong. You always do.",
+    "I'm lucky. That's it. That's the note.",
+    "Come home and tell me how it went. I want to hear everything.",
+    "Nothing about you is average.",
+    "You're tough. It's one of my favorite things about you.",
+    "Good form. I can just tell.",
+    "Beautiful and disciplined is a rare combo. You have it."
   ];
 
   var PRAISE = [
+    "Nice. One down.",
     "That's my girl.",
-    "Look at you go.",
-    "So strong. So pretty. Unfair.",
-    "One down. You make it look easy.",
-    "Proud of you. Always.",
-    "Smooth. Strong. Gorgeous.",
-    "You're actually crushing this.",
-    "Okay, show-off. I love it.",
-    "Beautiful work, beautiful girl.",
-    "You make this look good.",
-    "My favorite athlete.",
-    "Another one done. You're unreal."
+    "Look at you.",
+    "Making it look easy.",
+    "Strong.",
+    "Proud of you.",
+    "Clean work.",
+    "You're on a roll.",
+    "Another one done.",
+    "Smooth."
   ];
 
   var DAY_DONE = [
-    "You finished the WHOLE workout. I'm so proud of you I could burst. Come here so I can say it in person.",
-    "All done! You're incredible. Genuinely, deeply, ridiculously incredible. And also very, very pretty.",
-    "Every box checked. Strong, gorgeous, disciplined — I really out-punted my coverage with you.",
-    "Look at that — complete. Go drink some water, pretty girl. You were amazing today.",
-    "Workout complete. Final note of the day: you are the whole package and I adore you."
+    "Done — that's the whole workout. In, locked in, out. Proud of you.",
+    "All finished. You're incredible. Go get some water.",
+    "Every box checked. You showed up and did the whole thing. That matters.",
+    "Workout complete. You're amazing. Now go enjoy the rest of your day.",
+    "That's a wrap. Strong, quick, done. You make it look easy."
   ];
 
   var HEART_FOUND = [
-    "You found a heart. I hid it there for you. There are more.",
-    "Another one! Each hidden heart is one reason I like you. I ran out of website for the rest.",
-    "Caught it. That one means 'you're beautiful.' They all mean that.",
-    "This little heart waited all day for you to notice it. Relatable.",
-    "A heart, for the girl who has all of mine."
+    "You found one. There are more hidden around.",
+    "A little heart, just for you.",
+    "Found it. It means you're beautiful. They all mean that.",
+    "That one's been waiting all day for you.",
+    "One heart of many."
   ];
 
-  var SECRET = "You found the secret. Here it is: I loved you before this website existed, and I'll love you long after. Okay — back to your workout, gorgeous.";
-  var WEEKEND_NOTE = "It's the weekend, my love. No workout today. Stretch, walk, nap — Monday will wait for you. I, however, would like to see you immediately.";
+  var SECRET = "You found the secret. I loved you before this website existed, and I'll love you long after. Now back to your workout.";
+  var WEEKEND_NOTE = "It's the weekend. No workout today — rest, stretch, go for a walk. Monday will wait for you.";
 
   /* ---------- note toasts ---------- */
   var noteStack = document.getElementById("noteStack");
@@ -953,8 +909,8 @@
     var n = document.createElement("button");
     n.className = "note";
     n.type = "button";
-    n.setAttribute("aria-label", "A note from your boyfriend. Tap to close.");
-    n.innerHTML = '<span></span><span class="sig">— me ' + heartSVG(15, "#C2496B") + "</span>";
+    n.setAttribute("aria-label", "A note for you. Tap to close.");
+    n.innerHTML = "<span></span>";
     n.firstChild.textContent = text;
     noteStack.appendChild(n);
     var gone = false;
@@ -970,12 +926,12 @@
   /* ---------- storage helpers ---------- */
   function loadDone(dayId) {
     try {
-      var raw = localStorage.getItem("ps-" + dayId);
+      var raw = localStorage.getItem("ps2-" + dayId);
       return raw ? JSON.parse(raw) : {};
     } catch (e) { return {}; }
   }
   function saveDone(dayId, obj) {
-    try { localStorage.setItem("ps-" + dayId, JSON.stringify(obj)); } catch (e) {}
+    try { localStorage.setItem("ps2-" + dayId, JSON.stringify(obj)); } catch (e) {}
   }
 
   /* ---------- render day nav ---------- */
@@ -1191,10 +1147,10 @@
   /* reset week */
   document.getElementById("resetWeek").addEventListener("click", function () {
     try {
-      DAYS.forEach(function (d) { localStorage.removeItem("ps-" + d.id); });
+      DAYS.forEach(function (d) { localStorage.removeItem("ps2-" + d.id); });
     } catch (e) {}
     renderDay(DAYS[currentDay]);
-    showNote("Fresh week, same incredible you. Let's go.", 6000);
+    showNote("Fresh week, same you. Let's go.", 6000);
   });
 
   /* ---------- start on today's workout ---------- */
@@ -1204,7 +1160,7 @@
 
   /* ---------- ambient notes ---------- */
   setTimeout(function () {
-    showNote(isWeekend ? WEEKEND_NOTE : "Hi beautiful. Yes, this whole site is for you. Yes, every note is from me. There are a lot of them.", 9000);
+    showNote(isWeekend ? WEEKEND_NOTE : "Hi. This whole site was made for you. Keep an eye out for the little notes — there are a lot of them.", 9000);
   }, 2200);
 
   function ambient() {
