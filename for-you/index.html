@@ -665,18 +665,26 @@
   "use strict";
 
   /* ============================================================
-     Hey — it's easy to personalize this. Put her name here and
-     the site will greet her with it. Leave "" to keep "gorgeous".
+     The greeting rotates: every time the page opens, "Hi ___."
+     picks one of these at random — never the same one twice in
+     a row. Add or remove any you like.
      ============================================================ */
-  var HER_NAME = "";
+  var GREETINGS = ["Ruby", "Beautiful", "Pretty", "Gorgeous", "Stunning", "Lovely"];
 
   var reducedMotion = false;
   try { reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
 
-  if (HER_NAME) {
+  (function () {
     var hn = document.getElementById("heroName");
-    if (hn) hn.textContent = HER_NAME;
-  }
+    if (!hn) return;
+    var last = "";
+    try { last = localStorage.getItem("ps2-greet") || ""; } catch (e) {}
+    var options = GREETINGS.filter(function (g) { return g !== last; });
+    if (options.length === 0) options = GREETINGS;
+    var g = options[Math.floor(Math.random() * options.length)];
+    hn.textContent = g;
+    try { localStorage.setItem("ps2-greet", g); } catch (e) {}
+  })();
 
   /* ---------- tiny svg helpers ---------- */
   var HEART_PATH = "M12 21s-7.5-4.9-9.7-9C.6 8.9 2 5.3 5.2 4.4c2-.6 4.1.2 5.3 1.9L12 8l1.5-1.7c1.2-1.7 3.3-2.5 5.3-1.9 3.2.9 4.6 4.5 2.9 7.6-2.2 4.1-9.7 9-9.7 9z";
