@@ -2421,40 +2421,131 @@
     });
   }
 
+  var OFFLINE_MSG = "The big cookbook isn't answering right now — no stress. Add it with “+ your own” and your best guess; close enough, consistently, wins.";
+  function emptyMsg(q) {
+    return 'Nothing useful came back for “' + q + '”. Try a simpler word — “meatball” beats a brand name — or use “+ your own” on any meal.';
+  }
+
+  /* Open Food Facts first. Resolves items[] on success (maybe empty),
+     or null when the network is unreachable/blocked. */
+  function fetchOFF(q) {
+    return new Promise(function (resolve) {
+      if (typeof fetch !== "function") { resolve(null); return; }
+      var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+      var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 9000) : null;
+      var url = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=" + encodeURIComponent(q) +
+        "&search_simple=1&action=process&json=1&page_size=12" +
+        "&fields=product_name,brands,nutriments,serving_size";
+      fetch(url, ctrl ? { signal: ctrl.signal } : {})
+        .then(function (r) {
+          if (!r.ok) throw new Error("bad status");
+          return r.json();
+        })
+        .then(function (data) {
+          if (timer) clearTimeout(timer);
+          resolve(parseLookup(data && data.products));
+        })
+        .catch(function () {
+          if (timer) clearTimeout(timer);
+          resolve(null);
+        });
+    });
+  }
+
+  /* When the page is hosted on claude.ai, direct network calls are
+     walled off — but the page may ask Claude itself (the viewer okays
+     it on first use). Claude's typical-values estimates are honest
+     enough for home-cooked things like meatballs. */
+  var samplePromise = null;
+  function getSample() {
+    if (samplePromise === null) {
+      samplePromise = (window.claude && typeof window.claude.use === "function")
+        ? window.claude.use("sample").catch(function () { return null; })
+        : Promise.resolve(null);
+    }
+    return samplePromise;
+  }
+
+  function claudePrompt(q) {
+    return 'Nutrition lookup for a calorie-tracking app. The user searched for: "' + q.slice(0, 80) + '".\n' +
+      'Reply with ONLY a JSON array of 1 to 4 plausible interpretations, most likely first. Each item:\n' +
+      '{"name": string (short food name, e.g. "Beef meatballs, homemade"), ' +
+      '"serving": string (one natural serving, e.g. "3 meatballs (85 g)"), ' +
+      '"cal": integer (calories in that serving), ' +
+      '"protein": integer (grams of protein in that serving)}\n' +
+      'Use realistic typical values for a common or home-cooked version. No text outside the JSON.';
+  }
+
+  function parseClaudeItems(data) {
+    var arr = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : []);
+    var out = [];
+    arr.forEach(function (it) {
+      if (out.length >= 4 || !it) return;
+      var name = String(it.name || "").trim();
+      var serving = String(it.serving || "1 serving").trim();
+      var cal = Math.round(+it.cal);
+      var p = Math.round(+it.protein);
+      if (!name || !(cal > 0) || cal > 2000) return;
+      out.push({
+        name: name.length > 48 ? name.slice(0, 46) + "…" : name,
+        brand: "Claude's estimate",
+        base: { label: serving.slice(0, 40), cal: cal, p: p > 0 && p <= 250 ? p : 0 }
+      });
+    });
+    return out;
+  }
+
+  function askClaude(q, why) {
+    getSample().then(function (sample) {
+      if (searchQ !== q) { lookupBusy = false; return; }
+      if (!sample) {
+        lookupBusy = false;
+        setLookupStatus(why === "empty" ? emptyMsg(q) : OFFLINE_MSG);
+        return;
+      }
+      setLookupStatus("Asking Claude for honest estimates…");
+      sample.json(claudePrompt(q), { modelTier: "quick" })
+        .then(function (data) {
+          lookupBusy = false;
+          if (searchQ !== q) return;
+          var items = parseClaudeItems(data);
+          if (!items.length) { setLookupStatus(emptyMsg(q)); return; }
+          setLookupStatus("Claude's honest estimates — tap one to add it.");
+          renderLookup(items);
+        })
+        .catch(function (e) {
+          lookupBusy = false;
+          if (searchQ !== q) return;
+          var code = e && e.code;
+          if (code === "cancelled") { setLookupStatus(""); return; }
+          if (code === "rate_limited") {
+            setLookupStatus("The cookbook needs a little breather — try again in a minute or two.");
+          } else if (code === "invalid_json") {
+            setLookupStatus("That answer came back scrambled — tap the button to try once more.");
+          } else {
+            setLookupStatus(why === "empty" ? emptyMsg(q) : OFFLINE_MSG);
+          }
+        });
+    });
+  }
+
   lookupBtn.addEventListener("click", function () {
     if (lookupBusy || searchQ.length < 3) return;
     lookupBusy = true;
     lookupResults.innerHTML = "";
     setLookupStatus("Asking the big cookbook…");
     var q = searchQ;
-    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
-    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 9000) : null;
-    var url = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=" + encodeURIComponent(q) +
-      "&search_simple=1&action=process&json=1&page_size=12" +
-      "&fields=product_name,brands,nutriments,serving_size";
-    fetch(url, ctrl ? { signal: ctrl.signal } : {})
-      .then(function (r) {
-        if (!r.ok) throw new Error("bad status");
-        return r.json();
-      })
-      .then(function (data) {
-        if (timer) clearTimeout(timer);
+    fetchOFF(q).then(function (items) {
+      if (searchQ !== q) { lookupBusy = false; return; } /* she kept typing — stale answer */
+      if (items && items.length) {
         lookupBusy = false;
-        if (searchQ !== q) return; /* she kept typing — stale answer */
-        var items = parseLookup(data && data.products);
-        if (!items.length) {
-          setLookupStatus('Nothing useful came back for “' + q + '”. Try a simpler word — “meatball” beats a brand name — or use “+ your own” on any meal.');
-          return;
-        }
         setLookupStatus("From Open Food Facts, the community food database — tap one to add it.");
         renderLookup(items);
-      })
-      .catch(function () {
-        if (timer) clearTimeout(timer);
-        lookupBusy = false;
-        if (searchQ !== q) return;
-        setLookupStatus("The big cookbook isn't answering right now — no stress. Add it with “+ your own” and your best guess; close enough, consistently, wins.");
-      });
+      } else {
+        /* blocked network or an empty shelf — ask Claude instead */
+        askClaude(q, items ? "empty" : "blocked");
+      }
+    });
   });
 
   /* ---------- add modal ---------- */
