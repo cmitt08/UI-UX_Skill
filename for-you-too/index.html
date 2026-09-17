@@ -670,7 +670,7 @@
   .foodbtn .fico svg { width: 100%; height: 100%; }
   .foodbtn .f-name { font-weight: 700; font-size: 14.5px; line-height: 1.25; }
   .foodbtn .f-serv { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .foodbtn .f-cal {
+  .foodbtn .f-cal, .lookup-item .f-cal {
     display: inline-block;
     margin-top: 6px;
     background: var(--accent-soft);
@@ -680,7 +680,7 @@
     border-radius: 999px;
     padding: 2px 10px;
   }
-  .foodbtn .f-prot {
+  .foodbtn .f-prot, .lookup-item .f-prot {
     display: inline-block;
     margin-top: 4px;
     background: var(--good-soft);
@@ -698,6 +698,50 @@
     animation: bob 3.2s ease-in-out infinite;
   }
   .lib-empty { color: var(--muted); font-style: italic; padding: 20px 4px; }
+
+  /* ---------- big-cookbook lookup ---------- */
+  .lookup { margin-top: 16px; }
+  .lookup-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    background: var(--surface);
+    border: 1.5px dashed var(--accent);
+    border-radius: 999px;
+    color: var(--accent-deep);
+    font: inherit;
+    font-weight: 700;
+    font-size: 14.5px;
+    padding: 10px 20px;
+    min-height: 46px;
+    cursor: pointer;
+    transition: background 200ms ease;
+  }
+  .lookup-btn:hover { background: var(--accent-soft); }
+  .lookup-btn[hidden] { display: none; }
+  .lookup-status { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
+  .lookup-results { display: grid; gap: 8px; margin-top: 12px; }
+  .lookup-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 12px 16px;
+    text-align: left;
+    font: inherit;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 200ms ease, background 200ms ease;
+  }
+  .lookup-item:hover { border-color: var(--accent); background: var(--surface-2); }
+  .lookup-item .li-name { font-weight: 700; font-size: 15px; line-height: 1.3; }
+  .lookup-item .li-brand { font-size: 12.5px; color: var(--muted); }
+  .lookup-item .li-pills { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .lookup-item .li-serv { font-size: 12px; color: var(--muted); width: 100%; }
 
   /* ---------- Journey ---------- */
   .journey-card { padding: 20px; }
@@ -1170,7 +1214,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)" aria-hidden="true"><path d="M12 21s-7.5-4.9-9.7-9C.6 8.9 2 5.3 5.2 4.4c2-.6 4.1.2 5.3 1.9L12 8l1.5-1.7c1.2-1.7 3.3-2.5 5.3-1.9 3.2.9 4.6 4.5 2.9 7.6-2.2 4.1-9.7 9-9.7 9z"/></svg>
       </button>
     </h2>
-    <p class="blurb">Everything in here is real food with one ingredient: itself. Tap anything to add it to a meal — servings are honest, numbers are close enough, and a few of them are <strong>hiding something</strong>.</p>
+    <p class="blurb">Everything in here is real food with one ingredient: itself. Tap anything to add it to a meal — servings are honest, numbers are close enough, and a few of them are <strong>hiding something</strong>. And if what you ate isn't in here, type it in the search — the site can <strong>ask the big cookbook</strong> for the real numbers.</p>
     <div class="pickbar" id="pickbar" role="status">
       <span id="pickbarText">Adding to Breakfast — tap any food</span>
       <button type="button" id="pickbarDone">Done</button>
@@ -1180,7 +1224,15 @@
       <div class="cat-chips" id="catChips" role="group" aria-label="Filter by food group"></div>
     </div>
     <div class="food-grid" id="foodGrid"></div>
-    <p class="lib-empty" id="libEmpty" hidden>Nothing by that name in here — but "add your own" on any meal takes anything you cook.</p>
+    <p class="lib-empty" id="libEmpty" hidden>Nothing by that name on the shelf — ask the big cookbook below, or "add your own" on any meal.</p>
+    <div class="lookup">
+      <button type="button" class="lookup-btn" id="lookupBtn" hidden>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <span id="lookupBtnText">Ask the big cookbook</span>
+      </button>
+      <p class="lookup-status" id="lookupStatus" hidden></p>
+      <div class="lookup-results" id="lookupResults"></div>
+    </div>
   </section>
 
   <section id="journeySec" aria-label="Weight journey">
@@ -1334,13 +1386,15 @@
       art: fico('<path d="M31 11 a10 10 0 1 0-3 19"/><path d="M28 30 q-6 3-5 9"/><path d="M31 11 q5-1 7 2 M31 11 q4-4 8-3"/>' + dot(29, 15, 1.5)) },
     { id: "tuna", name: "Tuna", serv: "1 can, in water", cal: 120, cat: "protein",
       art: fico('<ellipse cx="24" cy="16" rx="14" ry="5"/><path d="M10 16 v14 a14 5 0 0 0 28 0 v-14"/><path d="M18 31 h12"/>') },
+    { id: "cannedchicken", name: "Canned Chicken", serv: "1 small can, drained", cal: 130, cat: "protein",
+      art: fico('<ellipse cx="24" cy="15" rx="14" ry="5"/><path d="M10 15 v14 a14 5 0 0 0 28 0 v-14"/><circle cx="27" cy="28" r="3.5"/><path d="M24 30 l-5 5"/>') },
     { id: "yogurt", name: "Greek Yogurt", serv: "1 cup plain", cal: 130, cat: "protein",
       art: fico('<path d="M14 14 h20 l-3 24 h-14z"/><path d="M12 14 h24"/><path d="M19 25 q5 4 10 0"/>') },
     { id: "cottage", name: "Cottage Cheese", serv: "half cup", cal: 90, cat: "protein",
       art: fico('<path d="M10 26 h28 a14 9 0 0 1-28 0z"/>' + dot(17, 23) + dot(23, 21.5) + dot(29, 23) + dot(26, 25) + dot(20, 25.5)) },
-    { id: "tofu", name: "Tofu", serv: "half block", cal: 180, cat: "protein",
-      art: fico('<path d="M10 20 l9-7 h19 l-9 7z"/><path d="M10 20 h19 v14 h-19z"/><path d="M29 34 l9-7 v-14"/>') },
-    { id: "beef", name: "Lean Beef", serv: "4 oz", cal: 200, cat: "protein",
+    { id: "groundbeef", name: "Ground Beef", serv: "4 oz, 90/10", cal: 220, cat: "protein",
+      art: fico('<rect x="10" y="24" width="28" height="9" rx="4.5"/><path d="M18 19 q2-3 0-6 M24 20 q2-3 0-6 M30 19 q2-3 0-6"/>' + dot(17, 28.5) + dot(24, 28.5) + dot(31, 28.5)) },
+    { id: "steak", name: "Steak", serv: "4 oz sirloin", cal: 210, cat: "protein",
       art: fico('<path d="M12 18 q12-8 24 0 q4 9-6 13 q-12 4-18-3 q-3-5 0-10z"/><path d="M19 23 q5 3 9 1"/>') },
 
     /* veggies */
@@ -1434,7 +1488,8 @@
   ];
   /* grams of protein per serving, matched by food id */
   var PROTEIN = {
-    eggs: 12, chicken: 35, salmon: 25, shrimp: 23, tuna: 26, yogurt: 20, cottage: 12, tofu: 18, beef: 32,
+    eggs: 12, chicken: 35, salmon: 25, shrimp: 23, tuna: 26, cannedchicken: 27, yogurt: 20, cottage: 12,
+    groundbeef: 28, steak: 31,
     broccoli: 4, spinach: 2, sweetpotato: 2, pepper: 1, carrot: 1, zucchini: 1, cauliflower: 2,
     greenbeans: 2, cucumber: 2, asparagus: 3, tomato: 1,
     apple: 0, banana: 1, strawberries: 1, blueberries: 1, orange: 1, grapes: 1, watermelon: 1,
@@ -2088,6 +2143,7 @@
   document.getElementById("libSearch").addEventListener("input", function () {
     searchQ = this.value.trim().toLowerCase();
     renderLibrary();
+    updateLookup();
   });
 
   function renderLibrary() {
@@ -2138,6 +2194,117 @@
     window.scrollTo(0, Math.max(top, 0));
   }
   document.getElementById("pickbarDone").addEventListener("click", disarmPicker);
+
+  /* ---------- the big cookbook (Open Food Facts lookup) ----------
+     For anything not on the shelf — meatballs, a granola bar, a
+     restaurant-ish thing — ask the community food database and get
+     real calories + protein instead of guessing. No account, no
+     key; if the internet is out, the site says so kindly. */
+  var LOOKUP_ART = fico('<path d="M10 26 h28 a14 10 0 0 1-28 0z"/><path d="M24 10 l1.6 3.4 3.4 1.6 -3.4 1.6 -1.6 3.4 -1.6-3.4 -3.4-1.6 3.4-1.6z"/>');
+  var lookupBtn = document.getElementById("lookupBtn");
+  var lookupStatus = document.getElementById("lookupStatus");
+  var lookupResults = document.getElementById("lookupResults");
+  var lookupBusy = false;
+
+  function updateLookup() {
+    var ok = searchQ.length >= 3;
+    lookupBtn.hidden = !ok;
+    if (!ok) {
+      lookupStatus.hidden = true;
+      lookupResults.innerHTML = "";
+    } else {
+      document.getElementById("lookupBtnText").textContent = 'Ask the big cookbook for “' + searchQ + '”';
+    }
+  }
+
+  function setLookupStatus(msg) {
+    lookupStatus.hidden = !msg;
+    lookupStatus.textContent = msg || "";
+  }
+
+  function parseLookup(products) {
+    var out = [];
+    (products || []).forEach(function (pr) {
+      if (out.length >= 8) return;
+      var name = String(pr.product_name || "").trim();
+      if (!name) return;
+      var n = pr.nutriments || {};
+      var kcalServ = +n["energy-kcal_serving"];
+      var kcal100 = +n["energy-kcal_100g"];
+      var base = null;
+      if (kcalServ > 0 && pr.serving_size) {
+        var protServ = +n["proteins_serving"];
+        base = { label: "1 serving (" + String(pr.serving_size).trim() + ")",
+                 cal: Math.round(kcalServ), p: protServ > 0 ? Math.round(protServ) : 0 };
+      } else if (kcal100 > 0) {
+        var prot100 = +n["proteins_100g"];
+        base = { label: "100 g", cal: Math.round(kcal100), p: prot100 > 0 ? Math.round(prot100) : 0 };
+      }
+      if (!base || base.cal <= 0 || base.cal > 2000) return;
+      out.push({
+        name: name.length > 48 ? name.slice(0, 46) + "…" : name,
+        brand: String(pr.brands || "").split(",")[0].trim(),
+        base: base
+      });
+    });
+    return out;
+  }
+
+  function renderLookup(items) {
+    var html = "";
+    items.forEach(function (it, i) {
+      html += '<button type="button" class="lookup-item" data-lu="' + i + '">' +
+        '<span><span class="li-name">' + esc(it.name) + '</span>' +
+        (it.brand ? '<br /><span class="li-brand">' + esc(it.brand) + '</span>' : '') + '</span>' +
+        '<span class="li-pills"><span class="f-cal">' + it.base.cal + ' cal</span>' +
+        (it.base.p > 0 ? '<span class="f-prot">' + it.base.p + ' g protein</span>' : '') + '</span>' +
+        '<span class="li-serv">per ' + esc(it.base.label) + ' — tap to add</span>' +
+        '</button>';
+    });
+    lookupResults.innerHTML = html;
+    Array.prototype.forEach.call(lookupResults.querySelectorAll("[data-lu]"), function (b) {
+      b.addEventListener("click", function () {
+        var it = items[+b.getAttribute("data-lu")];
+        openModal({ name: it.name, serv: it.base.label, cal: it.base.cal, p: it.base.p, art: LOOKUP_ART }, b);
+      });
+    });
+  }
+
+  lookupBtn.addEventListener("click", function () {
+    if (lookupBusy || searchQ.length < 3) return;
+    lookupBusy = true;
+    lookupResults.innerHTML = "";
+    setLookupStatus("Asking the big cookbook…");
+    var q = searchQ;
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 9000) : null;
+    var url = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=" + encodeURIComponent(q) +
+      "&search_simple=1&action=process&json=1&page_size=12" +
+      "&fields=product_name,brands,nutriments,serving_size";
+    fetch(url, ctrl ? { signal: ctrl.signal } : {})
+      .then(function (r) {
+        if (!r.ok) throw new Error("bad status");
+        return r.json();
+      })
+      .then(function (data) {
+        if (timer) clearTimeout(timer);
+        lookupBusy = false;
+        if (searchQ !== q) return; /* she kept typing — stale answer */
+        var items = parseLookup(data && data.products);
+        if (!items.length) {
+          setLookupStatus('Nothing useful came back for “' + q + '”. Try a simpler word — “meatball” beats a brand name — or use “+ your own” on any meal.');
+          return;
+        }
+        setLookupStatus("From Open Food Facts, the community food database — tap one to add it.");
+        renderLookup(items);
+      })
+      .catch(function () {
+        if (timer) clearTimeout(timer);
+        lookupBusy = false;
+        if (searchQ !== q) return;
+        setLookupStatus("The big cookbook isn't answering right now — no stress. Add it with “+ your own” and your best guess; close enough, consistently, wins.");
+      });
+  });
 
   /* ---------- add modal ---------- */
   var modal = document.getElementById("addModal");
