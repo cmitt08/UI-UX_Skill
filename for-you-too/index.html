@@ -4,8 +4,17 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#FDF7F1" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#251A20" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Nourished" />
+<meta name="format-detection" content="telephone=no" />
 <meta name="description" content="Pretty Nourished — a whole-foods calorie tracker made for one specific, very pretty person. Your daily number, three real meals, and a few hidden love notes." />
 <title>Pretty Nourished</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23C43D56' d='M12 21s-7.5-4.9-9.7-9C.6 8.9 2 5.3 5.2 4.4c2-.6 4.1.2 5.3 1.9L12 8l1.5-1.7c1.2-1.7 3.3-2.5 5.3-1.9 3.2.9 4.6 4.5 2.9 7.6-2.2 4.1-9.7 9-9.7 9z'/%3E%3C/svg%3E" />
+<link rel="apple-touch-icon" href="icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Karla:wght@400;500;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -68,7 +77,9 @@
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   }
 
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+  button, input, select, .foodbtn, .lookup-item { touch-action: manipulation; }
   html { scroll-behavior: smooth; }
   body {
     margin: 0;
@@ -141,6 +152,8 @@
     font-size: clamp(38px, 7vw, 56px);
     letter-spacing: -0.01em;
     cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
   }
   .hero h1 .script {
     font-family: 'Caveat', cursive;
@@ -561,7 +574,7 @@
     background: var(--surface);
     color: var(--ink);
     font: inherit;
-    font-size: 15px;
+    font-size: 16px; /* 16px floor stops iOS from zooming the page on focus */
     padding: 8px 12px;
     min-height: 44px;
   }
@@ -993,6 +1006,59 @@
     padding: 6px;
   }
 
+  /* ---------- sticky mini status bar (phones) ---------- */
+  .minibar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 70;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 16px;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
+    background: color-mix(in srgb, var(--surface) 90%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    font: inherit;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    transform: translateY(-110%);
+    transition: transform 280ms ease;
+  }
+  .minibar.show { transform: translateY(0); }
+  .minibar strong { color: var(--accent-deep); font-size: 15.5px; }
+  .minibar .mb-prot { margin-left: auto; color: var(--good); font-weight: 700; font-size: 13.5px; }
+
+  /* pressed-down feedback for touch */
+  .foodbtn:active, .lookup-item:active { transform: scale(0.98); }
+  .mini-btn:active, .cta:active, .lookup-btn:active, .m-meals button:active,
+  .qty-chips button:active, .pace-chips button:active, .cat-chips button:active,
+  .datenav button:active:not(:disabled), .closeout:active:not(.done-state) { transform: scale(0.96); }
+
+  /* no sticky hover styles on touch screens */
+  @media (hover: none) {
+    .foodbtn:hover { border-color: var(--line); background: var(--surface); }
+    .lookup-item:hover { border-color: var(--line); background: var(--surface); }
+    .mini-btn:hover { background: none; border-color: var(--line); }
+    .lookup-btn:hover { background: var(--surface); }
+    .datenav button:hover:not(:disabled) { background: var(--surface); }
+    .i-x:hover { color: var(--muted); background: none; }
+    .weigh-list button:hover { color: var(--muted); background: none; }
+    .logo-heart:hover, .intro-dismiss:hover { transform: none; }
+    .hidden-heart:hover, .lunchbox:hover { transform: none; animation-play-state: running; }
+  }
+
+  .chart.sm .lbl { font-size: 15px; }
+  .chart.sm .zone-lbl { font-size: 23px; }
+
+  @keyframes sheet-up {
+    from { opacity: 0; transform: translateY(48px); }
+  }
+
   /* falling hearts */
   .confetti-heart {
     position: fixed;
@@ -1023,13 +1089,52 @@
     50% { transform: translateY(-5px); }
   }
 
+  /* ---------- the phone layout: tighter, thumbier, calmer ---------- */
   @media (max-width: 720px) {
+    section { margin-top: 34px; }
+    section > h2 { font-size: 24px; }
+    .blurb { font-size: 15.5px; }
+    .hero .sub { font-size: 16.5px; }
+    .card { padding: 18px 16px; }
+    .meal-card { padding: 16px 14px; }
+    .mini-btn { min-height: 44px; }
+    .i-x { width: 40px; height: 40px; }
+    .minibar { display: flex; }
     .today-grid { grid-template-columns: 1fr; }
     .ring-card { position: static; }
+    .ring-wrap { width: 190px; height: 190px; }
     .split-card { grid-template-columns: 1fr; }
     .equation { grid-template-columns: 1fr; }
     .eq-op { text-align: center; }
-    .note-stack { right: 50%; transform: translateX(50%); align-items: center; }
+    .controls { grid-template-columns: 1fr 1fr; }
+    .ctrl-activity, .ctrl-pace { grid-column: 1 / -1; }
+    .pickbar { top: calc(env(safe-area-inset-top, 0px) + 54px); }
+    .note-stack {
+      right: 50%;
+      transform: translateX(50%);
+      align-items: center;
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+    .note { font-size: 18px; width: min(280px, calc(100vw - 32px)); padding: 14px 16px 12px; }
+    /* the add card becomes a bottom sheet */
+    .modal { place-items: end stretch; padding: 0; }
+    .modal .card {
+      width: 100%;
+      max-width: none;
+      border-radius: 22px 22px 0 0;
+      padding: 14px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+      animation-name: sheet-up;
+    }
+    .modal .card::before {
+      content: "";
+      display: block;
+      width: 44px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--line);
+      margin: 0 auto 14px;
+    }
+    .m-meals button { min-height: 52px; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -1124,7 +1229,7 @@
           <input type="number" id="inAge" inputmode="numeric" min="18" max="80" step="1" />
           <p class="hint">I guessed — fix it if I'm wrong.</p>
         </div>
-        <div class="ctrl">
+        <div class="ctrl ctrl-activity">
           <label for="inActivity">Most days I'm…</label>
           <select id="inActivity">
             <option value="1.35">mostly sitting, some walks</option>
@@ -1132,7 +1237,7 @@
             <option value="1.65">basically always moving</option>
           </select>
         </div>
-        <div class="ctrl">
+        <div class="ctrl ctrl-pace">
           <label id="paceLabel">The goal by New Year's</label>
           <div class="pace-chips" role="group" aria-labelledby="paceLabel">
             <button type="button" id="pace10" aria-pressed="true">Gentle · 10 lb</button>
@@ -1285,6 +1390,12 @@
   </footer>
 
 </div>
+
+<button class="minibar" id="minibar" aria-label="Back to today's plate">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)" aria-hidden="true"><path d="M12 21s-7.5-4.9-9.7-9C.6 8.9 2 5.3 5.2 4.4c2-.6 4.1.2 5.3 1.9L12 8l1.5-1.7c1.2-1.7 3.3-2.5 5.3-1.9 3.2.9 4.6 4.5 2.9 7.6-2.2 4.1-9.7 9-9.7 9z"/></svg>
+  <strong id="mbLeft">—</strong>
+  <span class="mb-prot" id="mbProt">—</span>
+</button>
 
 <div class="note-stack" id="noteStack" aria-live="polite"></div>
 
@@ -1612,8 +1723,13 @@
   }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+  function isPhone() {
+    try { return window.matchMedia("(max-width: 720px)").matches; } catch (e) { return false; }
+  }
+
   function showNote(text, ms) {
-    while (noteStack.children.length >= 2) noteStack.removeChild(noteStack.firstChild);
+    var limit = isPhone() ? 1 : 2; /* one note at a time on a phone — never a pile */
+    while (noteStack.children.length >= limit) noteStack.removeChild(noteStack.firstChild);
     var n = document.createElement("button");
     n.className = "note";
     n.type = "button";
@@ -1924,6 +2040,12 @@
     pRing.style.strokeDashoffset = pRingC * (1 - Math.min(prot / t.proteinGoal, 1));
     document.getElementById("ringProt").textContent = Math.round(prot) + " / " + t.proteinGoal + " g protein";
 
+    /* phone mini status bar */
+    document.getElementById("mbLeft").textContent = (left >= 0
+      ? fmtNum(left) + " left"
+      : fmtNum(-left) + " over") + (isToday ? " today" : " · " + niceDate(viewDate));
+    document.getElementById("mbProt").textContent = Math.round(prot) + "/" + t.proteinGoal + "g protein";
+
     var btn = document.getElementById("closeoutBtn");
     var note = document.getElementById("ringNote");
     if (closed) {
@@ -2058,6 +2180,10 @@
     renderToday();
     if (food && food.love) {
       showNote(food.love, 9000);
+    } else if (pickFor) {
+      /* while she's tap-tap-tapping foods, praise lives in the pickbar
+         instead of dropping notes over the thing she's tapping */
+      flashPickbar("Added — " + name);
     } else {
       showNote(pick(PRAISE), 4500);
     }
@@ -2194,6 +2320,31 @@
     window.scrollTo(0, Math.max(top, 0));
   }
   document.getElementById("pickbarDone").addEventListener("click", disarmPicker);
+
+  var pickbarFlashTimer = null;
+  function flashPickbar(msg) {
+    var el = document.getElementById("pickbarText");
+    el.textContent = msg;
+    if (pickbarFlashTimer) clearTimeout(pickbarFlashTimer);
+    pickbarFlashTimer = setTimeout(function () {
+      if (pickFor) el.textContent = "Adding to " + mealName(pickFor) + " — tap any food";
+    }, 1600);
+  }
+
+  /* phone mini status bar: appears once the ring scrolls out of view */
+  var minibar = document.getElementById("minibar");
+  minibar.addEventListener("click", function () {
+    var top = document.getElementById("todaySec").getBoundingClientRect().top + window.pageYOffset - 8;
+    window.scrollTo(0, Math.max(top, 0));
+  });
+  (function () {
+    var ringCard = document.querySelector(".ring-card");
+    if (!ringCard || typeof IntersectionObserver === "undefined") return;
+    new IntersectionObserver(function (entries) {
+      var e = entries[0];
+      minibar.classList.toggle("show", !e.isIntersecting && e.boundingClientRect.bottom < 0);
+    }, { threshold: 0 }).observe(ringCard);
+  })();
 
   /* ---------- the big cookbook (Open Food Facts lookup) ----------
      For anything not on the shelf — meatballs, a granola bar, a
@@ -2387,7 +2538,15 @@
   /* ---------- journey chart ---------- */
   function renderJourney() {
     var svgEl = document.getElementById("journeyChart");
-    var W = 640, H = 300, padL = 46, padR = 18, padT = 18, padB = 34;
+    /* on a phone the chart draws at a smaller coordinate size so
+       labels render big enough to actually read */
+    var cw = svgEl.clientWidth || (svgEl.parentNode ? svgEl.parentNode.clientWidth : 0) || 640;
+    var small = cw > 0 && cw < 480;
+    var W = small ? 380 : 640, H = small ? 270 : 300;
+    var padL = small ? 42 : 46, padR = small ? 14 : 18, padT = 18, padB = small ? 40 : 34;
+    svgEl.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svgEl.classList.toggle("sm", small);
+    var mScale = small ? 0.8 : 0.58;
     var x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
 
     var startD = fromDstr(start.d);
@@ -2448,11 +2607,10 @@
         var dstrg = "M" + pts.map(function (p) { return p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" L");
         svg += '<path class="trend" d="' + dstrg + '"/>';
       }
-      pts.forEach(function (p, i) {
-        svg += '<g transform="translate(' + (p[0] - 7).toFixed(1) + ' ' + (p[1] - 7).toFixed(1) + ') scale(0.58)">' +
+      pts.forEach(function (p) {
+        var off = 12 * mScale;
+        svg += '<g transform="translate(' + (p[0] - off).toFixed(1) + ' ' + (p[1] - off).toFixed(1) + ') scale(' + mScale + ')">' +
           '<path class="wpt" d="' + HEART_PATH + '"/></g>';
-        var wi = weighins[i];
-        svg += '<title></title>';
       });
     } else {
       svg += '<text class="zone-lbl" x="' + ((x0 + x1) / 2).toFixed(1) + '" y="' + ((y0 + y1) / 2).toFixed(1) + '" text-anchor="middle">your first weigh-in starts the line</text>';
@@ -2654,11 +2812,19 @@
   function ambient() {
     var wait = 45000 + Math.random() * 30000;
     setTimeout(function () {
-      if (!document.hidden) showNote(drawNote());
+      /* stay quiet while she's mid-task — no notes over open sheets or armed picking */
+      if (!document.hidden && modal.hidden && celebrateEl.hidden && !pickFor) showNote(drawNote());
       ambient();
     }, wait);
   }
   ambient();
+
+  /* re-fit the journey chart when the phone rotates or the window resizes */
+  var resizeTimer = null;
+  window.addEventListener("resize", function () {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(renderJourney, 250);
+  });
 })();
 </script>
 </body>
