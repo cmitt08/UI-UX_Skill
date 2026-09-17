@@ -1,0 +1,6 @@
+# Standalone deploy branch for "Pretty Nourished".
+# The site lives in for-you-too/ on the main branches; this branch
+# carries ONLY the site at its root so Netlify serves nothing else.
+[build]
+  publish = "."
+  command = ""
