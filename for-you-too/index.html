@@ -432,6 +432,7 @@
   .ring-wrap { position: relative; width: 210px; height: 210px; margin: 6px auto 4px; }
   .ring-wrap svg { width: 100%; height: 100%; }
   .ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 14; }
+  .ring-bg.inner { stroke-width: 9; }
   .ring-fg {
     fill: none;
     stroke: var(--accent);
@@ -441,6 +442,7 @@
   }
   .ring-fg.win { stroke: var(--good); }
   .ring-fg.over { stroke: var(--honey); }
+  .ring-fg.prot { stroke: var(--good); stroke-width: 9; }
   .ring-center {
     position: absolute; inset: 0;
     display: grid; place-items: center;
@@ -454,6 +456,17 @@
   }
   .ring-of { font-size: 13.5px; color: var(--muted); }
   .ring-left { margin-top: 4px; font-size: 15px; font-weight: 700; color: var(--accent-deep); }
+  .ring-prot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin: 2px 0 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--good);
+  }
+  .prot-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--good); flex: 0 0 auto; }
   .closeout {
     margin-top: 14px;
     background: var(--accent);
@@ -481,10 +494,12 @@
 
   .meals { display: grid; gap: 14px; }
   .meal-card { position: relative; padding: 18px 20px; }
+  .meal-card.has-lunch .meal-top { padding-right: 38px; }
   .meal-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .meal-top h3 { font-size: 21px; }
   .meal-budget { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--muted); white-space: nowrap; }
   .meal-budget strong { color: var(--accent-deep); }
+  .meal-prot { color: var(--good); }
   .meal-bar {
     height: 7px;
     background: var(--surface-2);
@@ -551,7 +566,8 @@
     min-height: 44px;
   }
   .own-form .of-name { flex: 2 1 140px; }
-  .own-form .of-cal { flex: 1 1 80px; }
+  .own-form .of-cal { flex: 1 1 74px; }
+  .own-form .of-prot { flex: 1 1 92px; }
 
   /* lunchbox note */
   .lunchbox {
@@ -663,6 +679,16 @@
     font-size: 12.5px;
     border-radius: 999px;
     padding: 2px 10px;
+  }
+  .foodbtn .f-prot {
+    display: inline-block;
+    margin-top: 4px;
+    background: var(--good-soft);
+    color: var(--good);
+    font-weight: 700;
+    font-size: 11.5px;
+    border-radius: 999px;
+    padding: 2px 9px;
   }
   .foodbtn .f-love {
     position: absolute;
@@ -873,7 +899,27 @@
     border-color: var(--accent);
     color: var(--accent-deep);
   }
+  .qty-custom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .qty-custom input {
+    width: 88px;
+    min-height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    padding: 8px 10px;
+    text-align: center;
+  }
   .m-meals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .m-meals.single { grid-template-columns: 1fr; }
   .m-meals button {
     min-height: 48px;
     border: 0;
@@ -989,6 +1035,10 @@
         </li>
         <li>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+          <span><strong>Protein is the fullness cheat code.</strong> You said it yourself — it fills you up, and it protects the muscle you're building. Your protein goal sits right next to your calorie number, the green ring tracks it, and "some at every meal" is the whole strategy.</span>
+        </li>
+        <li>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
           <span><strong>I will never send you below 1,200 a day.</strong> That's the floor and it's a promise. And if a day ever feels off — dizzy, dragging, hangry at strangers — eat more that day. The plan bends. You don't have to.</span>
         </li>
       </ul>
@@ -1010,6 +1060,7 @@
         <span class="chip" id="chipDays">— days until Dec 31</span>
         <span class="chip calm" id="chipPace">≈ — lb a week</span>
         <span class="chip hny" id="chipLand">on pace for ~— lb</span>
+        <span class="chip calm" id="chipProtein">+ ~— g protein a day</span>
       </div>
       <div class="equation" aria-label="How the number is calculated">
         <div class="eq-tile"><div class="eq-num" id="eqBurn">—</div><div class="eq-lbl">your body burns about this much a day</div></div>
@@ -1093,6 +1144,8 @@
           <svg viewBox="0 0 160 160" aria-hidden="true">
             <circle class="ring-bg" cx="80" cy="80" r="64"/>
             <circle class="ring-fg" id="ringFg" cx="80" cy="80" r="64" transform="rotate(-90 80 80)"/>
+            <circle class="ring-bg inner" cx="80" cy="80" r="47"/>
+            <circle class="ring-fg prot" id="ringProtFg" cx="80" cy="80" r="47" transform="rotate(-90 80 80)"/>
           </svg>
           <div class="ring-center">
             <div>
@@ -1102,6 +1155,7 @@
             </div>
           </div>
         </div>
+        <p class="ring-prot"><span class="prot-dot" aria-hidden="true"></span><span id="ringProt">0 / 105 g protein</span></p>
         <button class="closeout" id="closeoutBtn">Close out my day</button>
         <p class="ring-note" id="ringNote">Close it after dinner — that's when the confetti decides.</p>
       </div>
@@ -1200,9 +1254,16 @@
       </div>
     </div>
     <div class="qty-chips" role="group" aria-label="How much?">
-      <button type="button" data-q="0.5">half</button>
-      <button type="button" data-q="1" aria-pressed="true">one serving</button>
-      <button type="button" data-q="2">double</button>
+      <button type="button" data-q="0.25">¼</button>
+      <button type="button" data-q="0.5">½</button>
+      <button type="button" data-q="1" aria-pressed="true">1</button>
+      <button type="button" data-q="1.5">1½</button>
+      <button type="button" data-q="2">2</button>
+    </div>
+    <div class="qty-custom">
+      <label for="mQty">or exactly</label>
+      <input type="number" id="mQty" inputmode="decimal" min="0.05" max="10" step="0.05" value="1" />
+      <span>servings</span>
     </div>
     <div class="m-meals" id="mMeals"></div>
     <button class="m-cancel" id="mCancel">never mind</button>
@@ -1371,8 +1432,28 @@
       love: "Obviously this one made me think of you.",
       art: fico('<path d="M16 17 q-6 5-6 11 a14 10 0 0 0 28 0 q0-6-6-11"/><path d="M16 17 q8-4 16 0"/><path d="M20 12 h8"/>') }
   ];
+  /* grams of protein per serving, matched by food id */
+  var PROTEIN = {
+    eggs: 12, chicken: 35, salmon: 25, shrimp: 23, tuna: 26, yogurt: 20, cottage: 12, tofu: 18, beef: 32,
+    broccoli: 4, spinach: 2, sweetpotato: 2, pepper: 1, carrot: 1, zucchini: 1, cauliflower: 2,
+    greenbeans: 2, cucumber: 2, asparagus: 3, tomato: 1,
+    apple: 0, banana: 1, strawberries: 1, blueberries: 1, orange: 1, grapes: 1, watermelon: 1,
+    peach: 1, pineapple: 1, mango: 1,
+    oats: 5, rice: 5, quinoa: 8, toast: 4, potato: 4, blackbeans: 8, chickpeas: 7, corn: 3,
+    avocado: 2, almonds: 6, peanutbutter: 4, oliveoil: 0, hummus: 2, cheese: 7, milk: 8, honey: 0
+  };
   var FOOD_BY_ID = {};
-  FOODS.forEach(function (f) { FOOD_BY_ID[f.id] = f; });
+  FOODS.forEach(function (f) {
+    f.p = PROTEIN[f.id] || 0;
+    FOOD_BY_ID[f.id] = f;
+  });
+
+  function fmtQty(q) {
+    var map = { "0.25": "¼", "0.5": "½", "0.75": "¾", "1.5": "1½" };
+    var key = String(q);
+    if (map[key]) return map[key];
+    return String(Math.round(q * 100) / 100);
+  }
 
   /* ---------- notes from him ---------- */
   var NOTES = [
@@ -1610,6 +1691,8 @@
     if (target < 1200) { target = 1200; floored = true; }
     var effDeficit = tdee - target;
     var landing = w - (effDeficit * Math.max(daysReal, 0)) / 3500;
+    /* ~0.8 g protein per lb — right for someone lifting while losing */
+    var proteinGoal = Math.min(Math.max(Math.round(w * 0.8 / 5) * 5, 70), 140);
     return {
       tdee: Math.round(tdee / 10) * 10,
       deficit: Math.round(effDeficit / 10) * 10,
@@ -1618,7 +1701,8 @@
       lbPerWeek: (effDeficit * 7) / 3500,
       landing: landing,
       remaining: remaining,
-      floored: floored
+      floored: floored,
+      proteinGoal: proteinGoal
     };
   }
 
@@ -1650,6 +1734,7 @@
       ? "goal reached — maintain + glow"
       : "on pace for ~" + Math.round(t.landing) + " lb";
     document.getElementById("chipLand").textContent = landTxt;
+    document.getElementById("chipProtein").textContent = "+ ~" + t.proteinGoal + " g protein a day";
     var fn = document.getElementById("floorNote");
     if (t.floored) {
       fn.innerHTML = "<strong>The floor is holding:</strong> the math wanted less, and this site said no. 1,200 is the minimum, the finish line moves instead — that was always the deal.";
@@ -1716,6 +1801,18 @@
     (log[id] || []).forEach(function (it) { sum += it.c; });
     return sum;
   }
+  function logProtein(log) {
+    var sum = 0;
+    ["b", "l", "d", "s"].forEach(function (k) {
+      (log[k] || []).forEach(function (it) { sum += it.p || 0; });
+    });
+    return sum;
+  }
+  function mealProtein(log, id) {
+    var sum = 0;
+    (log[id] || []).forEach(function (it) { sum += it.p || 0; });
+    return sum;
+  }
   function isClosed(dateS) { return !!lsGet("pn2-closed-" + dateS, false); }
 
   function streakCount() {
@@ -1764,6 +1861,14 @@
       ? fmtNum(left) + " left"
       : fmtNum(-left) + " over — it's fine";
 
+    /* inner protein ring */
+    var prot = logProtein(log);
+    var pRingC = 2 * Math.PI * 47;
+    var pRing = document.getElementById("ringProtFg");
+    pRing.style.strokeDasharray = pRingC;
+    pRing.style.strokeDashoffset = pRingC * (1 - Math.min(prot / t.proteinGoal, 1));
+    document.getElementById("ringProt").textContent = Math.round(prot) + " / " + t.proteinGoal + " g protein";
+
     var btn = document.getElementById("closeoutBtn");
     var note = document.getElementById("ringNote");
     if (closed) {
@@ -1795,7 +1900,7 @@
       var budget = share !== null ? Math.round(t.target * share) : 0;
       var got = mealTotal(log, id);
       var items = log[id] || [];
-      html += '<div class="card meal-card" data-meal="' + id + '">';
+      html += '<div class="card meal-card' + (mi === lunchIdx ? ' has-lunch' : '') + '" data-meal="' + id + '">';
       if (mi === lunchIdx) {
         html += '<button class="lunchbox" data-lunch aria-label="Something is tucked into this meal…" title="What\'s this?">' +
           '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">' +
@@ -1805,11 +1910,13 @@
             : '<path d="M3 8l9 6 9-6"/>') +
           '</svg></button>';
       }
+      var gotP = mealProtein(log, id);
+      var protTxt = gotP > 0 ? ' · <span class="meal-prot">' + Math.round(gotP) + ' g protein</span>' : '';
       html += '<div class="meal-top"><h3>' + esc(mealName(id)) + '</h3>';
       if (share !== null) {
-        html += '<span class="meal-budget"><strong>' + fmtNum(got) + '</strong> / ' + fmtNum(budget) + '</span>';
+        html += '<span class="meal-budget"><strong>' + fmtNum(got) + '</strong> / ' + fmtNum(budget) + protTxt + '</span>';
       } else {
-        html += '<span class="meal-budget"><strong>' + fmtNum(got) + '</strong> logged</span>';
+        html += '<span class="meal-budget"><strong>' + fmtNum(got) + '</strong> logged' + protTxt + '</span>';
       }
       html += '</div>';
       if (share !== null) {
@@ -1836,6 +1943,7 @@
       html += '<form class="own-form" data-own-form>' +
         '<input type="text" class="of-name" placeholder="what was it?" aria-label="Food name" maxlength="60" />' +
         '<input type="number" class="of-cal" placeholder="cal" aria-label="Calories" inputmode="numeric" min="1" max="3000" required />' +
+        '<input type="number" class="of-prot" placeholder="protein g" aria-label="Protein in grams, optional" inputmode="numeric" min="0" max="250" />' +
         '<button type="submit" class="mini-btn">add</button>' +
         '</form>';
       html += '</div>';
@@ -1869,8 +1977,9 @@
           e.preventDefault();
           var name = ownForm.querySelector(".of-name").value.trim() || "Something homemade";
           var cal = Math.round(+ownForm.querySelector(".of-cal").value);
+          var prot = Math.max(0, Math.round(+ownForm.querySelector(".of-prot").value || 0));
           if (!(cal > 0)) return;
-          addToMeal(mid, name, cal, null, ownForm.querySelector(".of-cal"));
+          addToMeal(mid, name, cal, null, ownForm.querySelector(".of-cal"), prot);
         });
       }
 
@@ -1886,10 +1995,10 @@
     });
   }
 
-  function addToMeal(mid, name, cal, food, origin) {
+  function addToMeal(mid, name, cal, food, origin, prot) {
     var log = getLog(viewDate);
     if (!log[mid]) log[mid] = [];
-    log[mid].push({ n: name, c: cal });
+    log[mid].push({ n: name, c: cal, p: prot || 0 });
     saveLog(viewDate, log);
     renderToday();
     if (food && food.love) {
@@ -1898,6 +2007,15 @@
       showNote(pick(PRAISE), 4500);
     }
     heartConfettiMini(origin || null);
+
+    /* first time the protein goal is hit each day gets its own note */
+    var t = calcTargets();
+    if (logProtein(getLog(viewDate)) >= t.proteinGoal && !lsGet("pn2-prot-" + viewDate, false)) {
+      lsSet("pn2-prot-" + viewDate, true);
+      setTimeout(function () {
+        showNote("Protein goal: hit. Full, strong, and glowing — that's the whole formula.", 8500);
+      }, 900);
+    }
   }
 
   /* ---------- close out the day ---------- */
@@ -1925,8 +2043,9 @@
       return;
     }
     lsSet("pn2-closed-" + viewDate, true);
+    var protHit = logProtein(getLog(viewDate)) >= t.proteinGoal;
     if (eaten <= t.target + 100) {
-      celebrate("Day closed", pick(DAY_DONE));
+      celebrate(protHit ? "Day closed · protein goal hit" : "Day closed", pick(DAY_DONE));
     } else {
       showNote(OVER_NOTE, 11000);
     }
@@ -1987,6 +2106,7 @@
         '<span class="f-name">' + esc(f.name) + '</span><br />' +
         '<span class="f-serv">' + esc(f.serv) + '</span><br />' +
         '<span class="f-cal">' + f.cal + ' cal</span>' +
+        (f.p >= 5 ? '<br /><span class="f-prot">' + f.p + ' g protein</span>' : '') +
         '</button>';
     });
     grid.innerHTML = html;
@@ -1995,12 +2115,7 @@
     Array.prototype.forEach.call(grid.querySelectorAll("[data-food]"), function (b) {
       b.addEventListener("click", function () {
         var f = FOOD_BY_ID[b.getAttribute("data-food")];
-        if (!f) return;
-        if (pickFor) {
-          addToMeal(pickFor, f.name, f.cal, f, b);
-        } else {
-          openModal(f, b);
-        }
+        if (f) openModal(f, b);
       });
     });
   }
@@ -2027,35 +2142,57 @@
   /* ---------- add modal ---------- */
   var modal = document.getElementById("addModal");
   var modalFood = null;
-  var modalQty = 1;
   var lastFocus = null;
 
+  var mQtyInput = document.getElementById("mQty");
+  function getModalQty() {
+    var q = +mQtyInput.value;
+    if (!(q > 0)) return 1;
+    return Math.min(Math.max(q, 0.05), 10);
+  }
+  function syncQtyChips() {
+    var q = getModalQty();
+    Array.prototype.forEach.call(document.querySelectorAll(".qty-chips button"), function (b) {
+      b.setAttribute("aria-pressed", +b.getAttribute("data-q") === q ? "true" : "false");
+    });
+  }
+  function commitModal(mealId) {
+    var q = getModalQty();
+    var cal = Math.round(modalFood.cal * q);
+    var prot = Math.round((modalFood.p || 0) * q);
+    var label = q === 1 ? modalFood.name : modalFood.name + " ×" + fmtQty(q);
+    closeModal();
+    addToMeal(mealId, label, cal, q >= 0.5 ? modalFood : null, lastFocus, prot);
+  }
   function openModal(f, origin) {
     modalFood = f;
-    modalQty = 1;
     lastFocus = origin || null;
     document.getElementById("mIcon").innerHTML = f.art;
     document.getElementById("mName").textContent = f.name;
-    document.getElementById("mServ").textContent = f.serv + " · " + f.cal + " cal";
-    Array.prototype.forEach.call(document.querySelectorAll(".qty-chips button"), function (b) {
-      b.setAttribute("aria-pressed", b.getAttribute("data-q") === "1" ? "true" : "false");
-    });
-    var shares = mealShares();
-    var ids = shares.map(function (m) { return m.id; });
+    document.getElementById("mServ").textContent = f.serv + " · " + f.cal + " cal" +
+      (f.p ? " · " + f.p + " g protein" : "");
+    mQtyInput.value = "1";
+    syncQtyChips();
     var mm = document.getElementById("mMeals");
     mm.innerHTML = "";
-    ids.forEach(function (id) {
-      var b = document.createElement("button");
-      b.type = "button";
-      b.textContent = mealName(id);
-      b.addEventListener("click", function () {
-        var cal = Math.round(modalFood.cal * modalQty);
-        var label = modalFood.name + (modalQty === 1 ? "" : (modalQty === 0.5 ? " (half)" : " ×2"));
-        closeModal();
-        addToMeal(id, label, cal, modalQty >= 1 ? modalFood : null, lastFocus);
+    if (pickFor) {
+      /* armed from a meal card — one big confirm button */
+      mm.className = "m-meals single";
+      var one = document.createElement("button");
+      one.type = "button";
+      one.textContent = "Add to " + mealName(pickFor);
+      one.addEventListener("click", function () { commitModal(pickFor); });
+      mm.appendChild(one);
+    } else {
+      mm.className = "m-meals";
+      mealShares().forEach(function (m) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = m.name;
+        b.addEventListener("click", function () { commitModal(m.id); });
+        mm.appendChild(b);
       });
-      mm.appendChild(b);
-    });
+    }
     modal.hidden = false;
     var first = mm.querySelector("button");
     if (first) first.focus();
@@ -2066,12 +2203,11 @@
   }
   Array.prototype.forEach.call(document.querySelectorAll(".qty-chips button"), function (b) {
     b.addEventListener("click", function () {
-      modalQty = +b.getAttribute("data-q");
-      Array.prototype.forEach.call(document.querySelectorAll(".qty-chips button"), function (x) {
-        x.setAttribute("aria-pressed", x === b ? "true" : "false");
-      });
+      mQtyInput.value = b.getAttribute("data-q");
+      syncQtyChips();
     });
   });
+  mQtyInput.addEventListener("input", syncQtyChips);
   document.getElementById("mCancel").addEventListener("click", closeModal);
   modal.addEventListener("click", function (e) { if (e.target === modal) closeModal(); });
   document.addEventListener("keydown", function (e) {
@@ -2311,6 +2447,7 @@
     lsDel("pn2-log-" + todayStr());
     lsDel("pn2-closed-" + todayStr());
     lsDel("pn2-lunch-" + todayStr());
+    lsDel("pn2-prot-" + todayStr());
     if (viewDate === todayStr()) renderToday();
     showNote("Fresh plate, same you. Let's go.", 6000);
   });
