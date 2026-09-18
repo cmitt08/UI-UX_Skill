@@ -2916,6 +2916,29 @@
     if (resizeTimer) clearTimeout(resizeTimer);
     resizeTimer = setTimeout(renderJourney, 250);
   });
+
+  /* ---------- midnight rollover ----------
+     Phones keep this page alive overnight, so "today" can go stale:
+     the date label freezes on yesterday and the next-day arrow stays
+     off. Re-check the date whenever she comes back (and once a
+     minute) and roll the whole app to the new day. */
+  var appDay = todayStr();
+  function checkDayRollover() {
+    var nowDay = todayStr();
+    if (nowDay === appDay) return;
+    if (viewDate === appDay) viewDate = nowDay;
+    var wd = document.getElementById("weighDate");
+    if (wd && wd.value === appDay) wd.value = nowDay;
+    appDay = nowDay;
+    renderAll();
+    showNote("New day, fresh plate. Yesterday is saved — the ‹ arrow visits it.", 8000);
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) checkDayRollover();
+  });
+  window.addEventListener("focus", checkDayRollover);
+  window.addEventListener("pageshow", checkDayRollover);
+  setInterval(checkDayRollover, 60000);
 })();
 </script>
 </body>
